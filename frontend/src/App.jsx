@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
+import AddPet from "./pages/AddPet";
 
 function Home() {
   return (
@@ -20,12 +21,22 @@ function Test() {
   );
 }
 
+function Dashboard() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <p className="text-lg text-gray-700">Pet registered! (Dashboard coming in PAW-20)</p>
+    </div>
+  );
+}
+
 function App() {
   return (
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/test" element={<Test />} />
+        <Route path="/pets/new" element={<AddPet />} />
+        <Route path="/dashboard" element={<Dashboard />} />
       </Routes>
     </BrowserRouter>
   );
