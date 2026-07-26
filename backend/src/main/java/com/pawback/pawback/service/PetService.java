@@ -8,6 +8,9 @@ import com.pawback.pawback.model.User;
 import com.pawback.pawback.repository.PetRepository;
 import com.pawback.pawback.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+
+import java.util.List;
+
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -59,5 +62,18 @@ public class PetService {
                 .photoUrl(pet.getPhotoUrl())
                 .status(pet.getStatus())
                 .build();
+    }
+
+    // Returns all pets belonging to the currently authenticated owner
+    public List<PetResponse> getMyPets() {
+
+        // TEMPORARY — replace with real JWT-based lookup once PAW-18 merges
+        Long ownerId = getCurrentOwnerId();
+
+        List<Pet> pets = petRepository.findByOwnerId(ownerId);
+
+        return pets.stream()
+                .map(this::mapToResponse)
+                .toList();
     }
 }
