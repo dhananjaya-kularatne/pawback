@@ -61,32 +61,48 @@ function Dashboard() {
         )}
 
         {!loading && !error && pets.length > 0 && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
-              {pets.map((pet) => (
-                <div
-                  key={pet.id}
-                  className="bg-white border border-gray-300 rounded-xl p-4"
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
+            {pets.map((pet) => (
+              <div
+                key={pet.id}
+                className="bg-white border border-gray-300 rounded-xl p-4"
+              >
+                <img
+                  src={pet.photoUrl}
+                  alt={pet.name}
+                  className="w-full h-48 object-cover rounded-lg mb-3"
+                />
+                <p className="text-base font-medium text-gray-900">{pet.name}</p>
+
+                {pet.breed && (
+                  <p className="text-sm text-gray-600 mb-1">{pet.breed}</p>
+                )}
+
+                {pet.description && (
+                  <p className="text-xs text-gray-600 mb-1 line-clamp-2">
+                    {pet.description}
+                  </p>
+                )}
+
+                {pet.ifFoundInstructions && (
+                  <p className="text-xs text-gray-500 italic mb-2">
+                    If found: {pet.ifFoundInstructions}
+                  </p>
+                )}
+
+                <span
+                  className={`text-xs font-medium px-2 py-0.5 rounded-full ${
+                    pet.status === "SAFE"
+                      ? "bg-green-100 text-green-700"
+                      : "bg-red-100 text-red-700"
+                  }`}
                 >
-                  <img
-                    src={pet.photoUrl}
-                    alt={pet.name}
-                    className="w-full h-48 object-cover rounded-lg mb-3"
-                  />
-                  <p className="text-base font-medium text-gray-900">{pet.name}</p>
-                  <p className="text-sm text-gray-600 mb-2">{pet.breed}</p>
-                  <span
-                    className={`text-xs font-medium px-2 py-0.5 rounded-full ${
-                      pet.status === "SAFE"
-                        ? "bg-green-100 text-green-700"
-                        : "bg-red-100 text-red-700"
-                    }`}
-                  >
-                    {pet.status === "SAFE" ? "Safe" : "Lost"}
-                  </span>
-                </div>
-              ))}
-            </div>
-          )}
+                  {pet.status === "SAFE" ? "Safe" : "Lost"}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
