@@ -1,6 +1,7 @@
 package com.pawback.pawback.controller;
 
 import com.pawback.pawback.dto.request.CreatePetRequest;
+import com.pawback.pawback.dto.request.UpdatePetRequest;
 import com.pawback.pawback.dto.response.ApiResponse;
 import com.pawback.pawback.dto.response.PetResponse;
 import com.pawback.pawback.service.PetService;
@@ -40,6 +41,19 @@ public class PetController {
 
         return ResponseEntity.ok(
                 ApiResponse.success("Pets retrieved successfully", pets)
+        );
+    }
+
+    // Updates an existing pet — only the owning user may perform this
+    @PutMapping("/{id}")
+    public ResponseEntity<ApiResponse<PetResponse>> updatePet(
+            @PathVariable Long id,
+            @RequestBody UpdatePetRequest request) {
+
+        PetResponse response = petService.updatePet(id, request);
+
+        return ResponseEntity.ok(
+                ApiResponse.success("Pet updated successfully", response)
         );
     }
 }

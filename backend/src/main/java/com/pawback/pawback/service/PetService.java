@@ -1,6 +1,7 @@
 package com.pawback.pawback.service;
 
 import com.pawback.pawback.dto.request.CreatePetRequest;
+import com.pawback.pawback.dto.request.UpdatePetRequest;
 import com.pawback.pawback.dto.response.PetResponse;
 import com.pawback.pawback.model.Pet;
 import com.pawback.pawback.model.PetStatus;
@@ -75,5 +76,28 @@ public class PetService {
         return pets.stream()
                 .map(this::mapToResponse)
                 .toList();
+    }
+
+    // Updates an existing pet's details — only the owning user may perform this
+    public PetResponse updatePet(Long petId, UpdatePetRequest request) {
+
+        Long ownerId = getCurrentOwnerId();
+
+        Pet pet = petRepository.findById(petId)
+                .orElseThrow(() -> new RuntimeException("Pet not found"));
+
+        // Ownership check — enforced here, server-side
+        if (!pet.getOwner().getId().equals(ownerId)) {
+            throw new RuntimeException("You do not have permission to edit this pet");
+        }
+
+        pet.setName(request.getName());
+        pet.setBreed(request.getBreed());
+        pet.setDescription(request.getDescription());
+        pet.setIfFoundInstructions(request.getIfFoundInstructions());
+
+        Pet updatedPet = petRepository.save(pet);
+
+        return mapToResponse(updatedPet);
     }
 }
