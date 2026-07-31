@@ -22,3 +22,18 @@ export async function createPet(petData, imageFile) {
 
   return result.data;
 }
+
+// Fetches all pets belonging to the logged-in owner
+export async function getMyPets() {
+  const response = await fetch(`${API_BASE_URL}/pets`, {
+    method: "GET",
+  });
+
+  const result = await response.json();
+
+  if (!response.ok) {
+    throw new Error(result.message || "Failed to fetch pets");
+  }
+
+  return result.data;
+}

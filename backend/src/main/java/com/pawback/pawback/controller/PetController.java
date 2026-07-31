@@ -6,6 +6,9 @@ import com.pawback.pawback.dto.response.PetResponse;
 import com.pawback.pawback.service.PetService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+
+import java.util.List;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -27,5 +30,16 @@ public class PetController {
 
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.success(201, "Pet registered successfully", response));
+    }
+
+    // Returns all pets belonging to the currently authenticated owner
+    @GetMapping
+    public ResponseEntity<ApiResponse<List<PetResponse>>> getMyPets() {
+
+        List<PetResponse> pets = petService.getMyPets();
+
+        return ResponseEntity.ok(
+                ApiResponse.success("Pets retrieved successfully", pets)
+        );
     }
 }
