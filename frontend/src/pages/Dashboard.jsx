@@ -108,57 +108,67 @@ function Dashboard() {
             {pets.map((pet) => (
               <div
                 key={pet.id}
-                className="bg-white border border-gray-200 rounded-xl p-4
-                           shadow-sm hover:shadow-md hover:-translate-y-0.5
-                           transition-all duration-200"
+                className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-lg
+                          hover:-translate-y-1 transition-all duration-300 group"
               >
-                <div className="relative overflow-hidden rounded-lg mb-3">
+                <div className="relative h-52 overflow-hidden">
                   <img
                     src={pet.photoUrl}
                     alt={pet.name}
-                    className="w-full h-48 object-cover transition-transform
-                               duration-300 hover:scale-105"
+                    className="w-full h-full object-cover transition-transform
+                              duration-500 group-hover:scale-110"
                   />
-                </div>
+                  {/* Gradient overlay for text readability */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/0 to-transparent" />
 
-                <div className="flex items-start justify-between mb-1">
-                  <p className="text-base font-medium text-gray-900">{pet.name}</p>
+                  {/* Status badge, top-left, on the image */}
+                  <span
+                    className={`absolute top-3 left-3 text-xs font-semibold px-2.5 py-1 rounded-full backdrop-blur-sm ${
+                      pet.status === "SAFE"
+                        ? "bg-green-500/90 text-white"
+                        : "bg-red-500/90 text-white"
+                    }`}
+                  >
+                    {pet.status === "SAFE" ? "Safe" : "Lost"}
+                  </span>
+
+                  {/* Edit button, top-right, on the image */}
                   <button
                     onClick={() => setEditingPet(pet)}
-                    className="flex items-center gap-1 text-xs font-medium text-blue-700
-                               hover:text-blue-800 hover:bg-blue-50 px-2 py-1 rounded-md
-                               cursor-pointer transition-colors shrink-0"
+                    className="absolute top-3 right-3 w-8 h-8 flex items-center justify-center
+                              bg-white/90 hover:bg-white rounded-full cursor-pointer
+                              transition-colors shadow-sm"
+                    aria-label="Edit pet"
                   >
-                    <Pencil size={12} />
-                    Edit
+                    <Pencil size={14} className="text-gray-700" />
                   </button>
+
+                  {/* Name overlaid at the bottom of the image */}
+                  <div className="absolute bottom-0 left-0 right-0 p-3">
+                    <p className="text-white font-semibold text-lg drop-shadow-sm">
+                      {pet.name}
+                    </p>
+                    {pet.breed && (
+                      <p className="text-white/90 text-xs">{pet.breed}</p>
+                    )}
+                  </div>
                 </div>
 
-                {pet.breed && (
-                  <p className="text-sm text-gray-600 mb-1">{pet.breed}</p>
-                )}
-
-                {pet.description && (
-                  <p className="text-xs text-gray-600 mb-1 line-clamp-2">
-                    {pet.description}
-                  </p>
-                )}
-
-                {pet.ifFoundInstructions && (
-                  <p className="text-xs text-gray-500 italic mb-2">
-                    If found: {pet.ifFoundInstructions}
-                  </p>
-                )}
-
-                <span
-                  className={`text-xs font-medium px-2 py-0.5 rounded-full ${
-                    pet.status === "SAFE"
-                      ? "bg-green-100 text-green-700"
-                      : "bg-red-100 text-red-700"
-                  }`}
-                >
-                  {pet.status === "SAFE" ? "Safe" : "Lost"}
-                </span>
+                <div className="p-4">
+                  {pet.description && (
+                    <p className="text-xs text-gray-600 mb-1 line-clamp-2">
+                      {pet.description}
+                    </p>
+                  )}
+                  {pet.ifFoundInstructions && (
+                    <p className="text-xs text-gray-500 italic">
+                      If found: {pet.ifFoundInstructions}
+                    </p>
+                  )}
+                  {!pet.description && !pet.ifFoundInstructions && (
+                    <p className="text-xs text-gray-400">No additional details</p>
+                  )}
+                </div>
               </div>
             ))}
           </div>
