@@ -3,13 +3,15 @@ import { useParams } from "react-router-dom";
 import { Pencil } from "lucide-react";
 import Navbar from "../components/Navbar";
 import { getPetById, updatePet } from "../api/petApi";
+import EditPetModal from "../components/EditPetModal";
 
-// Pet detail page — shows full info and links to the edit modal
+// Pet detail page with an edit modal for updating the pet's info
 function PetDetail() {
   const { id } = useParams();
   const [pet, setPet] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [modalOpen, setModalOpen] = useState(false);
 
   useEffect(() => {
     async function fetchPet() {
@@ -24,6 +26,12 @@ function PetDetail() {
     }
     fetchPet();
   }, [id]);
+
+  async function handleSave(updatedFields) {
+    const updated = await updatePet(id, updatedFields);
+    setPet(updated);
+    setModalOpen(false);
+  }
 
   if (loading) return <p className="text-sm text-gray-600 p-6">Loading...</p>;
   if (error) return <p className="text-sm text-red-700 p-6">{error}</p>;
@@ -42,7 +50,10 @@ function PetDetail() {
 
           <div className="flex items-center justify-between mb-1">
             <h1 className="text-lg font-medium text-gray-900">{pet.name}</h1>
-            <button className="flex items-center gap-1 text-sm text-blue-700 hover:underline">
+            <button
+              onClick={() => setModalOpen(true)}
+              className="flex items-center gap-1 text-sm text-blue-700 hover:underline"
+            >
               <Pencil size={14} />
               Edit
             </button>
@@ -69,6 +80,14 @@ function PetDetail() {
           </span>
         </div>
       </div>
+
+      {modalOpen && (
+        <EditPetModal
+          pet={pet}
+          onClose={() => setModalOpen(false)}
+          onSave={handleSave}
+        />
+      )}
     </div>
   );
 }
