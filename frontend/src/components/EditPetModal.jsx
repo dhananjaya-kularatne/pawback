@@ -33,10 +33,14 @@ function EditPetModal({ pet, onClose, onSave }) {
 
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl p-6 w-full max-w-sm">
+      <div className="bg-white rounded-xl p-6 w-full max-w-sm shadow-lg">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-base font-medium text-gray-900">Edit pet</h2>
-          <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
+          <button
+            onClick={onClose}
+            className="text-gray-500 hover:text-gray-700 hover:bg-gray-100
+                       p-1 rounded-md cursor-pointer transition-colors"
+          >
             <X size={18} />
           </button>
         </div>
@@ -44,7 +48,11 @@ function EditPetModal({ pet, onClose, onSave }) {
         <form onSubmit={handleSubmit} className="space-y-3">
           <div>
             <label className="text-sm text-gray-600">Photo</label>
-            <label className="mt-1 flex items-center justify-center gap-2 border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-600 cursor-pointer hover:bg-gray-50">
+            <label
+              className="mt-1 flex items-center justify-center gap-2 border border-gray-300
+                         rounded-lg px-3 py-2 text-sm text-gray-600 cursor-pointer
+                         hover:bg-gray-50 hover:border-gray-400 transition-colors"
+            >
               <Camera size={16} />
               {image ? image.name : "Change photo (optional)"}
               <input
@@ -62,7 +70,9 @@ function EditPetModal({ pet, onClose, onSave }) {
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm mt-1"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm mt-1
+                         focus:outline-none focus:ring-2 focus:ring-blue-700 focus:border-transparent
+                         transition-shadow"
             />
           </div>
           <div>
@@ -71,7 +81,9 @@ function EditPetModal({ pet, onClose, onSave }) {
               type="text"
               value={breed}
               onChange={(e) => setBreed(e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm mt-1"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm mt-1
+                         focus:outline-none focus:ring-2 focus:ring-blue-700 focus:border-transparent
+                         transition-shadow"
             />
           </div>
           <div>
@@ -80,7 +92,9 @@ function EditPetModal({ pet, onClose, onSave }) {
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={2}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm mt-1"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm mt-1
+                         focus:outline-none focus:ring-2 focus:ring-blue-700 focus:border-transparent
+                         transition-shadow"
             />
           </div>
           <div>
@@ -89,7 +103,9 @@ function EditPetModal({ pet, onClose, onSave }) {
               value={ifFoundInstructions}
               onChange={(e) => setIfFoundInstructions(e.target.value)}
               rows={2}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm mt-1"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm mt-1
+                         focus:outline-none focus:ring-2 focus:ring-blue-700 focus:border-transparent
+                         transition-shadow"
             />
           </div>
 
@@ -98,7 +114,9 @@ function EditPetModal({ pet, onClose, onSave }) {
           <button
             type="submit"
             disabled={saving}
-            className="w-full bg-blue-700 hover:bg-blue-800 text-white text-sm font-medium py-2 rounded-lg disabled:opacity-50"
+            className="w-full bg-blue-700 hover:bg-blue-800 text-white text-sm font-medium
+                       py-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed
+                       cursor-pointer transition-colors shadow-sm hover:shadow"
           >
             {saving ? "Saving..." : "Save changes"}
           </button>
