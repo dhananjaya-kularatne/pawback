@@ -1,16 +1,17 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
 import { Plus, Pencil } from "lucide-react";
 import Navbar from "../components/Navbar";
-import { getMyPets, updatePet } from "../api/petApi";
+import { getMyPets, updatePet, createPet } from "../api/petApi";
 import EditPetModal from "../components/EditPetModal";
+import AddPetModal from "../components/AddPetModal";
 
-// Owner's dashboard — lists all registered pets, with inline editing
+// Owner's dashboard — lists all registered pets, with inline add/edit
 function Dashboard() {
   const [pets, setPets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [editingPet, setEditingPet] = useState(null);
+  const [addModalOpen, setAddModalOpen] = useState(false);
 
   useEffect(() => {
     async function fetchPets() {
@@ -26,12 +27,20 @@ function Dashboard() {
     fetchPets();
   }, []);
 
+  // Saves an edited pet in place in the local list — no reload needed
   async function handleSave(updatedFields, imageFile) {
     const updated = await updatePet(editingPet.id, updatedFields, imageFile);
     setPets((prev) =>
       prev.map((pet) => (pet.id === updated.id ? updated : pet))
     );
     setEditingPet(null);
+  }
+
+  // Adds a newly created pet straight into the local list — no reload needed
+  async function handleAddPet(petData, imageFile) {
+    const newPet = await createPet(petData, imageFile);
+    setPets((prev) => [...prev, newPet]);
+    setAddModalOpen(false);
   }
 
   return (
@@ -65,15 +74,15 @@ function Dashboard() {
       <div className="max-w-5xl mx-auto p-6">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-lg font-medium text-gray-900">My pets</h2>
-          <Link
-            to="/pets/new"
+          <button
+            onClick={() => setAddModalOpen(true)}
             className="flex items-center gap-1.5 bg-blue-700 hover:bg-blue-800
-                      text-white text-sm font-medium px-4 py-2 rounded-lg
-                      shadow-sm hover:shadow transition-all cursor-pointer"
+                       text-white text-sm font-medium px-4 py-2 rounded-lg
+                       shadow-sm hover:shadow transition-all cursor-pointer"
           >
             <Plus size={16} />
             Add pet
-          </Link>
+          </button>
         </div>
 
         {loading && <p className="text-sm text-gray-600">Loading...</p>}
@@ -84,13 +93,13 @@ function Dashboard() {
             <p className="text-sm text-gray-600 mb-3">
               You haven't registered any pets yet.
             </p>
-            <Link
-              to="/pets/new"
+            <button
+              onClick={() => setAddModalOpen(true)}
               className="inline-block bg-blue-700 hover:bg-blue-800 text-white text-sm
                          font-medium px-4 py-2 rounded-lg transition-colors cursor-pointer"
             >
               Register pet
-            </Link>
+            </button>
           </div>
         )}
 
@@ -161,6 +170,13 @@ function Dashboard() {
           pet={editingPet}
           onClose={() => setEditingPet(null)}
           onSave={handleSave}
+        />
+      )}
+
+      {addModalOpen && (
+        <AddPetModal
+          onClose={() => setAddModalOpen(false)}
+          onSave={handleAddPet}
         />
       )}
     </div>
