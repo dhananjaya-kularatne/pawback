@@ -8,6 +8,7 @@ import com.pawback.pawback.service.PetService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
+
 import java.util.List;
 
 import org.springframework.http.HttpStatus;
@@ -21,6 +22,7 @@ import org.springframework.web.multipart.MultipartFile;
 public class PetController {
 
     private final PetService petService;
+    
 
     @PostMapping(consumes = "multipart/form-data")
     public ResponseEntity<ApiResponse<PetResponse>> createPet(
@@ -45,12 +47,13 @@ public class PetController {
     }
 
     // Updates an existing pet — only the owning user may perform this
-    @PutMapping("/{id}")
+    @PutMapping(value = "/{id}", consumes = "multipart/form-data")
     public ResponseEntity<ApiResponse<PetResponse>> updatePet(
             @PathVariable Long id,
-            @RequestBody UpdatePetRequest request) {
+            @RequestPart("pet") @Valid UpdatePetRequest request,
+            @RequestParam(value = "image", required = false) MultipartFile image) {
 
-        PetResponse response = petService.updatePet(id, request);
+        PetResponse response = petService.updatePet(id, request, image);
 
         return ResponseEntity.ok(
                 ApiResponse.success("Pet updated successfully", response)

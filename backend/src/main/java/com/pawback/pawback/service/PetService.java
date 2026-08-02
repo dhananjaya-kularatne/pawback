@@ -78,8 +78,8 @@ public class PetService {
                 .toList();
     }
 
-    // Updates an existing pet's details — only the owning user may perform this
-    public PetResponse updatePet(Long petId, UpdatePetRequest request) {
+    // Updates an existing pet's details, including an optional new photo
+    public PetResponse updatePet(Long petId, UpdatePetRequest request, MultipartFile image) {
 
         Long ownerId = getCurrentOwnerId();
 
@@ -95,6 +95,12 @@ public class PetService {
         pet.setBreed(request.getBreed());
         pet.setDescription(request.getDescription());
         pet.setIfFoundInstructions(request.getIfFoundInstructions());
+
+        // Only replace the photo if a new one was actually provided
+        if (image != null && !image.isEmpty()) {
+            String newPhotoUrl = cloudinaryService.uploadPetImage(image);
+            pet.setPhotoUrl(newPhotoUrl);
+        }
 
         Pet updatedPet = petRepository.save(pet);
 

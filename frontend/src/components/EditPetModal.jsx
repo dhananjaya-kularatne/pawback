@@ -1,7 +1,6 @@
 import { useState } from "react";
-import { X } from "lucide-react";
+import { X, Camera } from "lucide-react";
 
-// Modal for editing a pet's details, opened from the pet detail page
 function EditPetModal({ pet, onClose, onSave }) {
   const [name, setName] = useState(pet.name);
   const [breed, setBreed] = useState(pet.breed || "");
@@ -9,6 +8,7 @@ function EditPetModal({ pet, onClose, onSave }) {
   const [ifFoundInstructions, setIfFoundInstructions] = useState(
     pet.ifFoundInstructions || ""
   );
+  const [image, setImage] = useState(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
@@ -23,7 +23,7 @@ function EditPetModal({ pet, onClose, onSave }) {
 
     setSaving(true);
     try {
-      await onSave({ name, breed, description, ifFoundInstructions });
+      await onSave({ name, breed, description, ifFoundInstructions }, image);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -42,6 +42,20 @@ function EditPetModal({ pet, onClose, onSave }) {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-3">
+          <div>
+            <label className="text-sm text-gray-600">Photo</label>
+            <label className="mt-1 flex items-center justify-center gap-2 border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-600 cursor-pointer hover:bg-gray-50">
+              <Camera size={16} />
+              {image ? image.name : "Change photo (optional)"}
+              <input
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => setImage(e.target.files[0])}
+              />
+            </label>
+          </div>
+
           <div>
             <label className="text-sm text-gray-600">Name</label>
             <input

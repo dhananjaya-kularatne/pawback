@@ -50,12 +50,22 @@ export async function getPetById(petId) {
   return result.data;
 }
 
-// Updates an existing pet's editable fields
-export async function updatePet(petId, petData) {
+// Updates an existing pet, with an optional new photo
+export async function updatePet(petId, petData, imageFile) {
+  const formData = new FormData();
+
+  const petBlob = new Blob([JSON.stringify(petData)], {
+    type: "application/json",
+  });
+  formData.append("pet", petBlob);
+
+  if (imageFile) {
+    formData.append("image", imageFile);
+  }
+
   const response = await fetch(`${API_BASE_URL}/pets/${petId}`, {
     method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(petData),
+    body: formData,
   });
 
   const result = await response.json();

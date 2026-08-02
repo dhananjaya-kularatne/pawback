@@ -27,11 +27,11 @@ function PetDetail() {
     fetchPet();
   }, [id]);
 
-  async function handleSave(updatedFields) {
-    const updated = await updatePet(id, updatedFields);
-    setPet(updated);
-    setModalOpen(false);
-  }
+  async function handleSave(updatedFields, imageFile) {
+  const updated = await updatePet(id, updatedFields, imageFile);
+  setPet(updated);
+  setModalOpen(false);
+  }   
 
   if (loading) return <p className="text-sm text-gray-600 p-6">Loading...</p>;
   if (error) return <p className="text-sm text-red-700 p-6">{error}</p>;
