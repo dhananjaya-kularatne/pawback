@@ -1,14 +1,16 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Plus } from "lucide-react";
+import { Plus, Pencil } from "lucide-react";
 import Navbar from "../components/Navbar";
-import { getMyPets } from "../api/petApi";
+import { getMyPets, updatePet } from "../api/petApi";
+import EditPetModal from "../components/EditPetModal";
 
-// Owner's dashboard — lists all registered pets, or an empty state if none exist
+// Owner's dashboard — lists all registered pets, with inline editing
 function Dashboard() {
   const [pets, setPets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [editingPet, setEditingPet] = useState(null);
 
   // Load the owner's pets once, when the dashboard first renders
   useEffect(() => {
@@ -25,6 +27,16 @@ function Dashboard() {
     fetchPets();
   }, []);
 
+  // Saves the edited pet and updates it in place in the local list —
+  // no full page reload or re-fetch needed
+  async function handleSave(updatedFields, imageFile) {
+    const updated = await updatePet(editingPet.id, updatedFields, imageFile);
+    setPets((prev) =>
+      prev.map((pet) => (pet.id === updated.id ? updated : pet))
+    );
+    setEditingPet(null);
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
@@ -32,7 +44,7 @@ function Dashboard() {
       <div className="max-w-5xl mx-auto p-6">
         <div className="flex justify-between items-center mb-4">
           <h1 className="text-lg font-medium text-gray-900">My pets</h1>
-            <Link
+          <Link
             to="/pets/new"
             className="flex items-center gap-1.5 bg-blue-700 hover:bg-blue-800
                       text-white text-sm font-medium px-4 py-2 rounded-lg
@@ -63,8 +75,7 @@ function Dashboard() {
         {!loading && !error && pets.length > 0 && (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
             {pets.map((pet) => (
-              <Link
-                to={`/pets/${pet.id}`}
+              <div
                 key={pet.id}
                 className="bg-white border border-gray-300 rounded-xl p-4"
               >
@@ -73,7 +84,17 @@ function Dashboard() {
                   alt={pet.name}
                   className="w-full h-48 object-cover rounded-lg mb-3"
                 />
-                <p className="text-base font-medium text-gray-900">{pet.name}</p>
+
+                <div className="flex items-start justify-between mb-1">
+                  <p className="text-base font-medium text-gray-900">{pet.name}</p>
+                  <button
+                    onClick={() => setEditingPet(pet)}
+                    className="flex items-center gap-1 text-xs text-blue-700 hover:underline shrink-0"
+                  >
+                    <Pencil size={12} />
+                    Edit
+                  </button>
+                </div>
 
                 {pet.breed && (
                   <p className="text-sm text-gray-600 mb-1">{pet.breed}</p>
@@ -100,11 +121,19 @@ function Dashboard() {
                 >
                   {pet.status === "SAFE" ? "Safe" : "Lost"}
                 </span>
-              </Link>
+              </div>
             ))}
           </div>
         )}
       </div>
+
+      {editingPet && (
+        <EditPetModal
+          pet={editingPet}
+          onClose={() => setEditingPet(null)}
+          onSave={handleSave}
+        />
+      )}
     </div>
   );
 }
