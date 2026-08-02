@@ -100,4 +100,18 @@ public class PetService {
 
         return mapToResponse(updatedPet);
     }
+
+    // Returns a single pet by id — only if it belongs to the current owner
+    public PetResponse getPetById(Long petId) {
+        Long ownerId = getCurrentOwnerId();
+
+        Pet pet = petRepository.findById(petId)
+                .orElseThrow(() -> new RuntimeException("Pet not found"));
+
+        if (!pet.getOwner().getId().equals(ownerId)) {
+            throw new RuntimeException("You do not have permission to view this pet");
+        }
+
+        return mapToResponse(pet);
+    }
 }

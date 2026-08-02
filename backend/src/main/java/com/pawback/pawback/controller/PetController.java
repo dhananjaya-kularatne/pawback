@@ -56,4 +56,10 @@ public class PetController {
                 ApiResponse.success("Pet updated successfully", response)
         );
     }
+    // Returns a single pet by id, if owned by the current user
+    @GetMapping("/{id}")
+    public ResponseEntity<ApiResponse<PetResponse>> getPetById(@PathVariable Long id) {
+        PetResponse response = petService.getPetById(id);
+        return ResponseEntity.ok(ApiResponse.success("Pet retrieved successfully", response));
+    }
 }
