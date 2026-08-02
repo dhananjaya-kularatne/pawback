@@ -12,7 +12,6 @@ function Dashboard() {
   const [error, setError] = useState("");
   const [editingPet, setEditingPet] = useState(null);
 
-  // Load the owner's pets once, when the dashboard first renders
   useEffect(() => {
     async function fetchPets() {
       try {
@@ -27,8 +26,6 @@ function Dashboard() {
     fetchPets();
   }, []);
 
-  // Saves the edited pet and updates it in place in the local list —
-  // no full page reload or re-fetch needed
   async function handleSave(updatedFields, imageFile) {
     const updated = await updatePet(editingPet.id, updatedFields, imageFile);
     setPets((prev) =>
@@ -38,17 +35,41 @@ function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Navbar />
+    <div className="min-h-screen bg-slate-50">
+      {/* Navbar + welcome banner share one continuous blue background */}
+      <div className="bg-gradient-to-br from-blue-700 to-blue-900 relative overflow-hidden">
+        <div className="absolute inset-0 opacity-10">
+          <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <pattern id="paw-pattern" x="0" y="0" width="60" height="60" patternUnits="userSpaceOnUse">
+                <circle cx="30" cy="30" r="2" fill="white" />
+              </pattern>
+            </defs>
+            <rect width="100%" height="100%" fill="url(#paw-pattern)" />
+          </svg>
+        </div>
+
+        <div className="relative">
+          <Navbar />
+          <div className="max-w-5xl mx-auto px-6 pb-10">
+            <h1 className="text-2xl font-semibold text-white mb-1">
+              Welcome back, Dhananjaya
+            </h1>
+            <p className="text-blue-100 text-sm">
+              Keep your pets' profiles up to date so they can always find their way home.
+            </p>
+          </div>
+        </div>
+      </div>
 
       <div className="max-w-5xl mx-auto p-6">
         <div className="flex justify-between items-center mb-4">
-          <h1 className="text-lg font-medium text-gray-900">My pets</h1>
+          <h2 className="text-lg font-medium text-gray-900">My pets</h2>
           <Link
             to="/pets/new"
             className="flex items-center gap-1.5 bg-blue-700 hover:bg-blue-800
-                       text-white text-sm font-medium px-4 py-2 rounded-lg
-                       shadow-sm hover:shadow transition-all cursor-pointer"
+                      text-white text-sm font-medium px-4 py-2 rounded-lg
+                      shadow-sm hover:shadow transition-all cursor-pointer"
           >
             <Plus size={16} />
             Add pet
