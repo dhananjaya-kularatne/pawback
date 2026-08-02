@@ -1,6 +1,7 @@
 package com.pawback.pawback.service;
 
 import com.pawback.pawback.dto.request.CreatePetRequest;
+import com.pawback.pawback.dto.request.UpdatePetRequest;
 import com.pawback.pawback.dto.response.PetResponse;
 import com.pawback.pawback.model.Pet;
 import com.pawback.pawback.model.PetStatus;
@@ -75,5 +76,48 @@ public class PetService {
         return pets.stream()
                 .map(this::mapToResponse)
                 .toList();
+    }
+
+    // Updates an existing pet's details, including an optional new photo
+    public PetResponse updatePet(Long petId, UpdatePetRequest request, MultipartFile image) {
+
+        Long ownerId = getCurrentOwnerId();
+
+        Pet pet = petRepository.findById(petId)
+                .orElseThrow(() -> new RuntimeException("Pet not found"));
+
+        // Ownership check — enforced here, server-side
+        if (!pet.getOwner().getId().equals(ownerId)) {
+            throw new RuntimeException("You do not have permission to edit this pet");
+        }
+
+        pet.setName(request.getName());
+        pet.setBreed(request.getBreed());
+        pet.setDescription(request.getDescription());
+        pet.setIfFoundInstructions(request.getIfFoundInstructions());
+
+        // Only replace the photo if a new one was actually provided
+        if (image != null && !image.isEmpty()) {
+            String newPhotoUrl = cloudinaryService.uploadPetImage(image);
+            pet.setPhotoUrl(newPhotoUrl);
+        }
+
+        Pet updatedPet = petRepository.save(pet);
+
+        return mapToResponse(updatedPet);
+    }
+
+    // Returns a single pet by id — only if it belongs to the current owner
+    public PetResponse getPetById(Long petId) {
+        Long ownerId = getCurrentOwnerId();
+
+        Pet pet = petRepository.findById(petId)
+                .orElseThrow(() -> new RuntimeException("Pet not found"));
+
+        if (!pet.getOwner().getId().equals(ownerId)) {
+            throw new RuntimeException("You do not have permission to view this pet");
+        }
+
+        return mapToResponse(pet);
     }
 }

@@ -1,11 +1,13 @@
 package com.pawback.pawback.controller;
 
 import com.pawback.pawback.dto.request.CreatePetRequest;
+import com.pawback.pawback.dto.request.UpdatePetRequest;
 import com.pawback.pawback.dto.response.ApiResponse;
 import com.pawback.pawback.dto.response.PetResponse;
 import com.pawback.pawback.service.PetService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+
 
 import java.util.List;
 
@@ -20,6 +22,7 @@ import org.springframework.web.multipart.MultipartFile;
 public class PetController {
 
     private final PetService petService;
+    
 
     @PostMapping(consumes = "multipart/form-data")
     public ResponseEntity<ApiResponse<PetResponse>> createPet(
@@ -41,5 +44,25 @@ public class PetController {
         return ResponseEntity.ok(
                 ApiResponse.success("Pets retrieved successfully", pets)
         );
+    }
+
+    // Updates an existing pet — only the owning user may perform this
+    @PutMapping(value = "/{id}", consumes = "multipart/form-data")
+    public ResponseEntity<ApiResponse<PetResponse>> updatePet(
+            @PathVariable Long id,
+            @RequestPart("pet") @Valid UpdatePetRequest request,
+            @RequestParam(value = "image", required = false) MultipartFile image) {
+
+        PetResponse response = petService.updatePet(id, request, image);
+
+        return ResponseEntity.ok(
+                ApiResponse.success("Pet updated successfully", response)
+        );
+    }
+    // Returns a single pet by id, if owned by the current user
+    @GetMapping("/{id}")
+    public ResponseEntity<ApiResponse<PetResponse>> getPetById(@PathVariable Long id) {
+        PetResponse response = petService.getPetById(id);
+        return ResponseEntity.ok(ApiResponse.success("Pet retrieved successfully", response));
     }
 }
