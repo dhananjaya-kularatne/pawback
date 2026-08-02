@@ -47,8 +47,8 @@ function Dashboard() {
           <Link
             to="/pets/new"
             className="flex items-center gap-1.5 bg-blue-700 hover:bg-blue-800
-                      text-white text-sm font-medium px-4 py-2 rounded-lg
-                      shadow-sm transition-colors"
+                       text-white text-sm font-medium px-4 py-2 rounded-lg
+                       shadow-sm hover:shadow transition-all cursor-pointer"
           >
             <Plus size={16} />
             Add pet
@@ -65,7 +65,8 @@ function Dashboard() {
             </p>
             <Link
               to="/pets/new"
-              className="inline-block bg-blue-700 hover:bg-blue-800 text-white text-sm font-medium px-4 py-2 rounded-lg"
+              className="inline-block bg-blue-700 hover:bg-blue-800 text-white text-sm
+                         font-medium px-4 py-2 rounded-lg transition-colors cursor-pointer"
             >
               Register pet
             </Link>
@@ -77,19 +78,26 @@ function Dashboard() {
             {pets.map((pet) => (
               <div
                 key={pet.id}
-                className="bg-white border border-gray-300 rounded-xl p-4"
+                className="bg-white border border-gray-200 rounded-xl p-4
+                           shadow-sm hover:shadow-md hover:-translate-y-0.5
+                           transition-all duration-200"
               >
-                <img
-                  src={pet.photoUrl}
-                  alt={pet.name}
-                  className="w-full h-48 object-cover rounded-lg mb-3"
-                />
+                <div className="relative overflow-hidden rounded-lg mb-3">
+                  <img
+                    src={pet.photoUrl}
+                    alt={pet.name}
+                    className="w-full h-48 object-cover transition-transform
+                               duration-300 hover:scale-105"
+                  />
+                </div>
 
                 <div className="flex items-start justify-between mb-1">
                   <p className="text-base font-medium text-gray-900">{pet.name}</p>
                   <button
                     onClick={() => setEditingPet(pet)}
-                    className="flex items-center gap-1 text-xs text-blue-700 hover:underline shrink-0"
+                    className="flex items-center gap-1 text-xs font-medium text-blue-700
+                               hover:text-blue-800 hover:bg-blue-50 px-2 py-1 rounded-md
+                               cursor-pointer transition-colors shrink-0"
                   >
                     <Pencil size={12} />
                     Edit
