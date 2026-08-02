@@ -63,7 +63,8 @@ function Dashboard() {
         {!loading && !error && pets.length > 0 && (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
             {pets.map((pet) => (
-              <div
+              <Link
+                to={`/pets/${pet.id}`}
                 key={pet.id}
                 className="bg-white border border-gray-300 rounded-xl p-4"
               >
@@ -99,7 +100,7 @@ function Dashboard() {
                 >
                   {pet.status === "SAFE" ? "Safe" : "Lost"}
                 </span>
-              </div>
+              </Link>
             ))}
           </div>
         )}
