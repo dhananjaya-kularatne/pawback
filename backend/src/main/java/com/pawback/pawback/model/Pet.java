@@ -28,6 +28,8 @@ public class Pet {
 
     @Column(nullable = false)
     private String photoUrl;
+    
+    private String qrCodeUrl;
 
     private String breed;
     private String description;
