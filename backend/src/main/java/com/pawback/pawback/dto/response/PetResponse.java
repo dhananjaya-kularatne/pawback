@@ -19,4 +19,5 @@ public class PetResponse {
     private String ifFoundInstructions;
     private String photoUrl;
     private PetStatus status;
+    private String qrCodeUrl;
 }
