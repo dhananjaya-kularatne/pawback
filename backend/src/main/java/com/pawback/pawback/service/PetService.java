@@ -22,6 +22,7 @@ public class PetService {
     private final PetRepository petRepository;
     private final UserRepository userRepository;
     private final CloudinaryService cloudinaryService;
+    private final QrCodeService qrCodeService;
 
     public PetResponse createPet(CreatePetRequest request, MultipartFile image) {
 
@@ -45,6 +46,11 @@ public class PetService {
 
         Pet savedPet = petRepository.save(pet);
 
+        // Generate the QR code now that petUuid is confirmed, then attach and re-save
+        String qrCodeUrl = qrCodeService.generateAndUploadQrCode(savedPet.getPetUuid().toString());
+        savedPet.setQrCodeUrl(qrCodeUrl);
+        savedPet = petRepository.save(savedPet);
+
         return mapToResponse(savedPet);
     }
 
@@ -61,6 +67,7 @@ public class PetService {
                 .description(pet.getDescription())
                 .ifFoundInstructions(pet.getIfFoundInstructions())
                 .photoUrl(pet.getPhotoUrl())
+                .qrCodeUrl(pet.getQrCodeUrl())
                 .status(pet.getStatus())
                 .build();
     }
