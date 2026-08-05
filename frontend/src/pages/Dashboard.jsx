@@ -1,17 +1,19 @@
 import { useEffect, useState } from "react";
-import { Plus, Pencil } from "lucide-react";
+import { Plus, Pencil, QrCode as QrCodeIcon } from "lucide-react";
 import Navbar from "../components/Navbar";
 import { getMyPets, updatePet, createPet } from "../api/petApi";
 import EditPetModal from "../components/EditPetModal";
 import AddPetModal from "../components/AddPetModal";
+import QrCodeModal from "../components/QrCodeModal";
 
-// Owner's dashboard — lists all registered pets, with inline add/edit
+// Owner's dashboard — lists all registered pets, with inline add/edit/QR view
 function Dashboard() {
   const [pets, setPets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [editingPet, setEditingPet] = useState(null);
   const [addModalOpen, setAddModalOpen] = useState(false);
+  const [viewingQrPet, setViewingQrPet] = useState(null);
 
   useEffect(() => {
     async function fetchPets() {
@@ -132,6 +134,17 @@ function Dashboard() {
                     {pet.status === "SAFE" ? "Safe" : "Lost"}
                   </span>
 
+                  {/* View QR button, top-right (left of Edit), on the image */}
+                  <button
+                    onClick={() => setViewingQrPet(pet)}
+                    className="absolute top-3 right-12 w-8 h-8 flex items-center justify-center
+                              bg-white/90 hover:bg-white rounded-full cursor-pointer
+                              transition-colors shadow-sm"
+                    aria-label="View QR code"
+                  >
+                    <QrCodeIcon size={14} className="text-gray-700" />
+                  </button>
+
                   {/* Edit button, top-right, on the image */}
                   <button
                     onClick={() => setEditingPet(pet)}
@@ -187,6 +200,13 @@ function Dashboard() {
         <AddPetModal
           onClose={() => setAddModalOpen(false)}
           onSave={handleAddPet}
+        />
+      )}
+
+      {viewingQrPet && (
+        <QrCodeModal
+          pet={viewingQrPet}
+          onClose={() => setViewingQrPet(null)}
         />
       )}
     </div>
