@@ -3,6 +3,12 @@ import { Link, useNavigate } from "react-router-dom";
 import { PawPrint, User, Mail, Lock, Phone, ArrowRight } from "lucide-react";
 import { registerUser } from "../api/authApi";
 
+// Checks that a password is at least 8 characters and includes an
+// uppercase letter, a number, and a special character
+function isPasswordValid(pwd) {
+  return /^(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*(),.?":{}|<>]).{8,}$/.test(pwd);
+}
+
 // Registration page allowing new pet owners to create an account with email and password
 function Register() {
   const [name, setName] = useState("");
@@ -21,6 +27,14 @@ function Register() {
     e.preventDefault();
     setError("");
     setPasswordError("");
+
+    // Inline client-side check for password strength before sending request
+    if (!isPasswordValid(password)) {
+      setPasswordError(
+        "Password must be at least 8 characters and include an uppercase letter, a number, and a special character"
+      );
+      return;
+    }
 
     // Inline client-side check for matching passwords before sending request
     if (password !== confirmPassword) {
@@ -174,8 +188,8 @@ function Register() {
                   id="password"
                   type="password"
                   required
-                  minLength={6}
-                  placeholder="At least 6 characters"
+                  minLength={8}
+                  placeholder="8+ characters, 1 uppercase, 1 number, 1 special character"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="w-full pl-9 pr-3 py-2 text-sm border border-gray-300 rounded-lg
@@ -204,11 +218,10 @@ function Register() {
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   className={`w-full pl-9 pr-3 py-2 text-sm border rounded-lg
-                             focus:outline-none focus:ring-2 focus:ring-blue-700 transition-shadow text-gray-900 ${
-                               passwordError
-                                 ? "border-red-500 bg-red-50/30"
-                                 : "border-gray-300"
-                             }`}
+                             focus:outline-none focus:ring-2 focus:ring-blue-700 transition-shadow text-gray-900 ${passwordError
+                      ? "border-red-500 bg-red-50/30"
+                      : "border-gray-300"
+                    }`}
                 />
               </div>
               {passwordError && (
