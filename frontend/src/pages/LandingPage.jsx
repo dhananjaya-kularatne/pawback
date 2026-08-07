@@ -8,6 +8,9 @@ import { registerUser } from "../api/authApi";
 function LandingPage() {
   const navigate = useNavigate();
 
+  // Derive auth state from token presence — no global auth context needed yet
+  const isLoggedIn = Boolean(localStorage.getItem("token"));
+
   // null = closed, true = open — follows the team modal state pattern
   const [registerOpen, setRegisterOpen] = useState(false);
 
@@ -68,19 +71,31 @@ function LandingPage() {
           </Link>
 
           <div className="flex items-center gap-4">
-            <Link
-              to="/dashboard"
-              className="text-sm font-medium text-blue-100 hover:text-white transition-colors"
-            >
-              Sign in
-            </Link>
-            <button
-              onClick={openRegister}
-              className="bg-white text-blue-800 hover:bg-blue-50 text-sm font-semibold
-                         px-4 py-2 rounded-lg shadow-sm hover:shadow transition-all cursor-pointer"
-            >
-              Register
-            </button>
+            {isLoggedIn ? (
+              <Link
+                to="/dashboard"
+                className="bg-white text-blue-800 hover:bg-blue-50 text-sm font-semibold
+                           px-4 py-2 rounded-lg shadow-sm hover:shadow transition-all"
+              >
+                Go to Dashboard
+              </Link>
+            ) : (
+              <>
+                <Link
+                  to="/dashboard"
+                  className="text-sm font-medium text-blue-100 hover:text-white transition-colors"
+                >
+                  Sign in
+                </Link>
+                <button
+                  onClick={openRegister}
+                  className="bg-white text-blue-800 hover:bg-blue-50 text-sm font-semibold
+                             px-4 py-2 rounded-lg shadow-sm hover:shadow transition-all cursor-pointer"
+                >
+                  Register
+                </button>
+              </>
+            )}
           </div>
         </div>
       </header>
@@ -115,23 +130,37 @@ function LandingPage() {
             </p>
 
             <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 pt-2">
-              <button
-                onClick={openRegister}
-                className="w-full sm:w-auto bg-white text-blue-800 hover:bg-blue-50 text-base
-                           font-semibold px-7 py-3.5 rounded-xl shadow-lg hover:shadow-xl
-                           hover:-translate-y-0.5 transition-all cursor-pointer flex items-center justify-center gap-2"
-              >
-                Register your pet
-                <ArrowRight size={18} />
-              </button>
+              {isLoggedIn ? (
+                <button
+                  onClick={() => navigate("/dashboard")}
+                  className="w-full sm:w-auto bg-white text-blue-800 hover:bg-blue-50 text-base
+                             font-semibold px-7 py-3.5 rounded-xl shadow-lg hover:shadow-xl
+                             hover:-translate-y-0.5 transition-all cursor-pointer flex items-center justify-center gap-2"
+                >
+                  Go to Dashboard
+                  <ArrowRight size={18} />
+                </button>
+              ) : (
+                <>
+                  <button
+                    onClick={openRegister}
+                    className="w-full sm:w-auto bg-white text-blue-800 hover:bg-blue-50 text-base
+                               font-semibold px-7 py-3.5 rounded-xl shadow-lg hover:shadow-xl
+                               hover:-translate-y-0.5 transition-all cursor-pointer flex items-center justify-center gap-2"
+                  >
+                    Register your pet
+                    <ArrowRight size={18} />
+                  </button>
 
-              <button
-                onClick={() => navigate("/dashboard")}
-                className="w-full sm:w-auto border border-white/30 hover:bg-white/10 text-white
-                           text-base font-medium px-7 py-3.5 rounded-xl transition-all cursor-pointer"
-              >
-                Explore Dashboard
-              </button>
+                  <button
+                    onClick={() => navigate("/dashboard")}
+                    className="w-full sm:w-auto border border-white/30 hover:bg-white/10 text-white
+                               text-base font-medium px-7 py-3.5 rounded-xl transition-all cursor-pointer"
+                  >
+                    Explore Dashboard
+                  </button>
+                </>
+              )}
             </div>
           </div>
 
@@ -209,15 +238,27 @@ function LandingPage() {
         <div className="max-w-4xl mx-auto text-center space-y-6">
           <h2 className="text-3xl font-bold tracking-tight">Ready to protect your pet?</h2>
           <p className="text-gray-300 text-base max-w-xl mx-auto">
-            It takes less than 2 minutes to create an account and register your pet's first profile.
+            {isLoggedIn
+              ? "Welcome back! Head to your dashboard to manage your pets."
+              : "It takes less than 2 minutes to create an account and register your pet's first profile."}
           </p>
-          <button
-            onClick={openRegister}
-            className="bg-blue-700 hover:bg-blue-800 text-white font-semibold
-                       px-8 py-3.5 rounded-xl shadow-md transition-all cursor-pointer"
-          >
-            Get Started for Free
-          </button>
+          {isLoggedIn ? (
+            <button
+              onClick={() => navigate("/dashboard")}
+              className="bg-blue-700 hover:bg-blue-800 text-white font-semibold
+                         px-8 py-3.5 rounded-xl shadow-md transition-all cursor-pointer"
+            >
+              Go to Dashboard
+            </button>
+          ) : (
+            <button
+              onClick={openRegister}
+              className="bg-blue-700 hover:bg-blue-800 text-white font-semibold
+                         px-8 py-3.5 rounded-xl shadow-md transition-all cursor-pointer"
+            >
+              Get Started for Free
+            </button>
+          )}
         </div>
       </section>
 
@@ -232,7 +273,9 @@ function LandingPage() {
             Built with <Heart size={12} className="text-red-500 fill-red-500 mx-1" /> for pet owners everywhere.
           </p>
           <div className="flex items-center gap-6">
-            <button onClick={openRegister} className="hover:text-gray-900 transition-colors cursor-pointer">Register</button>
+            {!isLoggedIn && (
+              <button onClick={openRegister} className="hover:text-gray-900 transition-colors cursor-pointer">Register</button>
+            )}
             <Link to="/dashboard" className="hover:text-gray-900 transition-colors">Dashboard</Link>
           </div>
         </div>
