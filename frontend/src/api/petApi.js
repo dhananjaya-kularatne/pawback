@@ -76,3 +76,20 @@ export async function updatePet(petId, petData, imageFile) {
 
   return result.data;
 }
+
+// Toggles a pet's status between SAFE and LOST
+export async function updatePetStatus(petId, status) {
+  const response = await fetch(`${API_BASE_URL}/pets/${petId}/status`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ status }),
+  });
+
+  const result = await response.json();
+
+  if (!response.ok) {
+    throw new Error(result.message || "Failed to update pet status");
+  }
+
+  return result.data;
+}
