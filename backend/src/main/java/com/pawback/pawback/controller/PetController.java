@@ -2,6 +2,7 @@ package com.pawback.pawback.controller;
 
 import com.pawback.pawback.dto.request.CreatePetRequest;
 import com.pawback.pawback.dto.request.UpdatePetRequest;
+import com.pawback.pawback.dto.request.UpdateStatusRequest;
 import com.pawback.pawback.dto.response.ApiResponse;
 import com.pawback.pawback.dto.response.PetResponse;
 import com.pawback.pawback.service.PetService;
@@ -65,4 +66,18 @@ public class PetController {
         PetResponse response = petService.getPetById(id);
         return ResponseEntity.ok(ApiResponse.success("Pet retrieved successfully", response));
     }
+
+    // Updates a pet's Lost/Safe status
+    @PatchMapping("/{id}/status")
+    public ResponseEntity<ApiResponse<PetResponse>> updateStatus(
+            @PathVariable Long id,
+            @RequestBody @Valid UpdateStatusRequest request) {
+
+        PetResponse response = petService.updateStatus(id, request.getStatus());
+
+        return ResponseEntity.ok(
+                ApiResponse.success("Pet status updated successfully", response)
+        );
+    }
+
 }
