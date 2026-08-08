@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
 import { Plus, Pencil, QrCode as QrCodeIcon } from "lucide-react";
 import Navbar from "../components/Navbar";
-import { getMyPets, updatePet, createPet } from "../api/petApi";
+import { getMyPets, updatePet, createPet, updatePetStatus } from "../api/petApi";
 import EditPetModal from "../components/EditPetModal";
 import AddPetModal from "../components/AddPetModal";
 import QrCodeModal from "../components/QrCodeModal";
 
-// Owner's dashboard — lists all registered pets, with inline add/edit/QR view
+// Owner's dashboard — lists all registered pets, with inline add/edit/QR view/status toggle
 function Dashboard() {
   const [pets, setPets] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -43,6 +43,19 @@ function Dashboard() {
     const newPet = await createPet(petData, imageFile);
     setPets((prev) => [...prev, newPet]);
     setAddModalOpen(false);
+  }
+
+  // Toggles a pet's status between SAFE and LOST, updating in place
+  async function handleToggleStatus(pet) {
+    const newStatus = pet.status === "SAFE" ? "LOST" : "SAFE";
+    try {
+      const updated = await updatePetStatus(pet.id, newStatus);
+      setPets((prev) =>
+        prev.map((p) => (p.id === updated.id ? updated : p))
+      );
+    } catch (err) {
+      console.error(err.message);
+    }
   }
 
   return (
@@ -123,16 +136,19 @@ function Dashboard() {
                   {/* Gradient overlay for text readability */}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/0 to-transparent" />
 
-                  {/* Status badge, top-left, on the image */}
-                  <span
-                    className={`absolute top-3 left-3 text-xs font-semibold px-2.5 py-1 rounded-full backdrop-blur-sm ${
+                  {/* Status badge, top-left, on the image — now a clickable toggle */}
+                  <button
+                    onClick={() => handleToggleStatus(pet)}
+                    className={`absolute top-3 left-3 text-xs font-semibold px-2.5 py-1 rounded-full
+                               backdrop-blur-sm cursor-pointer transition-colors ${
                       pet.status === "SAFE"
-                        ? "bg-green-500/90 text-white"
-                        : "bg-red-500/90 text-white"
+                        ? "bg-green-500/90 hover:bg-green-600/90 text-white"
+                        : "bg-red-500/90 hover:bg-red-600/90 text-white"
                     }`}
+                    title={`Click to mark as ${pet.status === "SAFE" ? "Lost" : "Safe"}`}
                   >
                     {pet.status === "SAFE" ? "Safe" : "Lost"}
-                  </span>
+                  </button>
 
                   {/* View QR button, top-right (left of Edit), on the image */}
                   <button
