@@ -65,6 +65,14 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
                 .body(ApiResponse.error(409, exception.getMessage()));
     }
 
+    // --- Invalid login credentials ---
+    @ExceptionHandler(InvalidCredentialsException.class)
+    public ResponseEntity<ApiResponse<Void>> handleInvalidCredentials(
+            InvalidCredentialsException exception, HttpServletRequest request) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(ApiResponse.error(401, exception.getMessage()));
+    }
+
     // --- Catch-all fallback for anything unhandled ---
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<ApiResponse<Void>> handleRuntimeException(
