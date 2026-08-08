@@ -129,20 +129,20 @@ public class PetService {
     }
 
     // Updates a pet's status (Safe/Lost) — only the owning user may perform this
-public PetResponse updateStatus(Long petId, PetStatus newStatus) {
+    public PetResponse updateStatus(Long petId, PetStatus newStatus) {
 
-    Long ownerId = getCurrentOwnerId();
+        Long ownerId = getCurrentOwnerId();
 
-    Pet pet = petRepository.findById(petId)
-            .orElseThrow(() -> new RuntimeException("Pet not found"));
+        Pet pet = petRepository.findById(petId)
+                .orElseThrow(() -> new RuntimeException("Pet not found"));
 
-    if (!pet.getOwner().getId().equals(ownerId)) {
-        throw new RuntimeException("You do not have permission to change this pet's status");
+        if (!pet.getOwner().getId().equals(ownerId)) {
+            throw new RuntimeException("You do not have permission to change this pet's status");
+        }
+
+        pet.setStatus(newStatus);
+        Pet updatedPet = petRepository.save(pet);
+
+        return mapToResponse(updatedPet);
     }
-
-    pet.setStatus(newStatus);
-    Pet updatedPet = petRepository.save(pet);
-
-    return mapToResponse(updatedPet);
-}
 }
