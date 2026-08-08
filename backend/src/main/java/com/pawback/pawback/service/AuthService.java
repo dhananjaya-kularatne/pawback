@@ -1,9 +1,11 @@
 package com.pawback.pawback.service;
 
+import com.pawback.pawback.dto.request.LoginRequest;
 import com.pawback.pawback.dto.request.RegisterRequest;
 import com.pawback.pawback.dto.response.AuthResponse;
 import com.pawback.pawback.dto.response.UserResponse;
 import com.pawback.pawback.exception.EmailAlreadyExistsException;
+import com.pawback.pawback.exception.InvalidCredentialsException;
 import com.pawback.pawback.model.AuthProvider;
 import com.pawback.pawback.model.Role;
 import com.pawback.pawback.model.User;
@@ -45,6 +47,24 @@ public class AuthService {
         return AuthResponse.builder()
                 .token(token)
                 .user(UserResponse.fromUser(savedUser))
+                .build();
+    }
+
+    // Authenticates a user with email and password, returning JWT token
+    @Transactional(readOnly = true)
+    public AuthResponse login(LoginRequest request) {
+        User user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new InvalidCredentialsException("Invalid email or password"));
+
+        if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
+            throw new InvalidCredentialsException("Invalid email or password");
+        }
+
+        String token = jwtUtil.generateToken(user);
+
+        return AuthResponse.builder()
+                .token(token)
+                .user(UserResponse.fromUser(user))
                 .build();
     }
 }
