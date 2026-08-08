@@ -1,5 +1,6 @@
 package com.pawback.pawback.controller;
 
+import com.pawback.pawback.dto.request.LoginRequest;
 import com.pawback.pawback.dto.request.RegisterRequest;
 import com.pawback.pawback.dto.response.ApiResponse;
 import com.pawback.pawback.dto.response.AuthResponse;
@@ -26,5 +27,12 @@ public class AuthController {
         AuthResponse response = authService.register(request);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.success(201, "Account created successfully", response));
+    }
+
+    // Authenticates a user with email and password, returning JWT token
+    @PostMapping("/login")
+    public ResponseEntity<ApiResponse<AuthResponse>> login(@Valid @RequestBody LoginRequest request) {
+        AuthResponse response = authService.login(request);
+        return ResponseEntity.ok(ApiResponse.success("Login successful", response));
     }
 }
