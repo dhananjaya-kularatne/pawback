@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { PawPrint, User, Mail, Lock, Phone, ArrowRight } from "lucide-react";
+import PublicHeader from "../components/layout/PublicHeader";
+import { User, Mail, Lock, Phone, ArrowRight } from "lucide-react";
 import { registerUser } from "../api/authApi";
 
 // Checks that a password is at least 8 characters and includes an
@@ -71,22 +72,10 @@ function Register() {
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       {/* Brand Header */}
-      <div className="sm:mx-auto sm:w-full sm:max-w-md text-center">
-        <Link to="/" className="inline-flex items-center gap-2 mb-2">
-          <div className="w-10 h-10 rounded-xl bg-blue-700 flex items-center justify-center text-white shadow-md">
-            <PawPrint size={24} />
-          </div>
-          <span className="text-2xl font-bold text-gray-900 tracking-tight">
-            PawBack
-          </span>
-        </Link>
-        <h2 className="mt-2 text-xl font-semibold text-gray-900">
-          Create your owner account
-        </h2>
-        <p className="mt-1 text-sm text-gray-600">
-          Register to protect your pets and manage their digital identity
-        </p>
-      </div>
+      <PublicHeader 
+        title="Create your owner account" 
+        subtitle="Register to protect your pets and manage their digital identity" 
+      />
 
       {/* Form Card */}
       <div className="mt-6 sm:mx-auto sm:w-full sm:max-w-md">
