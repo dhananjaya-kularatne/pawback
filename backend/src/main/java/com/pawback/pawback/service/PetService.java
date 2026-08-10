@@ -3,6 +3,7 @@ package com.pawback.pawback.service;
 import com.pawback.pawback.dto.request.CreatePetRequest;
 import com.pawback.pawback.dto.request.UpdatePetRequest;
 import com.pawback.pawback.dto.response.PetResponse;
+import com.pawback.pawback.dto.response.PublicPetResponse;
 import com.pawback.pawback.model.Pet;
 import com.pawback.pawback.model.PetStatus;
 import com.pawback.pawback.model.User;
@@ -11,6 +12,7 @@ import com.pawback.pawback.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 
 import java.util.List;
+import java.util.UUID;
 
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -144,5 +146,24 @@ public class PetService {
         Pet updatedPet = petRepository.save(pet);
 
         return mapToResponse(updatedPet);
+    }
+
+    // Returns public-safe info for a pet by its UUID — no authentication required.
+    // Used by the finder-facing scan page. Never exposes owner details.
+    public PublicPetResponse getPetByUuid(String petUuid) {
+        Pet pet = petRepository.findByPetUuid(UUID.fromString(petUuid));
+
+        if (pet == null) {
+            throw new RuntimeException("Pet not found");
+        }
+
+        return PublicPetResponse.builder()
+                .name(pet.getName())
+                .photoUrl(pet.getPhotoUrl())
+                .status(pet.getStatus())
+                .breed(pet.getBreed())
+                .description(pet.getDescription())
+                .ifFoundInstructions(pet.getIfFoundInstructions())
+                .build();
     }
 }
