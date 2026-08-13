@@ -19,9 +19,10 @@ function Navbar() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // TEMPORARY — clears nothing real yet since JWT auth (PAW-18) isn't built.
-  // Once real auth exists, this should clear the stored token and redirect.
+  // Clears the JWT and user data from localStorage, then redirects to the home page
   function handleLogout() {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
     setMenuOpen(false);
     navigate("/");
   }
