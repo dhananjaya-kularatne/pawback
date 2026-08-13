@@ -6,6 +6,7 @@ import Dashboard from "./pages/Dashboard";
 import AddPet from "./pages/AddPet";
 import PetDetail from "./pages/PetDetail";
 import ScanPage from "./pages/ScanPage";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
   return (
@@ -14,10 +15,31 @@ function App() {
         <Route path="/" element={<LandingPage />} />
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login />} />
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/pets/new" element={<AddPet />} />
-        <Route path="/pets/:id" element={<PetDetail />} />
         <Route path="/scan/:petUuid" element={<ScanPage />} />
+        <Route
+          path="/dashboard"
+          element={
+            <ProtectedRoute>
+              <Dashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/pets/new"
+          element={
+            <ProtectedRoute>
+              <AddPet />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/pets/:id"
+          element={
+            <ProtectedRoute>
+              <PetDetail />
+            </ProtectedRoute>
+          }
+        />
       </Routes>
     </BrowserRouter>
   );
