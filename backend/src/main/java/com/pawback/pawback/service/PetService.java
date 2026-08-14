@@ -1,15 +1,20 @@
 package com.pawback.pawback.service;
 
 import com.pawback.pawback.dto.request.CreatePetRequest;
+import com.pawback.pawback.dto.request.CreateReportRequest;
 import com.pawback.pawback.dto.request.UpdatePetRequest;
 import com.pawback.pawback.dto.response.PetResponse;
 import com.pawback.pawback.dto.response.PublicPetResponse;
+import com.pawback.pawback.dto.response.ScanReportResponse;
 import com.pawback.pawback.model.Pet;
 import com.pawback.pawback.model.PetStatus;
+import com.pawback.pawback.model.ScanReport;
 import com.pawback.pawback.model.User;
 import com.pawback.pawback.repository.PetRepository;
+import com.pawback.pawback.repository.ScanReportRepository;
 import com.pawback.pawback.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+
 
 import java.util.List;
 import java.util.UUID;
@@ -25,6 +30,7 @@ public class PetService {
     private final UserRepository userRepository;
     private final CloudinaryService cloudinaryService;
     private final QrCodeService qrCodeService;
+    private final ScanReportRepository scanReportRepository; 
 
     public PetResponse createPet(CreatePetRequest request, MultipartFile image) {
 
@@ -164,6 +170,42 @@ public class PetService {
                 .breed(pet.getBreed())
                 .description(pet.getDescription())
                 .ifFoundInstructions(pet.getIfFoundInstructions())
+                .build();
+    }
+
+    // Creates a scan report for a pet, uploading an optional photo.
+    // No ownership check — this is intentionally callable by anyone
+    // (the finder), matching the "no login required" requirement.
+    public ScanReportResponse createReport(String petUuid, CreateReportRequest request, MultipartFile photo) {
+
+        Pet pet = petRepository.findByPetUuid(UUID.fromString(petUuid));
+
+        if (pet == null) {
+            throw new RuntimeException("Pet not found");
+        }
+
+        String photoUrl = null;
+        if (photo != null && !photo.isEmpty()) {
+            photoUrl = cloudinaryService.uploadReportImage(photo);
+        }
+
+        ScanReport report = ScanReport.builder()
+                .message(request.getMessage())
+                .photoUrl(photoUrl)
+                .latitude(request.getLatitude())
+                .longitude(request.getLongitude())
+                .pet(pet)
+                .build();
+
+        ScanReport savedReport = scanReportRepository.save(report);
+
+        return ScanReportResponse.builder()
+                .id(savedReport.getId())
+                .message(savedReport.getMessage())
+                .photoUrl(savedReport.getPhotoUrl())
+                .latitude(savedReport.getLatitude())
+                .longitude(savedReport.getLongitude())
+                .createdAt(savedReport.getCreatedAt())
                 .build();
     }
 }
