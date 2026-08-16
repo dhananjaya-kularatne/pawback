@@ -1,18 +1,21 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { PawPrint, Heart, Camera, MapPin } from "lucide-react";
-import { getPetByUuid } from "../api/scanApi";
+import { getPetByUuid, submitReport } from "../api/scanApi";
 
 // Public page a finder lands on after scanning a pet's QR code.
 // No login required. Branches on the pet's status: Safe shows a calm message, Lost shows the pet's details (conditional fields) plus a
-// report form. Form submission logic is built in PAW-27.
+// working report form (message, optional photo, optional location).
 function ScanPage() {
   const { petUuid } = useParams();
   const [pet, setPet] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  // Report form state — submission wiring comes in PAW-27
+  const [location, setLocation] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  const [formError, setFormError] = useState("");
   const [message, setMessage] = useState("");
   const [photo, setPhoto] = useState(null);
 
@@ -29,6 +32,51 @@ function ScanPage() {
     }
     fetchPet();
   }, [petUuid]);
+
+  // Requests the browser's geolocation — silently does nothing if denied,
+  // since location is optional per the AC
+  function handleShareLocation() {
+    if (!navigator.geolocation) return;
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setLocation({
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+        });
+      },
+      () => {
+        // Permission denied or unavailable — location stays null, form still submittable
+      }
+    );
+  }
+
+  async function handleSubmitReport() {
+    setFormError("");
+
+    if (!message.trim()) {
+      setFormError("Please enter a message");
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      await submitReport(
+        petUuid,
+        {
+          message,
+          latitude: location?.latitude ?? null,
+          longitude: location?.longitude ?? null,
+        },
+        photo
+      );
+      setSubmitted(true);
+    } catch (err) {
+      setFormError(err.message);
+    } finally {
+      setSubmitting(false);
+    }
+  }
 
   if (loading) {
     return (
@@ -75,17 +123,14 @@ function ScanPage() {
               {pet.name}
             </p>
 
-            {/* Breed — shown only if present */}
             {pet.breed && (
               <p className="text-sm text-gray-500 mb-1">{pet.breed}</p>
             )}
 
-            {/* Description — shown only if present */}
             {pet.description && (
               <p className="text-sm text-gray-600 mb-1">{pet.description}</p>
             )}
 
-            {/* If-found instructions — shown only if present */}
             {pet.ifFoundInstructions && (
               <p className="text-xs text-gray-500 italic mb-3">
                 If found: {pet.ifFoundInstructions}
@@ -104,7 +149,7 @@ function ScanPage() {
               </div>
             )}
 
-            {isLost && (
+            {isLost && !submitted && (
               <div className="mt-4 pt-4 border-t border-gray-200 space-y-3">
                 <div>
                   <label className="text-sm text-gray-600">
@@ -137,21 +182,41 @@ function ScanPage() {
 
                 <button
                   type="button"
-                  className="w-full flex items-center justify-center gap-2 border border-gray-300
-                             rounded-lg px-3 py-2 text-sm text-gray-600 cursor-pointer
-                             hover:bg-gray-50 transition-colors"
+                  onClick={handleShareLocation}
+                  className={`w-full flex items-center justify-center gap-2 border rounded-lg px-3 py-2 text-sm
+                             cursor-pointer transition-colors ${
+                    location
+                      ? "border-green-500 bg-green-50 text-green-700"
+                      : "border-gray-300 text-gray-600 hover:bg-gray-50"
+                  }`}
                 >
                   <MapPin size={16} />
-                  Share my location (optional)
+                  {location ? "Location shared" : "Share my location (optional)"}
                 </button>
+
+                {formError && (
+                  <p className="text-xs text-red-600">{formError}</p>
+                )}
 
                 <button
                   type="button"
+                  onClick={handleSubmitReport}
+                  disabled={submitting}
                   className="w-full bg-red-600 hover:bg-red-700 text-white text-sm font-medium
-                             py-2.5 rounded-lg cursor-pointer transition-colors shadow-sm hover:shadow"
+                             py-2.5 rounded-lg cursor-pointer transition-colors shadow-sm hover:shadow
+                             disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Send report
+                  {submitting ? "Sending..." : "Send report"}
                 </button>
+              </div>
+            )}
+
+            {isLost && submitted && (
+              <div className="mt-4 pt-4 border-t border-gray-200 text-center py-4">
+                <p className="text-sm font-medium text-gray-900">Thank you!</p>
+                <p className="text-xs text-gray-500 mt-1">
+                  The owner has been notified and will reach out soon.
+                </p>
               </div>
             )}
           </div>
