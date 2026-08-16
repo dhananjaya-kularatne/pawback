@@ -25,7 +25,19 @@ public class CloudinaryService {
         return (String) uploadResult.get("secure_url");
     } catch (IOException e) {
         throw new RuntimeException("Failed to upload image to Cloudinary", e);
+        }
     }
-}
+
+    // Uploads a finder's report photo to Cloudinary, kept in a separate folder from pet photos for easier moderation later
+    @SuppressWarnings("unchecked")
+    public String uploadReportImage(MultipartFile file) {
+        try {
+            Map<String, Object> options = ObjectUtils.asMap("folder", "pawback/reports/");
+            Map<String, Object> uploadResult = cloudinary.uploader().upload(file.getBytes(), options);
+            return (String) uploadResult.get("secure_url");
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to upload image to Cloudinary", e);
+        }
+    }
 }
 
