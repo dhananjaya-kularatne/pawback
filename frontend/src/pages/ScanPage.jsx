@@ -52,6 +52,10 @@ function ScanPage() {
   }
 
   async function handleSubmitReport() {
+
+  // Guard against duplicate submissions — blocks the request even if the form somehow becomes visible again after a successful submit
+    if (submitted || submitting) return;
+    
     setFormError("");
 
     if (!message.trim()) {
