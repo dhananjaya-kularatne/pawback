@@ -1,6 +1,7 @@
 package com.pawback.pawback.util;
 
 import com.pawback.pawback.model.User;
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
@@ -37,5 +38,29 @@ public class JwtUtil {
                 .expiration(expiryDate)
                 .signWith(key)
                 .compact();
+    }
+
+    // Extracts the email (subject claim) from a signed JWT token
+    public String extractEmail(String token) {
+        return Jwts.parser()
+                .verifyWith(key)
+                .build()
+                .parseSignedClaims(token)
+                .getPayload()
+                .getSubject();
+    }
+
+    // Returns true if the token can be parsed with the correct key and is not expired.
+    // Any JwtException (expired, malformed, wrong signature) returns false.
+    public boolean isTokenValid(String token) {
+        try {
+            Jwts.parser()
+                    .verifyWith(key)
+                    .build()
+                    .parseSignedClaims(token);
+            return true;
+        } catch (JwtException | IllegalArgumentException e) {
+            return false;
+        }
     }
 }
