@@ -52,11 +52,14 @@ public class SecurityConfig {
             .sessionManagement(session ->
                     session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                // Public endpoints — no token required
                 .requestMatchers(
                         "/api/auth/register",
                         "/api/auth/login",
-                        "/api/scan/**"
+                        "/api/auth/forgot-password",
+                        "/api/auth/verify-otp",
+                        "/api/auth/reset-password",
+                        "/api/scans/**",
+                        "/api/reports/**"
                 ).permitAll()
                 // Every other endpoint requires a valid JWT
                 .anyRequest().authenticated()
