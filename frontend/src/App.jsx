@@ -6,6 +6,7 @@ import Dashboard from "./pages/Dashboard";
 import AddPet from "./pages/AddPet";
 import PetDetail from "./pages/PetDetail";
 import ScanPage from "./pages/ScanPage";
+import ForgotPassword from "./pages/ForgotPassword";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
@@ -15,6 +16,7 @@ function App() {
         <Route path="/" element={<LandingPage />} />
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/scan/:petUuid" element={<ScanPage />} />
         <Route
           path="/dashboard"
