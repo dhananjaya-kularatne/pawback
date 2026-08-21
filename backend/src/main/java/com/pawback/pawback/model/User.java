@@ -35,4 +35,7 @@ public class User {
 
     @Builder.Default
     private boolean enabled = true;
+
+    private String resetOtpHash;
+    private java.time.LocalDateTime resetOtpExpiry;
 }

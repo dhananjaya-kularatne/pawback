@@ -82,12 +82,20 @@ function Login() {
 
             {/* Password */}
             <div>
-              <label
-                htmlFor="password"
-                className="block text-xs font-medium text-gray-700 mb-1"
-              >
-                Password
-              </label>
+              <div className="flex justify-between items-center mb-1">
+                <label
+                  htmlFor="password"
+                  className="block text-xs font-medium text-gray-700"
+                >
+                  Password
+                </label>
+                <Link
+                  to="/forgot-password"
+                  className="text-xs text-blue-700 hover:text-blue-800 font-medium hover:underline"
+                >
+                  Forgot password?
+                </Link>
+              </div>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
                   <Lock size={16} />
