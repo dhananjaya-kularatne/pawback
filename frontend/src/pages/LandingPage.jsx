@@ -148,7 +148,7 @@ function LandingPage() {
       </section>
 
       {/* Feature Highlights */}
-      <section id="features" className="py-20 w-full px-6 md:px-10 lg:px-16 scroll-mt-20">
+      <section className="py-20 w-full px-6 md:px-10 lg:px-16">
         <div className="text-center max-w-2xl mx-auto mb-16">
           <h2 className="text-3xl font-bold text-gray-900 tracking-tight mb-3">
             Why pet parents choose PawBack

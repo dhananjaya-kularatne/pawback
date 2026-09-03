@@ -1,34 +1,16 @@
-import { Link } from "react-router-dom";
-import { PawPrint, Heart, Mail, Globe, MessageCircle } from "lucide-react";
+import { PawPrint, Mail, Globe, MessageCircle } from "lucide-react";
 
 // Marketing footer for the landing page — dark brand band, link columns and a
 // bottom legal bar. Matches the CTA banner's slate-900 surface and the header's
 // full-bleed width + padding.
 const LINK_GROUPS = [
   {
-    title: "Product",
-    links: [
-      { label: "Features", href: "#features" },
-      { label: "How it works", href: "#features" },
-      { label: "QR Tags", href: "#features" },
-      { label: "Dashboard", href: "/dashboard" },
-    ],
-  },
-  {
-    title: "Company",
-    links: [
-      { label: "About", href: "#" },
-      { label: "Blog", href: "#" },
-      { label: "Careers", href: "#" },
-      { label: "Contact", href: "mailto:hello@pawback.app" },
-    ],
-  },
-  {
     title: "Support",
     links: [
       { label: "Help Center", href: "#" },
       { label: "Community", href: "#" },
       { label: "System Status", href: "#" },
+      { label: "Contact", href: "mailto:hello@pawback.app" },
     ],
   },
   {
@@ -47,27 +29,11 @@ const SOCIALS = [
   { label: "Community", href: "#", Icon: MessageCircle },
 ];
 
-function FooterLink({ href, label }) {
-  const className = "text-sm text-slate-400 hover:text-white transition-colors";
-  if (href.startsWith("/")) {
-    return (
-      <Link to={href} className={className}>
-        {label}
-      </Link>
-    );
-  }
-  return (
-    <a href={href} className={className}>
-      {label}
-    </a>
-  );
-}
-
 export default function Footer() {
   return (
     <footer className="bg-slate-900 text-slate-400 border-t border-white/10">
       <div className="w-full px-6 md:px-10 lg:px-16 py-14">
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-10">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-10">
           {/* Brand */}
           <div className="col-span-2">
             <div className="flex items-center gap-2 text-white">
@@ -104,7 +70,12 @@ export default function Footer() {
               <ul className="mt-4 space-y-3">
                 {group.links.map((link) => (
                   <li key={link.label}>
-                    <FooterLink href={link.href} label={link.label} />
+                    <a
+                      href={link.href}
+                      className="text-sm text-slate-400 hover:text-white transition-colors"
+                    >
+                      {link.label}
+                    </a>
                   </li>
                 ))}
               </ul>
@@ -117,9 +88,12 @@ export default function Footer() {
           <p className="text-xs text-slate-500">
             © {new Date().getFullYear()} PawBack. All rights reserved.
           </p>
-          <p className="text-xs text-slate-500 flex items-center gap-1">
-            Built with <Heart size={12} className="text-red-500 fill-red-500 mx-0.5" /> for pet owners everywhere.
-          </p>
+          <a
+            href="mailto:hello@pawback.app"
+            className="text-xs text-slate-500 hover:text-slate-300 transition-colors"
+          >
+            hello@pawback.app
+          </a>
         </div>
       </div>
     </footer>
