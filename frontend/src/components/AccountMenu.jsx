@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { ChevronDown, LogOut, LayoutDashboard } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { ChevronDown, LogOut } from "lucide-react";
 
 // Account dropdown shared by the authenticated Navbar and the landing-page
 // header: avatar button, a Dashboard link and a Log out action. `onLoggedOut`
@@ -61,16 +61,7 @@ export default function AccountMenu({ onLoggedOut }) {
       </button>
 
       {menuOpen && (
-        <div className="absolute right-0 mt-2 w-44 bg-white border border-gray-300 rounded-lg shadow-lg py-1 z-20">
-          <Link
-            to="/dashboard"
-            onClick={() => setMenuOpen(false)}
-            className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700
-                       hover:bg-gray-50 transition-colors"
-          >
-            <LayoutDashboard size={14} />
-            Dashboard
-          </Link>
+        <div className="absolute right-0 mt-2 w-40 bg-white border border-gray-300 rounded-lg shadow-lg py-1 z-20">
           <button
             onClick={handleLogout}
             className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700

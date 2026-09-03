@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { PawPrint, Shield, QrCode, Bell, ArrowRight, Heart } from "lucide-react";
 import heroImg from "../assets/hero.png";
 import RegisterModal from "../components/auth/RegisterModal";
@@ -99,37 +99,15 @@ function LandingPage() {
             </p>
 
             <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 pt-2">
-              {isLoggedIn ? (
-                <button
-                  onClick={() => navigate("/dashboard")}
-                  className="w-full sm:w-auto bg-white text-blue-800 hover:bg-blue-50 text-base
-                             font-semibold px-7 py-3.5 rounded-xl shadow-lg hover:shadow-xl
-                             hover:-translate-y-0.5 transition-all cursor-pointer flex items-center justify-center gap-2"
-                >
-                  Go to Dashboard
-                  <ArrowRight size={18} />
-                </button>
-              ) : (
-                <>
-                  <button
-                    onClick={openRegister}
-                    className="w-full sm:w-auto bg-white text-blue-800 hover:bg-blue-50 text-base
-                               font-semibold px-7 py-3.5 rounded-xl shadow-lg hover:shadow-xl
-                               hover:-translate-y-0.5 transition-all cursor-pointer flex items-center justify-center gap-2"
-                  >
-                    Register your pet
-                    <ArrowRight size={18} />
-                  </button>
-
-                  <button
-                    onClick={openLogin}
-                    className="w-full sm:w-auto border border-white/30 hover:bg-white/10 text-white
-                               text-base font-medium px-7 py-3.5 rounded-xl transition-all cursor-pointer"
-                  >
-                    Sign in
-                  </button>
-                </>
-              )}
+              <button
+                onClick={isLoggedIn ? () => navigate("/dashboard") : openRegister}
+                className="w-full sm:w-auto bg-white text-blue-800 hover:bg-blue-50 text-base
+                           font-semibold px-7 py-3.5 rounded-xl shadow-lg hover:shadow-xl
+                           hover:-translate-y-0.5 transition-all cursor-pointer flex items-center justify-center gap-2"
+              >
+                {isLoggedIn ? "Go to Dashboard" : "Register your pet"}
+                <ArrowRight size={18} />
+              </button>
             </div>
           </div>
 
@@ -202,24 +180,14 @@ function LandingPage() {
         </div>
       </section>
 
-      {/* CTA Banner */}
-      <section className="bg-slate-900 text-white py-16 px-6">
-        <div className="max-w-4xl mx-auto text-center space-y-6">
-          <h2 className="text-3xl font-bold tracking-tight">Ready to protect your pet?</h2>
-          <p className="text-gray-300 text-base max-w-xl mx-auto">
-            {isLoggedIn
-              ? "Welcome back! Head to your dashboard to manage your pets."
-              : "It takes less than 2 minutes to create an account and register your pet's first profile."}
-          </p>
-          {isLoggedIn ? (
-            <button
-              onClick={() => navigate("/dashboard")}
-              className="bg-blue-700 hover:bg-blue-800 text-white font-semibold
-                         px-8 py-3.5 rounded-xl shadow-md transition-all cursor-pointer"
-            >
-              Go to Dashboard
-            </button>
-          ) : (
+      {/* CTA Banner — conversion prompt, only relevant to signed-out visitors */}
+      {!isLoggedIn && (
+        <section className="bg-slate-900 text-white py-16 px-6">
+          <div className="max-w-4xl mx-auto text-center space-y-6">
+            <h2 className="text-3xl font-bold tracking-tight">Ready to protect your pet?</h2>
+            <p className="text-gray-300 text-base max-w-xl mx-auto">
+              It takes less than 2 minutes to create an account and register your pet's first profile.
+            </p>
             <button
               onClick={openRegister}
               className="bg-blue-700 hover:bg-blue-800 text-white font-semibold
@@ -227,9 +195,9 @@ function LandingPage() {
             >
               Get Started for Free
             </button>
-          )}
-        </div>
-      </section>
+          </div>
+        </section>
+      )}
 
       {/* Footer */}
       <footer className="bg-white border-t border-gray-200 mt-auto py-8">
@@ -241,16 +209,6 @@ function LandingPage() {
           <p className="flex items-center gap-1">
             Built with <Heart size={12} className="text-red-500 fill-red-500 mx-1" /> for pet owners everywhere.
           </p>
-          <div className="flex items-center gap-6">
-            {isLoggedIn ? (
-              <Link to="/dashboard" className="hover:text-gray-900 transition-colors">Dashboard</Link>
-            ) : (
-              <>
-                <button onClick={openRegister} className="hover:text-gray-900 transition-colors cursor-pointer">Register</button>
-                <button onClick={openLogin} className="hover:text-gray-900 transition-colors cursor-pointer">Sign in</button>
-              </>
-            )}
-          </div>
         </div>
       </footer>
 
