@@ -44,20 +44,20 @@ public class AuthController {
     public ResponseEntity<ApiResponse<Void>> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
         authService.forgotPassword(request);
         // We always return the same success message to prevent email enumeration
-        return ResponseEntity.ok(ApiResponse.success("If this email is registered, a password reset code has been sent."));
+        return ResponseEntity.ok(ApiResponse.success("If this email is registered, a password reset code has been sent.", null));
     }
 
     // Verifies the 6-digit OTP sent to the user's email
     @PostMapping("/verify-otp")
     public ResponseEntity<ApiResponse<Void>> verifyOtp(@Valid @RequestBody VerifyOtpRequest request) {
         authService.verifyOtp(request);
-        return ResponseEntity.ok(ApiResponse.success("OTP verified successfully. You may now reset your password."));
+        return ResponseEntity.ok(ApiResponse.success("OTP verified successfully. You may now reset your password.", null));
     }
 
     // Sets a new password using the verified OTP
     @PostMapping("/reset-password")
     public ResponseEntity<ApiResponse<Void>> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
         authService.resetPassword(request);
-        return ResponseEntity.ok(ApiResponse.success("Password has been reset successfully."));
+        return ResponseEntity.ok(ApiResponse.success("Password has been reset successfully.", null));
     }
 }

@@ -38,7 +38,7 @@ public class SecurityConfig {
         return email -> userRepository.findByEmail(email)
                 .map(user -> new org.springframework.security.core.userdetails.User(
                         user.getEmail(),
-                        user.getPassword(),
+                        user.getPasswordHash() != null ? user.getPasswordHash() : "",
                         List.of(new SimpleGrantedAuthority("ROLE_" + user.getRole().name()))))
                 .orElseThrow(() -> new UsernameNotFoundException("User not found: " + email));
     }
