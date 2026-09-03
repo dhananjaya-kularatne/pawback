@@ -82,7 +82,7 @@ function LandingPage() {
           </svg>
         </div>
 
-        <div className="max-w-7xl mx-auto px-6 lg:px-8 py-16 md:py-24 relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+        <div className="w-full px-6 md:px-10 lg:px-16 py-16 md:py-24 relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
           {/* Hero Copy */}
           <div className="lg:col-span-7 space-y-6 text-center lg:text-left">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/20 text-xs font-medium text-blue-100">
@@ -137,7 +137,7 @@ function LandingPage() {
       </section>
 
       {/* Feature Highlights */}
-      <section className="py-20 max-w-7xl mx-auto px-6 lg:px-8">
+      <section className="py-20 w-full px-6 md:px-10 lg:px-16">
         <div className="text-center max-w-2xl mx-auto mb-16">
           <h2 className="text-3xl font-bold text-gray-900 tracking-tight mb-3">
             Why pet parents choose PawBack
@@ -201,7 +201,7 @@ function LandingPage() {
 
       {/* Footer */}
       <footer className="bg-white border-t border-gray-200 py-8">
-        <div className="max-w-7xl mx-auto px-6 lg:px-8 flex flex-col sm:flex-row justify-between items-center gap-4 text-xs text-gray-500">
+        <div className="w-full px-6 md:px-10 lg:px-16 flex flex-col sm:flex-row justify-between items-center gap-4 text-xs text-gray-500">
           <div className="flex items-center gap-2 font-medium text-gray-700">
             <PawPrint size={16} className="text-blue-700" />
             <span>PawBack © {new Date().getFullYear()}</span>

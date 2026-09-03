@@ -75,7 +75,7 @@ function Dashboard() {
           </svg>
         </div>
 
-        <div className="relative max-w-7xl mx-auto px-6 lg:px-8 py-8">
+        <div className="relative w-full px-6 md:px-10 lg:px-16 py-8">
           <h1 className="text-2xl font-semibold text-white mb-1">
             Welcome back, Dhananjaya
           </h1>
@@ -85,7 +85,7 @@ function Dashboard() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-6 lg:px-8 py-6">
+      <div className="w-full px-6 md:px-10 lg:px-16 py-6">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-lg font-medium text-gray-900">My pets</h2>
           <button
