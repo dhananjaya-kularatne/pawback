@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { PawPrint, Shield, QrCode, Bell, ArrowRight, Heart } from "lucide-react";
+import { Shield, QrCode, Bell, ArrowRight } from "lucide-react";
 import heroImg from "../assets/hero.png";
 import RegisterModal from "../components/auth/RegisterModal";
 import LoginModal from "../components/auth/LoginModal";
 import ForgotPasswordModal from "../components/auth/ForgotPasswordModal";
 import AccountMenu from "../components/AccountMenu";
 import AppHeader from "../components/AppHeader";
+import Footer from "../components/layout/Footer";
 
 // Landing page — the register form opens as a modal overlay when a CTA is clicked
 function LandingPage() {
@@ -147,7 +148,7 @@ function LandingPage() {
       </section>
 
       {/* Feature Highlights */}
-      <section className="py-20 w-full px-6 md:px-10 lg:px-16">
+      <section id="features" className="py-20 w-full px-6 md:px-10 lg:px-16 scroll-mt-20">
         <div className="text-center max-w-2xl mx-auto mb-16">
           <h2 className="text-3xl font-bold text-gray-900 tracking-tight mb-3">
             Why pet parents choose PawBack
@@ -210,17 +211,7 @@ function LandingPage() {
       )}
 
       {/* Footer */}
-      <footer className="bg-white border-t border-gray-200 py-8">
-        <div className="w-full px-6 md:px-10 lg:px-16 flex flex-col sm:flex-row justify-between items-center gap-4 text-xs text-gray-500">
-          <div className="flex items-center gap-2 font-medium text-gray-700">
-            <PawPrint size={16} className="text-blue-700" />
-            <span>PawBack © {new Date().getFullYear()}</span>
-          </div>
-          <p className="flex items-center gap-1">
-            Built with <Heart size={12} className="text-red-500 fill-red-500 mx-1" /> for pet owners everywhere.
-          </p>
-        </div>
-      </footer>
+      <Footer />
 
       {registerOpen && (
         <RegisterModal
