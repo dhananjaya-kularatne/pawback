@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Shield, QrCode, Bell, ArrowRight } from "lucide-react";
-import heroImg from "../assets/hero.png";
+import heroImg from "../assets/hero.avif";
 import RegisterModal from "../components/auth/RegisterModal";
 import LoginModal from "../components/auth/LoginModal";
 import ForgotPasswordModal from "../components/auth/ForgotPasswordModal";
@@ -129,18 +129,9 @@ function LandingPage() {
               <div className="relative bg-white/10 backdrop-blur-md border border-white/20 p-3 rounded-3xl shadow-2xl overflow-hidden">
                 <img
                   src={heroImg}
-                  alt="Happy pet owner with registered dog"
-                  className="w-full h-80 sm:h-96 object-cover rounded-2xl shadow-inner"
+                  alt="Happy dog outdoors"
+                  className="w-full h-auto object-contain rounded-2xl shadow-inner"
                 />
-                <div className="absolute bottom-6 left-6 right-6 bg-white/90 backdrop-blur-md p-4 rounded-xl shadow-lg border border-white/40 flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center text-green-700 flex-shrink-0">
-                    <QrCode size={20} />
-                  </div>
-                  <div>
-                    <p className="text-xs font-bold text-gray-900">QR Code Tag Enabled</p>
-                    <p className="text-xs text-gray-600">Scan to view owner contact details instantly</p>
-                  </div>
-                </div>
               </div>
             </div>
           </div>
