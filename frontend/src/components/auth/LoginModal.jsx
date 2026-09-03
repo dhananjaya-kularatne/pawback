@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
 import { Mail, Lock, ArrowRight } from "lucide-react";
 import { loginUser } from "../../api/authApi";
 import AuthModalShell from "./AuthModalShell";
@@ -7,7 +6,7 @@ import AuthModalShell from "./AuthModalShell";
 // Sign-in form rendered as a modal on the landing page — the counterpart to
 // RegisterModal. On success it persists the returned token/user and calls
 // onSuccess so the landing page decides what happens next.
-export default function LoginModal({ onClose, onSuccess, onSwitchToRegister }) {
+export default function LoginModal({ onClose, onSuccess, onSwitchToRegister, onForgotPassword }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -78,12 +77,13 @@ export default function LoginModal({ onClose, onSuccess, onSwitchToRegister }) {
         <div>
           <div className="flex justify-between items-center mb-1">
             <label htmlFor="login-password" className="block text-xs font-medium text-gray-700">Password</label>
-            <Link
-              to="/forgot-password"
-              className="text-xs text-blue-700 hover:text-blue-800 font-medium hover:underline"
+            <button
+              type="button"
+              onClick={onForgotPassword}
+              className="text-xs text-blue-700 hover:text-blue-800 font-medium hover:underline cursor-pointer"
             >
               Forgot password?
-            </Link>
+            </button>
           </div>
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">

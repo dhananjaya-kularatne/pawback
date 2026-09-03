@@ -4,6 +4,7 @@ import { PawPrint, Shield, QrCode, Bell, ArrowRight, Heart } from "lucide-react"
 import heroImg from "../assets/hero.png";
 import RegisterModal from "../components/auth/RegisterModal";
 import LoginModal from "../components/auth/LoginModal";
+import ForgotPasswordModal from "../components/auth/ForgotPasswordModal";
 import AccountMenu from "../components/AccountMenu";
 import AppHeader from "../components/AppHeader";
 
@@ -25,6 +26,7 @@ function LandingPage() {
 
   const [registerOpen, setRegisterOpen] = useState(false);
   const [loginOpen, setLoginOpen] = useState(false);
+  const [forgotOpen, setForgotOpen] = useState(false);
 
   // Called by both auth modals once a token has been stored — close the modal
   // and reflect the logged-in state without leaving the landing page.
@@ -36,12 +38,20 @@ function LandingPage() {
 
   function openLogin() {
     setRegisterOpen(false);
+    setForgotOpen(false);
     setLoginOpen(true);
   }
 
   function openRegister() {
     setLoginOpen(false);
+    setForgotOpen(false);
     setRegisterOpen(true);
+  }
+
+  function openForgot() {
+    setLoginOpen(false);
+    setRegisterOpen(false);
+    setForgotOpen(true);
   }
 
   return (
@@ -225,6 +235,14 @@ function LandingPage() {
           onClose={() => setLoginOpen(false)}
           onSuccess={handleAuthSuccess}
           onSwitchToRegister={openRegister}
+          onForgotPassword={openForgot}
+        />
+      )}
+
+      {forgotOpen && (
+        <ForgotPasswordModal
+          onClose={() => setForgotOpen(false)}
+          onSwitchToLogin={openLogin}
         />
       )}
     </div>
