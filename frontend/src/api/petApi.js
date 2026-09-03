@@ -1,5 +1,10 @@
 const API_BASE_URL = "http://localhost:8080/api";
 
+function authHeaders() {
+  const token = localStorage.getItem("token");
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
 export async function createPet(petData, imageFile) {
   const formData = new FormData();
 
@@ -11,6 +16,7 @@ export async function createPet(petData, imageFile) {
 
   const response = await fetch(`${API_BASE_URL}/pets`, {
     method: "POST",
+    headers: authHeaders(),
     body: formData,
   });
 
@@ -27,6 +33,7 @@ export async function createPet(petData, imageFile) {
 export async function getMyPets() {
   const response = await fetch(`${API_BASE_URL}/pets`, {
     method: "GET",
+    headers: authHeaders(),
   });
 
   const result = await response.json();
@@ -40,7 +47,9 @@ export async function getMyPets() {
 
 // Fetches a single pet by id
 export async function getPetById(petId) {
-  const response = await fetch(`${API_BASE_URL}/pets/${petId}`);
+  const response = await fetch(`${API_BASE_URL}/pets/${petId}`, {
+    headers: authHeaders(),
+  });
   const result = await response.json();
 
   if (!response.ok) {
@@ -65,6 +74,7 @@ export async function updatePet(petId, petData, imageFile) {
 
   const response = await fetch(`${API_BASE_URL}/pets/${petId}`, {
     method: "PUT",
+    headers: authHeaders(),
     body: formData,
   });
 
@@ -81,7 +91,7 @@ export async function updatePet(petId, petData, imageFile) {
 export async function updatePetStatus(petId, status) {
   const response = await fetch(`${API_BASE_URL}/pets/${petId}/status`, {
     method: "PATCH",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", ...authHeaders() },
     body: JSON.stringify({ status }),
   });
 
