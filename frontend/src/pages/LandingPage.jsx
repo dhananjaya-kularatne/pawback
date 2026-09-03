@@ -5,6 +5,7 @@ import heroImg from "../assets/hero.png";
 import RegisterModal from "../components/auth/RegisterModal";
 import LoginModal from "../components/auth/LoginModal";
 import AccountMenu from "../components/AccountMenu";
+import HeaderNavLinks from "../components/HeaderNavLinks";
 
 // Landing page — the register form opens as a modal overlay when a CTA is clicked
 function LandingPage() {
@@ -48,25 +49,19 @@ function LandingPage() {
       {/* Navigation Header */}
       <header className="bg-gradient-to-r from-blue-700 to-blue-900 border-b border-blue-800/40">
         <div className="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
-          <Link to="/" className="flex items-center gap-2 text-white group">
-            <div className="w-9 h-9 rounded-xl bg-white/10 flex items-center justify-center group-hover:bg-white/20 transition-colors">
-              <PawPrint size={22} className="text-white" />
-            </div>
-            <span className="font-bold text-xl tracking-tight">PawBack</span>
-          </Link>
+          <div className="flex items-center gap-6">
+            <Link to="/" className="flex items-center gap-2 text-white group">
+              <div className="w-9 h-9 rounded-xl bg-white/10 flex items-center justify-center group-hover:bg-white/20 transition-colors">
+                <PawPrint size={22} className="text-white" />
+              </div>
+              <span className="font-bold text-xl tracking-tight">PawBack</span>
+            </Link>
+            {isLoggedIn && <HeaderNavLinks />}
+          </div>
 
           <div className="flex items-center gap-4">
             {isLoggedIn ? (
-              <>
-                <Link
-                  to="/dashboard"
-                  className="bg-white text-blue-800 hover:bg-blue-50 text-sm font-semibold
-                             px-4 py-2 rounded-lg shadow-sm hover:shadow transition-all"
-                >
-                  Go to Dashboard
-                </Link>
-                <AccountMenu onLoggedOut={() => setIsLoggedIn(false)} />
-              </>
+              <AccountMenu onLoggedOut={() => setIsLoggedIn(false)} />
             ) : (
               <>
                 <button

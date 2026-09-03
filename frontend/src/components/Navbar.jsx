@@ -1,15 +1,19 @@
 import { Link } from "react-router-dom";
 import { PawPrint, Bell } from "lucide-react";
 import AccountMenu from "./AccountMenu";
+import HeaderNavLinks from "./HeaderNavLinks";
 
-// Shared navbar for all authenticated pages — logo, notification bell, account menu
+// Shared navbar for all authenticated pages — logo, primary nav, bell, account menu
 function Navbar() {
   return (
     <div className="flex justify-between items-center px-5 py-3 relative">
-      <Link to="/dashboard" className="flex items-center gap-2">
-        <PawPrint size={20} className="text-white" />
-        <span className="font-semibold text-sm text-white">PawBack</span>
-      </Link>
+      <div className="flex items-center gap-6">
+        <Link to="/dashboard" className="flex items-center gap-2">
+          <PawPrint size={20} className="text-white" />
+          <span className="font-semibold text-sm text-white">PawBack</span>
+        </Link>
+        <HeaderNavLinks />
+      </div>
 
       <div className="flex items-center gap-3">
         <button
