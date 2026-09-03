@@ -1,62 +1,17 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { PawPrint, Shield, QrCode, Bell, ArrowRight, Heart, X, User, Mail, Lock, Phone } from "lucide-react";
+import { PawPrint, Shield, QrCode, Bell, ArrowRight, Heart } from "lucide-react";
 import heroImg from "../assets/hero.png";
-import { registerUser } from "../api/authApi";
+import RegisterModal from "../components/auth/RegisterModal";
 
-// Landing page — register modal opens as a popup overlay when CTA is clicked
+// Landing page — the register form opens as a modal overlay when a CTA is clicked
 function LandingPage() {
   const navigate = useNavigate();
 
   // Derive auth state from token presence — no global auth context needed yet
   const isLoggedIn = Boolean(localStorage.getItem("token"));
 
-  // null = closed, true = open — follows the team modal state pattern
   const [registerOpen, setRegisterOpen] = useState(false);
-
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [error, setError] = useState("");
-  const [passwordError, setPasswordError] = useState("");
-  const [loading, setLoading] = useState(false);
-
-  function openRegister() {
-    setRegisterOpen(true);
-    setError("");
-    setPasswordError("");
-    setName(""); setEmail(""); setPhone(""); setPassword(""); setConfirmPassword("");
-  }
-
-  function closeRegister() {
-    setRegisterOpen(false);
-  }
-
-  async function handleSubmit(e) {
-    e.preventDefault();
-    setError("");
-    setPasswordError("");
-
-    // Client-side check — don't hit the API if passwords don't match
-    if (password !== confirmPassword) {
-      setPasswordError("Passwords do not match");
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const data = await registerUser({ name, email, phone, password });
-      if (data.token) localStorage.setItem("token", data.token);
-      if (data.user) localStorage.setItem("user", JSON.stringify(data.user));
-      navigate("/dashboard");
-    } catch (err) {
-      setError(err.message || "Registration failed. Please try again.");
-    } finally {
-      setLoading(false);
-    }
-  }
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col font-sans">
@@ -88,7 +43,7 @@ function LandingPage() {
                   Sign in
                 </Link>
                 <button
-                  onClick={openRegister}
+                  onClick={() => setRegisterOpen(true)}
                   className="bg-white text-blue-800 hover:bg-blue-50 text-sm font-semibold
                              px-4 py-2 rounded-lg shadow-sm hover:shadow transition-all cursor-pointer"
                 >
@@ -143,7 +98,7 @@ function LandingPage() {
               ) : (
                 <>
                   <button
-                    onClick={openRegister}
+                    onClick={() => setRegisterOpen(true)}
                     className="w-full sm:w-auto bg-white text-blue-800 hover:bg-blue-50 text-base
                                font-semibold px-7 py-3.5 rounded-xl shadow-lg hover:shadow-xl
                                hover:-translate-y-0.5 transition-all cursor-pointer flex items-center justify-center gap-2"
@@ -252,7 +207,7 @@ function LandingPage() {
             </button>
           ) : (
             <button
-              onClick={openRegister}
+              onClick={() => setRegisterOpen(true)}
               className="bg-blue-700 hover:bg-blue-800 text-white font-semibold
                          px-8 py-3.5 rounded-xl shadow-md transition-all cursor-pointer"
             >
@@ -274,178 +229,19 @@ function LandingPage() {
           </p>
           <div className="flex items-center gap-6">
             {!isLoggedIn && (
-              <button onClick={openRegister} className="hover:text-gray-900 transition-colors cursor-pointer">Register</button>
+              <button onClick={() => setRegisterOpen(true)} className="hover:text-gray-900 transition-colors cursor-pointer">Register</button>
             )}
             <Link to="/dashboard" className="hover:text-gray-900 transition-colors">Dashboard</Link>
           </div>
         </div>
       </footer>
 
-      {/* Register Modal — dark backdrop, centered white card, close button top-right */}
       {registerOpen && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4"
-          onClick={closeRegister}
-        >
-          <div
-            className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8 relative"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Close button */}
-            <button
-              onClick={closeRegister}
-              className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full
-                         text-gray-500 hover:bg-gray-100 hover:text-gray-700 transition-colors cursor-pointer"
-              aria-label="Close register form"
-            >
-              <X size={18} />
-            </button>
-
-            {/* Header */}
-            <div className="mb-6">
-              <div className="flex items-center gap-2 mb-2">
-                <div className="w-8 h-8 rounded-lg bg-blue-700 flex items-center justify-center">
-                  <PawPrint size={18} className="text-white" />
-                </div>
-                <span className="font-bold text-gray-900">PawBack</span>
-              </div>
-              <h2 className="text-xl font-bold text-gray-900">Create your account</h2>
-              <p className="text-sm text-gray-600 mt-1">Register your pet and start protecting them today.</p>
-            </div>
-
-            {error && (
-              <div className="mb-4 p-3 rounded-lg bg-red-100 text-red-700 text-sm font-medium border border-red-200">
-                {error}
-              </div>
-            )}
-
-            <form onSubmit={handleSubmit} className="space-y-4">
-              {/* Full Name */}
-              <div>
-                <label htmlFor="reg-name" className="block text-xs font-medium text-gray-700 mb-1">Full Name</label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
-                    <User size={15} />
-                  </div>
-                  <input
-                    id="reg-name"
-                    type="text"
-                    required
-                    placeholder="Jane Doe"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    className="w-full pl-9 pr-3 py-2 text-sm border border-gray-300 rounded-lg
-                               focus:outline-none focus:ring-2 focus:ring-blue-700 transition-shadow text-gray-900"
-                  />
-                </div>
-              </div>
-
-              {/* Email */}
-              <div>
-                <label htmlFor="reg-email" className="block text-xs font-medium text-gray-700 mb-1">Email Address</label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
-                    <Mail size={15} />
-                  </div>
-                  <input
-                    id="reg-email"
-                    type="email"
-                    required
-                    placeholder="jane@example.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="w-full pl-9 pr-3 py-2 text-sm border border-gray-300 rounded-lg
-                               focus:outline-none focus:ring-2 focus:ring-blue-700 transition-shadow text-gray-900"
-                  />
-                </div>
-              </div>
-
-              {/* Phone */}
-              <div>
-                <label htmlFor="reg-phone" className="block text-xs font-medium text-gray-700 mb-1">
-                  Phone <span className="text-gray-400 font-normal">(Optional)</span>
-                </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
-                    <Phone size={15} />
-                  </div>
-                  <input
-                    id="reg-phone"
-                    type="tel"
-                    placeholder="+1 (555) 000-0000"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    className="w-full pl-9 pr-3 py-2 text-sm border border-gray-300 rounded-lg
-                               focus:outline-none focus:ring-2 focus:ring-blue-700 transition-shadow text-gray-900"
-                  />
-                </div>
-              </div>
-
-              {/* Password */}
-              <div>
-                <label htmlFor="reg-password" className="block text-xs font-medium text-gray-700 mb-1">Password</label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
-                    <Lock size={15} />
-                  </div>
-                  <input
-                    id="reg-password"
-                    type="password"
-                    required
-                    minLength={6}
-                    placeholder="At least 6 characters"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="w-full pl-9 pr-3 py-2 text-sm border border-gray-300 rounded-lg
-                               focus:outline-none focus:ring-2 focus:ring-blue-700 transition-shadow text-gray-900"
-                  />
-                </div>
-              </div>
-
-              {/* Confirm Password */}
-              <div>
-                <label htmlFor="reg-confirm" className="block text-xs font-medium text-gray-700 mb-1">Confirm Password</label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
-                    <Lock size={15} />
-                  </div>
-                  <input
-                    id="reg-confirm"
-                    type="password"
-                    required
-                    placeholder="Re-enter your password"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    className={`w-full pl-9 pr-3 py-2 text-sm border rounded-lg
-                               focus:outline-none focus:ring-2 focus:ring-blue-700 transition-shadow text-gray-900 ${
-                                 passwordError ? "border-red-500 bg-red-50/30" : "border-gray-300"
-                               }`}
-                  />
-                </div>
-                {passwordError && (
-                  <p className="mt-1 text-xs text-red-600 font-medium">{passwordError}</p>
-                )}
-              </div>
-
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full flex items-center justify-center gap-2 bg-blue-700 hover:bg-blue-800
-                           text-white text-sm font-semibold py-2.5 px-4 rounded-lg shadow-sm
-                           transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {loading ? "Creating account..." : (<>Create Account <ArrowRight size={15} /></>)}
-              </button>
-            </form>
-
-            <p className="mt-4 text-center text-xs text-gray-500">
-              Already registered?{" "}
-              <Link to="/dashboard" className="text-blue-700 hover:text-blue-800 font-medium underline">
-                Go to Dashboard
-              </Link>
-            </p>
-          </div>
-        </div>
+        <RegisterModal
+          onClose={() => setRegisterOpen(false)}
+          onSuccess={() => navigate("/dashboard")}
+          onSwitchToLogin={() => navigate("/login")}
+        />
       )}
     </div>
   );
