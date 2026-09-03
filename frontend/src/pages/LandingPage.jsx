@@ -130,7 +130,7 @@ function LandingPage() {
                 <img
                   src={heroImg}
                   alt="Happy dog outdoors"
-                  className="w-full h-80 sm:h-96 object-cover object-center rounded-2xl shadow-inner"
+                  className="w-full h-80 sm:h-96 object-contain object-center rounded-2xl"
                 />
               </div>
             </div>
