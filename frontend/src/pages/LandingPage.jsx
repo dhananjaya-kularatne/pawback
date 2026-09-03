@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Shield, QrCode, Bell, ArrowRight } from "lucide-react";
-import heroImg from "../assets/hero.avif";
+import heroImg from "../assets/hero.jpg";
 import RegisterModal from "../components/auth/RegisterModal";
 import LoginModal from "../components/auth/LoginModal";
 import ForgotPasswordModal from "../components/auth/ForgotPasswordModal";
@@ -124,13 +124,13 @@ function LandingPage() {
 
           {/* Hero Image */}
           <div className="lg:col-span-5 flex justify-center">
-            <div className="relative w-full max-w-md">
+            <div className="relative w-full max-w-xl">
               <div className="absolute -inset-1 bg-gradient-to-r from-blue-400 to-indigo-400 rounded-3xl blur-lg opacity-30"></div>
-              <div className="relative bg-white/10 backdrop-blur-md border border-white/20 p-3 rounded-3xl shadow-2xl overflow-hidden">
+              <div className="relative bg-white/10 backdrop-blur-md border border-white/20 p-2.5 rounded-3xl shadow-2xl overflow-hidden">
                 <img
                   src={heroImg}
-                  alt="Happy dog outdoors"
-                  className="w-full h-80 sm:h-96 object-contain object-center rounded-2xl"
+                  alt="Two friends laughing with their dogs outdoors"
+                  className="w-full aspect-[3/2] object-cover object-center rounded-2xl"
                 />
               </div>
             </div>
