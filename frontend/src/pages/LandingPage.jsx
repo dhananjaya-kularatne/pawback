@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { PawPrint, Shield, QrCode, Bell, ArrowRight, Heart } from "lucide-react";
 import heroImg from "../assets/hero.png";
@@ -9,11 +9,28 @@ import LoginModal from "../components/auth/LoginModal";
 function LandingPage() {
   const navigate = useNavigate();
 
-  // Derive auth state from token presence — no global auth context needed yet
-  const isLoggedIn = Boolean(localStorage.getItem("token"));
+  // Auth state is derived from token presence — kept in state so signing in or
+  // out updates the page in place. A storage listener keeps other tabs in sync.
+  const [isLoggedIn, setIsLoggedIn] = useState(() => Boolean(localStorage.getItem("token")));
+
+  useEffect(() => {
+    function syncAuth() {
+      setIsLoggedIn(Boolean(localStorage.getItem("token")));
+    }
+    window.addEventListener("storage", syncAuth);
+    return () => window.removeEventListener("storage", syncAuth);
+  }, []);
 
   const [registerOpen, setRegisterOpen] = useState(false);
   const [loginOpen, setLoginOpen] = useState(false);
+
+  // Called by both auth modals once a token has been stored — close the modal
+  // and reflect the logged-in state without leaving the landing page.
+  function handleAuthSuccess() {
+    setLoginOpen(false);
+    setRegisterOpen(false);
+    setIsLoggedIn(true);
+  }
 
   function openLogin() {
     setRegisterOpen(false);
@@ -255,7 +272,7 @@ function LandingPage() {
       {registerOpen && (
         <RegisterModal
           onClose={() => setRegisterOpen(false)}
-          onSuccess={() => navigate("/dashboard")}
+          onSuccess={handleAuthSuccess}
           onSwitchToLogin={openLogin}
         />
       )}
@@ -263,7 +280,7 @@ function LandingPage() {
       {loginOpen && (
         <LoginModal
           onClose={() => setLoginOpen(false)}
-          onSuccess={() => navigate("/dashboard")}
+          onSuccess={handleAuthSuccess}
           onSwitchToRegister={openRegister}
         />
       )}
