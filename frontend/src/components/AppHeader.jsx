@@ -9,7 +9,7 @@ import HeaderNavLinks from "./HeaderNavLinks";
 export default function AppHeader({ showNavLinks = true, children }) {
   return (
     <header className="bg-gradient-to-r from-blue-700 to-blue-900 border-b border-blue-800/40">
-      <div className="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
+      <div className="max-w-7xl mx-auto px-6 lg:px-8 py-4 flex justify-between items-center">
         <div className="flex items-center gap-6">
           <Link to="/" className="flex items-center gap-2 text-white group">
             <div className="w-9 h-9 rounded-xl bg-white/10 flex items-center justify-center group-hover:bg-white/20 transition-colors">

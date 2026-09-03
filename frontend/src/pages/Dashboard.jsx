@@ -75,7 +75,7 @@ function Dashboard() {
           </svg>
         </div>
 
-        <div className="relative max-w-5xl mx-auto px-6 py-8">
+        <div className="relative max-w-7xl mx-auto px-6 lg:px-8 py-8">
           <h1 className="text-2xl font-semibold text-white mb-1">
             Welcome back, Dhananjaya
           </h1>
@@ -85,7 +85,7 @@ function Dashboard() {
         </div>
       </div>
 
-      <div className="max-w-5xl mx-auto p-6">
+      <div className="max-w-7xl mx-auto px-6 lg:px-8 py-6">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-lg font-medium text-gray-900">My pets</h2>
           <button
@@ -118,7 +118,7 @@ function Dashboard() {
         )}
 
         {!loading && !error && pets.length > 0 && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
             {pets.map((pet) => (
               <div
                 key={pet.id}
