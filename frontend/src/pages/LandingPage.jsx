@@ -4,6 +4,7 @@ import { PawPrint, Shield, QrCode, Bell, ArrowRight, Heart } from "lucide-react"
 import heroImg from "../assets/hero.png";
 import RegisterModal from "../components/auth/RegisterModal";
 import LoginModal from "../components/auth/LoginModal";
+import AccountMenu from "../components/AccountMenu";
 
 // Landing page — the register form opens as a modal overlay when a CTA is clicked
 function LandingPage() {
@@ -56,13 +57,16 @@ function LandingPage() {
 
           <div className="flex items-center gap-4">
             {isLoggedIn ? (
-              <Link
-                to="/dashboard"
-                className="bg-white text-blue-800 hover:bg-blue-50 text-sm font-semibold
-                           px-4 py-2 rounded-lg shadow-sm hover:shadow transition-all"
-              >
-                Go to Dashboard
-              </Link>
+              <>
+                <Link
+                  to="/dashboard"
+                  className="bg-white text-blue-800 hover:bg-blue-50 text-sm font-semibold
+                             px-4 py-2 rounded-lg shadow-sm hover:shadow transition-all"
+                >
+                  Go to Dashboard
+                </Link>
+                <AccountMenu onLoggedOut={() => setIsLoggedIn(false)} />
+              </>
             ) : (
               <>
                 <button
