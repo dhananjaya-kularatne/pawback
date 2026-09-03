@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { PawPrint, Shield, QrCode, Bell, ArrowRight, Heart } from "lucide-react";
 import heroImg from "../assets/hero.png";
 import RegisterModal from "../components/auth/RegisterModal";
+import LoginModal from "../components/auth/LoginModal";
 
 // Landing page — the register form opens as a modal overlay when a CTA is clicked
 function LandingPage() {
@@ -12,6 +13,17 @@ function LandingPage() {
   const isLoggedIn = Boolean(localStorage.getItem("token"));
 
   const [registerOpen, setRegisterOpen] = useState(false);
+  const [loginOpen, setLoginOpen] = useState(false);
+
+  function openLogin() {
+    setRegisterOpen(false);
+    setLoginOpen(true);
+  }
+
+  function openRegister() {
+    setLoginOpen(false);
+    setRegisterOpen(true);
+  }
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col font-sans">
@@ -36,14 +48,14 @@ function LandingPage() {
               </Link>
             ) : (
               <>
-                <Link
-                  to="/dashboard"
-                  className="text-sm font-medium text-blue-100 hover:text-white transition-colors"
+                <button
+                  onClick={openLogin}
+                  className="text-sm font-medium text-blue-100 hover:text-white transition-colors cursor-pointer"
                 >
                   Sign in
-                </Link>
+                </button>
                 <button
-                  onClick={() => setRegisterOpen(true)}
+                  onClick={openRegister}
                   className="bg-white text-blue-800 hover:bg-blue-50 text-sm font-semibold
                              px-4 py-2 rounded-lg shadow-sm hover:shadow transition-all cursor-pointer"
                 >
@@ -98,7 +110,7 @@ function LandingPage() {
               ) : (
                 <>
                   <button
-                    onClick={() => setRegisterOpen(true)}
+                    onClick={openRegister}
                     className="w-full sm:w-auto bg-white text-blue-800 hover:bg-blue-50 text-base
                                font-semibold px-7 py-3.5 rounded-xl shadow-lg hover:shadow-xl
                                hover:-translate-y-0.5 transition-all cursor-pointer flex items-center justify-center gap-2"
@@ -108,11 +120,11 @@ function LandingPage() {
                   </button>
 
                   <button
-                    onClick={() => navigate("/dashboard")}
+                    onClick={openLogin}
                     className="w-full sm:w-auto border border-white/30 hover:bg-white/10 text-white
                                text-base font-medium px-7 py-3.5 rounded-xl transition-all cursor-pointer"
                   >
-                    Explore Dashboard
+                    Sign in
                   </button>
                 </>
               )}
@@ -207,7 +219,7 @@ function LandingPage() {
             </button>
           ) : (
             <button
-              onClick={() => setRegisterOpen(true)}
+              onClick={openRegister}
               className="bg-blue-700 hover:bg-blue-800 text-white font-semibold
                          px-8 py-3.5 rounded-xl shadow-md transition-all cursor-pointer"
             >
@@ -228,10 +240,14 @@ function LandingPage() {
             Built with <Heart size={12} className="text-red-500 fill-red-500 mx-1" /> for pet owners everywhere.
           </p>
           <div className="flex items-center gap-6">
-            {!isLoggedIn && (
-              <button onClick={() => setRegisterOpen(true)} className="hover:text-gray-900 transition-colors cursor-pointer">Register</button>
+            {isLoggedIn ? (
+              <Link to="/dashboard" className="hover:text-gray-900 transition-colors">Dashboard</Link>
+            ) : (
+              <>
+                <button onClick={openRegister} className="hover:text-gray-900 transition-colors cursor-pointer">Register</button>
+                <button onClick={openLogin} className="hover:text-gray-900 transition-colors cursor-pointer">Sign in</button>
+              </>
             )}
-            <Link to="/dashboard" className="hover:text-gray-900 transition-colors">Dashboard</Link>
           </div>
         </div>
       </footer>
@@ -240,7 +256,15 @@ function LandingPage() {
         <RegisterModal
           onClose={() => setRegisterOpen(false)}
           onSuccess={() => navigate("/dashboard")}
-          onSwitchToLogin={() => navigate("/login")}
+          onSwitchToLogin={openLogin}
+        />
+      )}
+
+      {loginOpen && (
+        <LoginModal
+          onClose={() => setLoginOpen(false)}
+          onSuccess={() => navigate("/dashboard")}
+          onSwitchToRegister={openRegister}
         />
       )}
     </div>
