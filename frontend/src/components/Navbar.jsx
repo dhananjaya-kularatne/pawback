@@ -1,32 +1,21 @@
-import { Link } from "react-router-dom";
-import { PawPrint, Bell } from "lucide-react";
+import { Bell } from "lucide-react";
+import AppHeader from "./AppHeader";
 import AccountMenu from "./AccountMenu";
-import HeaderNavLinks from "./HeaderNavLinks";
 
-// Shared navbar for all authenticated pages — logo, primary nav, bell, account menu
+// Header for the authenticated pages — the shared AppHeader bar with a
+// notification bell and the account menu in the right-hand slot.
 function Navbar() {
   return (
-    <div className="flex justify-between items-center px-5 py-3 relative">
-      <div className="flex items-center gap-6">
-        <Link to="/dashboard" className="flex items-center gap-2">
-          <PawPrint size={20} className="text-white" />
-          <span className="font-semibold text-sm text-white">PawBack</span>
-        </Link>
-        <HeaderNavLinks />
-      </div>
-
-      <div className="flex items-center gap-3">
-        <button
-          className="w-9 h-9 flex items-center justify-center rounded-full
-                     hover:bg-white/10 text-white cursor-pointer transition-colors"
-          aria-label="Notifications"
-        >
-          <Bell size={18} />
-        </button>
-
-        <AccountMenu />
-      </div>
-    </div>
+    <AppHeader>
+      <button
+        className="w-9 h-9 flex items-center justify-center rounded-full
+                   hover:bg-white/10 text-white cursor-pointer transition-colors"
+        aria-label="Notifications"
+      >
+        <Bell size={18} />
+      </button>
+      <AccountMenu />
+    </AppHeader>
   );
 }
 

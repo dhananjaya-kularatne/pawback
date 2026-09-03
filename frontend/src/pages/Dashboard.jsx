@@ -60,7 +60,9 @@ function Dashboard() {
 
   return (
     <div className="min-h-screen bg-slate-50">
-      {/* Navbar + welcome banner share one continuous blue background */}
+      <Navbar />
+
+      {/* Welcome banner — its own blue band beneath the shared header */}
       <div className="bg-gradient-to-br from-blue-700 to-blue-900 relative overflow-hidden">
         <div className="absolute inset-0 opacity-10">
           <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
@@ -73,16 +75,13 @@ function Dashboard() {
           </svg>
         </div>
 
-        <div className="relative">
-          <Navbar />
-          <div className="max-w-5xl mx-auto px-6 pb-10">
-            <h1 className="text-2xl font-semibold text-white mb-1">
-              Welcome back, Dhananjaya
-            </h1>
-            <p className="text-blue-100 text-sm">
-              Keep your pets' profiles up to date so they can always find their way home.
-            </p>
-          </div>
+        <div className="relative max-w-5xl mx-auto px-6 py-8">
+          <h1 className="text-2xl font-semibold text-white mb-1">
+            Welcome back, Dhananjaya
+          </h1>
+          <p className="text-blue-100 text-sm">
+            Keep your pets' profiles up to date so they can always find their way home.
+          </p>
         </div>
       </div>
 

@@ -5,7 +5,7 @@ import heroImg from "../assets/hero.png";
 import RegisterModal from "../components/auth/RegisterModal";
 import LoginModal from "../components/auth/LoginModal";
 import AccountMenu from "../components/AccountMenu";
-import HeaderNavLinks from "../components/HeaderNavLinks";
+import AppHeader from "../components/AppHeader";
 
 // Landing page — the register form opens as a modal overlay when a CTA is clicked
 function LandingPage() {
@@ -46,42 +46,28 @@ function LandingPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col font-sans">
-      {/* Navigation Header */}
-      <header className="bg-gradient-to-r from-blue-700 to-blue-900 border-b border-blue-800/40">
-        <div className="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
-          <div className="flex items-center gap-6">
-            <Link to="/" className="flex items-center gap-2 text-white group">
-              <div className="w-9 h-9 rounded-xl bg-white/10 flex items-center justify-center group-hover:bg-white/20 transition-colors">
-                <PawPrint size={22} className="text-white" />
-              </div>
-              <span className="font-bold text-xl tracking-tight">PawBack</span>
-            </Link>
-            {isLoggedIn && <HeaderNavLinks />}
-          </div>
-
-          <div className="flex items-center gap-4">
-            {isLoggedIn ? (
-              <AccountMenu onLoggedOut={() => setIsLoggedIn(false)} />
-            ) : (
-              <>
-                <button
-                  onClick={openLogin}
-                  className="text-sm font-medium text-blue-100 hover:text-white transition-colors cursor-pointer"
-                >
-                  Sign in
-                </button>
-                <button
-                  onClick={openRegister}
-                  className="bg-white text-blue-800 hover:bg-blue-50 text-sm font-semibold
-                             px-4 py-2 rounded-lg shadow-sm hover:shadow transition-all cursor-pointer"
-                >
-                  Register
-                </button>
-              </>
-            )}
-          </div>
-        </div>
-      </header>
+      {/* Navigation Header — shared AppHeader shell */}
+      <AppHeader showNavLinks={isLoggedIn}>
+        {isLoggedIn ? (
+          <AccountMenu onLoggedOut={() => setIsLoggedIn(false)} />
+        ) : (
+          <>
+            <button
+              onClick={openLogin}
+              className="text-sm font-medium text-blue-100 hover:text-white transition-colors cursor-pointer"
+            >
+              Sign in
+            </button>
+            <button
+              onClick={openRegister}
+              className="bg-white text-blue-800 hover:bg-blue-50 text-sm font-semibold
+                         px-4 py-2 rounded-lg shadow-sm hover:shadow transition-all cursor-pointer"
+            >
+              Register
+            </button>
+          </>
+        )}
+      </AppHeader>
 
       {/* Hero Section */}
       <section className="bg-gradient-to-br from-blue-700 via-blue-800 to-blue-900 text-white relative overflow-hidden">

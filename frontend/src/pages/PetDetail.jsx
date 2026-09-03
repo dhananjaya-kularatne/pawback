@@ -35,9 +35,7 @@ function PetDetail() {
 
   return (
     <div className="min-h-screen bg-slate-50">
-      <div className="bg-gradient-to-br from-blue-700 to-blue-900">
-        <Navbar />
-      </div>
+      <Navbar />
 
       {loading && <p className="text-sm text-gray-600 p-6">Loading...</p>}
       {error && <p className="text-sm text-red-700 p-6">{error}</p>}
