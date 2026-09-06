@@ -53,12 +53,14 @@ function Register() {
         password,
       });
 
-      // Save token to localStorage for subsequent sessions
+      // Save token to sessionStorage — cleared when the browser tab closes
       if (data.token) {
-        localStorage.setItem("token", data.token);
+        sessionStorage.setItem("token", data.token);
       }
       if (data.user) {
-        localStorage.setItem("user", JSON.stringify(data.user));
+        sessionStorage.setItem("user", JSON.stringify(data.user));
+      } else {
+        sessionStorage.removeItem("user");
       }
 
       navigate("/dashboard");

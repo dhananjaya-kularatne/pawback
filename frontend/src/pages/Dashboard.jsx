@@ -19,7 +19,7 @@ function Dashboard() {
   // actually signed in rather than a hard-coded owner.
   let firstName = "";
   try {
-    const user = JSON.parse(localStorage.getItem("user") || "null");
+    const user = JSON.parse(sessionStorage.getItem("user") || "null");
     if (user && user.name) firstName = user.name.split(" ")[0];
   } catch {
     // Malformed user payload — fall back to the generic greeting

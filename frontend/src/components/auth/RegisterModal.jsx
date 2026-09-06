@@ -30,8 +30,8 @@ export default function RegisterModal({ onClose, onSuccess, onSwitchToLogin }) {
     setLoading(true);
     try {
       const data = await registerUser({ name, email, phone, password });
-      if (data.token) localStorage.setItem("token", data.token);
-      if (data.user) localStorage.setItem("user", JSON.stringify(data.user));
+      if (data.token) sessionStorage.setItem("token", data.token);
+      if (data.user) sessionStorage.setItem("user", JSON.stringify(data.user));
       onSuccess();
     } catch (err) {
       setError(err.message || "Registration failed. Please try again.");

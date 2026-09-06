@@ -21,15 +21,15 @@ function Login() {
     try {
       const data = await loginUser({ email, password });
 
-      // Save token to localStorage for subsequent sessions
+      // Save token to sessionStorage — cleared when the browser tab closes
       if (data.token) {
-        localStorage.setItem("token", data.token);
+        sessionStorage.setItem("token", data.token);
       }
       // Always refresh the stored user so a previous account's details can't linger
       if (data.user) {
-        localStorage.setItem("user", JSON.stringify(data.user));
+        sessionStorage.setItem("user", JSON.stringify(data.user));
       } else {
-        localStorage.removeItem("user");
+        sessionStorage.removeItem("user");
       }
 
       navigate("/dashboard");

@@ -25,7 +25,7 @@ export default function AccountMenu({ onLoggedOut }) {
   // Use the stored owner name for the avatar initial and label, with a fallback
   let displayName = "";
   try {
-    const user = JSON.parse(localStorage.getItem("user") || "null");
+    const user = JSON.parse(sessionStorage.getItem("user") || "null");
     if (user && user.name) displayName = user.name;
   } catch {
     // Ignore a malformed user payload — fall back to the generic label
@@ -35,8 +35,8 @@ export default function AccountMenu({ onLoggedOut }) {
 
   // Clears the JWT and user data, then hands control back to the caller
   function handleLogout() {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
+    sessionStorage.removeItem("token");
+    sessionStorage.removeItem("user");
     setMenuOpen(false);
     if (onLoggedOut) {
       onLoggedOut();

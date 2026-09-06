@@ -21,16 +21,16 @@ function isTokenValid(token) {
 }
 
 // A wrapper for routes that require authentication.
-// On every render (including page refresh) it reads the JWT from localStorage,
+// On every render (including page refresh) it reads the JWT from sessionStorage,
 // validates its expiry, and redirects to /login if the token is missing,
 // expired, or malformed — cleaning up stale storage along the way.
 function ProtectedRoute({ children }) {
-  const token = localStorage.getItem("token");
+  const token = sessionStorage.getItem("token");
 
   if (!isTokenValid(token)) {
     // Clear any stale data so the login page starts with a clean slate
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
+    sessionStorage.removeItem("token");
+    sessionStorage.removeItem("user");
     return <Navigate to="/login" replace />;
   }
 

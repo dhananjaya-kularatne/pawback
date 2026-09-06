@@ -14,12 +14,13 @@ function LandingPage() {
   const navigate = useNavigate();
 
   // Auth state is derived from token presence — kept in state so signing in or
-  // out updates the page in place. A storage listener keeps other tabs in sync.
-  const [isLoggedIn, setIsLoggedIn] = useState(() => Boolean(localStorage.getItem("token")));
+  // out updates the page in place. The storage listener catches token changes
+  // from other contexts in this tab session.
+  const [isLoggedIn, setIsLoggedIn] = useState(() => Boolean(sessionStorage.getItem("token")));
 
   useEffect(() => {
     function syncAuth() {
-      setIsLoggedIn(Boolean(localStorage.getItem("token")));
+      setIsLoggedIn(Boolean(sessionStorage.getItem("token")));
     }
     window.addEventListener("storage", syncAuth);
     return () => window.removeEventListener("storage", syncAuth);
