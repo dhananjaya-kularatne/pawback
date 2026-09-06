@@ -183,18 +183,20 @@ function LandingPage() {
         </div>
       </section>
 
-      {/* CTA Banner — conversion prompt, only relevant to signed-out visitors */}
+      {/* CTA Banner — conversion prompt, only relevant to signed-out visitors.
+          Brand-blue so it reads as its own section above the slate footer. */}
       {!isLoggedIn && (
-        <section className="bg-slate-900 text-white py-16 px-6">
-          <div className="max-w-4xl mx-auto text-center space-y-6">
-            <h2 className="text-3xl font-bold tracking-tight">Ready to protect your pet?</h2>
-            <p className="text-gray-300 text-base max-w-xl mx-auto">
+        <section className="bg-gradient-to-br from-blue-700 via-blue-800 to-blue-900 text-white py-20 px-6">
+          <div className="max-w-3xl mx-auto text-center space-y-6">
+            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight">Ready to protect your pet?</h2>
+            <p className="text-blue-100 text-base max-w-xl mx-auto">
               It takes less than 2 minutes to create an account and register your pet's first profile.
             </p>
             <button
               onClick={openRegister}
-              className="bg-blue-700 hover:bg-blue-800 text-white font-semibold
-                         px-8 py-3.5 rounded-xl shadow-md transition-all cursor-pointer"
+              className="bg-white text-blue-800 hover:bg-blue-50 font-semibold
+                         px-8 py-3.5 rounded-xl shadow-lg hover:shadow-xl
+                         hover:-translate-y-0.5 transition-all cursor-pointer"
             >
               Get Started for Free
             </button>
