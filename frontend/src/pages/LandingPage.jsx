@@ -1,71 +1,89 @@
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { PawPrint, Shield, QrCode, Bell, ArrowRight, Heart } from "lucide-react";
-import heroImg from "../assets/hero.png";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { Shield, QrCode, Bell, ArrowRight } from "lucide-react";
+import heroImg from "../assets/hero.jpg";
 import RegisterModal from "../components/auth/RegisterModal";
 import LoginModal from "../components/auth/LoginModal";
+import ForgotPasswordModal from "../components/auth/ForgotPasswordModal";
+import AccountMenu from "../components/AccountMenu";
+import AppHeader from "../components/AppHeader";
+import NotificationBell from "../components/NotificationBell";
+import Footer from "../components/layout/Footer";
 
 // Landing page — the register form opens as a modal overlay when a CTA is clicked
 function LandingPage() {
   const navigate = useNavigate();
 
-  // Derive auth state from token presence — no global auth context needed yet
-  const isLoggedIn = Boolean(localStorage.getItem("token"));
+  // Auth state is derived from token presence — kept in state so signing in or
+  // out updates the page in place. The storage listener catches token changes
+  // from other contexts in this tab session.
+  const [isLoggedIn, setIsLoggedIn] = useState(() => Boolean(sessionStorage.getItem("token")));
+
+  useEffect(() => {
+    function syncAuth() {
+      setIsLoggedIn(Boolean(sessionStorage.getItem("token")));
+    }
+    window.addEventListener("storage", syncAuth);
+    return () => window.removeEventListener("storage", syncAuth);
+  }, []);
 
   const [registerOpen, setRegisterOpen] = useState(false);
   const [loginOpen, setLoginOpen] = useState(false);
+  const [forgotOpen, setForgotOpen] = useState(false);
+
+  // Called by both auth modals once a token has been stored — close the modal
+  // and reflect the logged-in state without leaving the landing page.
+  function handleAuthSuccess() {
+    setLoginOpen(false);
+    setRegisterOpen(false);
+    setIsLoggedIn(true);
+  }
 
   function openLogin() {
     setRegisterOpen(false);
+    setForgotOpen(false);
     setLoginOpen(true);
   }
 
   function openRegister() {
     setLoginOpen(false);
+    setForgotOpen(false);
     setRegisterOpen(true);
   }
 
-  return (
-    <div className="min-h-screen bg-slate-50 flex flex-col font-sans">
-      {/* Navigation Header */}
-      <header className="bg-gradient-to-r from-blue-700 to-blue-900 border-b border-blue-800/40">
-        <div className="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
-          <Link to="/" className="flex items-center gap-2 text-white group">
-            <div className="w-9 h-9 rounded-xl bg-white/10 flex items-center justify-center group-hover:bg-white/20 transition-colors">
-              <PawPrint size={22} className="text-white" />
-            </div>
-            <span className="font-bold text-xl tracking-tight">PawBack</span>
-          </Link>
+  function openForgot() {
+    setLoginOpen(false);
+    setRegisterOpen(false);
+    setForgotOpen(true);
+  }
 
-          <div className="flex items-center gap-4">
-            {isLoggedIn ? (
-              <Link
-                to="/dashboard"
-                className="bg-white text-blue-800 hover:bg-blue-50 text-sm font-semibold
-                           px-4 py-2 rounded-lg shadow-sm hover:shadow transition-all"
-              >
-                Go to Dashboard
-              </Link>
-            ) : (
-              <>
-                <button
-                  onClick={openLogin}
-                  className="text-sm font-medium text-blue-100 hover:text-white transition-colors cursor-pointer"
-                >
-                  Sign in
-                </button>
-                <button
-                  onClick={openRegister}
-                  className="bg-white text-blue-800 hover:bg-blue-50 text-sm font-semibold
-                             px-4 py-2 rounded-lg shadow-sm hover:shadow transition-all cursor-pointer"
-                >
-                  Register
-                </button>
-              </>
-            )}
-          </div>
-        </div>
-      </header>
+  return (
+    <div className="bg-slate-50 font-sans">
+      {/* Navigation Header — shared AppHeader shell */}
+      <AppHeader showNavLinks={isLoggedIn}>
+        {isLoggedIn ? (
+          <>
+            <NotificationBell />
+            <AccountMenu onLoggedOut={() => setIsLoggedIn(false)} />
+          </>
+        ) : (
+          <>
+            <button
+              onClick={openLogin}
+              className="text-sm font-medium text-blue-100 hover:text-white transition-colors cursor-pointer"
+            >
+              Sign in
+            </button>
+            <button
+              onClick={openRegister}
+              className="bg-white text-blue-800 hover:bg-blue-50 text-sm font-semibold
+                         px-4 py-2 rounded-lg shadow-sm hover:shadow transition-all cursor-pointer"
+            >
+              Register
+            </button>
+          </>
+        )}
+      </AppHeader>
 
       {/* Hero Section */}
       <section className="bg-gradient-to-br from-blue-700 via-blue-800 to-blue-900 text-white relative overflow-hidden">
@@ -80,7 +98,7 @@ function LandingPage() {
           </svg>
         </div>
 
-        <div className="max-w-6xl mx-auto px-6 py-16 md:py-24 relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+        <div className="w-full px-6 md:px-10 lg:px-16 py-16 md:py-24 relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
           {/* Hero Copy */}
           <div className="lg:col-span-7 space-y-6 text-center lg:text-left">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/20 text-xs font-medium text-blue-100">
@@ -97,59 +115,28 @@ function LandingPage() {
             </p>
 
             <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 pt-2">
-              {isLoggedIn ? (
-                <button
-                  onClick={() => navigate("/dashboard")}
-                  className="w-full sm:w-auto bg-white text-blue-800 hover:bg-blue-50 text-base
-                             font-semibold px-7 py-3.5 rounded-xl shadow-lg hover:shadow-xl
-                             hover:-translate-y-0.5 transition-all cursor-pointer flex items-center justify-center gap-2"
-                >
-                  Go to Dashboard
-                  <ArrowRight size={18} />
-                </button>
-              ) : (
-                <>
-                  <button
-                    onClick={openRegister}
-                    className="w-full sm:w-auto bg-white text-blue-800 hover:bg-blue-50 text-base
-                               font-semibold px-7 py-3.5 rounded-xl shadow-lg hover:shadow-xl
-                               hover:-translate-y-0.5 transition-all cursor-pointer flex items-center justify-center gap-2"
-                  >
-                    Register your pet
-                    <ArrowRight size={18} />
-                  </button>
-
-                  <button
-                    onClick={openLogin}
-                    className="w-full sm:w-auto border border-white/30 hover:bg-white/10 text-white
-                               text-base font-medium px-7 py-3.5 rounded-xl transition-all cursor-pointer"
-                  >
-                    Sign in
-                  </button>
-                </>
-              )}
+              <button
+                onClick={isLoggedIn ? () => navigate("/dashboard") : openRegister}
+                className="w-full sm:w-auto bg-white text-blue-800 hover:bg-blue-50 text-base
+                           font-semibold px-7 py-3.5 rounded-xl shadow-lg hover:shadow-xl
+                           hover:-translate-y-0.5 transition-all cursor-pointer flex items-center justify-center gap-2"
+              >
+                {isLoggedIn ? "Go to Dashboard" : "Register your pet"}
+                <ArrowRight size={18} />
+              </button>
             </div>
           </div>
 
           {/* Hero Image */}
           <div className="lg:col-span-5 flex justify-center">
-            <div className="relative w-full max-w-md">
+            <div className="relative w-full max-w-xl">
               <div className="absolute -inset-1 bg-gradient-to-r from-blue-400 to-indigo-400 rounded-3xl blur-lg opacity-30"></div>
-              <div className="relative bg-white/10 backdrop-blur-md border border-white/20 p-3 rounded-3xl shadow-2xl overflow-hidden">
+              <div className="relative bg-white/10 backdrop-blur-md border border-white/20 p-2.5 rounded-3xl shadow-2xl overflow-hidden">
                 <img
                   src={heroImg}
-                  alt="Happy pet owner with registered dog"
-                  className="w-full h-80 sm:h-96 object-cover rounded-2xl shadow-inner"
+                  alt="Two friends laughing with their dogs outdoors"
+                  className="w-full aspect-[3/2] object-cover object-center rounded-2xl"
                 />
-                <div className="absolute bottom-6 left-6 right-6 bg-white/90 backdrop-blur-md p-4 rounded-xl shadow-lg border border-white/40 flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center text-green-700 flex-shrink-0">
-                    <QrCode size={20} />
-                  </div>
-                  <div>
-                    <p className="text-xs font-bold text-gray-900">QR Code Tag Enabled</p>
-                    <p className="text-xs text-gray-600">Scan to view owner contact details instantly</p>
-                  </div>
-                </div>
               </div>
             </div>
           </div>
@@ -157,7 +144,7 @@ function LandingPage() {
       </section>
 
       {/* Feature Highlights */}
-      <section className="py-20 max-w-6xl mx-auto px-6">
+      <section className="py-20 w-full px-6 md:px-10 lg:px-16">
         <div className="text-center max-w-2xl mx-auto mb-16">
           <h2 className="text-3xl font-bold text-gray-900 tracking-tight mb-3">
             Why pet parents choose PawBack
@@ -200,62 +187,34 @@ function LandingPage() {
         </div>
       </section>
 
-      {/* CTA Banner */}
-      <section className="bg-slate-900 text-white py-16 px-6">
-        <div className="max-w-4xl mx-auto text-center space-y-6">
-          <h2 className="text-3xl font-bold tracking-tight">Ready to protect your pet?</h2>
-          <p className="text-gray-300 text-base max-w-xl mx-auto">
-            {isLoggedIn
-              ? "Welcome back! Head to your dashboard to manage your pets."
-              : "It takes less than 2 minutes to create an account and register your pet's first profile."}
-          </p>
-          {isLoggedIn ? (
-            <button
-              onClick={() => navigate("/dashboard")}
-              className="bg-blue-700 hover:bg-blue-800 text-white font-semibold
-                         px-8 py-3.5 rounded-xl shadow-md transition-all cursor-pointer"
-            >
-              Go to Dashboard
-            </button>
-          ) : (
+      {/* CTA Banner — conversion prompt, only relevant to signed-out visitors.
+          Brand-blue so it reads as its own section above the slate footer. */}
+      {!isLoggedIn && (
+        <section className="bg-gradient-to-br from-blue-700 via-blue-800 to-blue-900 text-white py-20 px-6">
+          <div className="max-w-3xl mx-auto text-center space-y-6">
+            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight">Ready to protect your pet?</h2>
+            <p className="text-blue-100 text-base max-w-xl mx-auto">
+              It takes less than 2 minutes to create an account and register your pet's first profile.
+            </p>
             <button
               onClick={openRegister}
-              className="bg-blue-700 hover:bg-blue-800 text-white font-semibold
-                         px-8 py-3.5 rounded-xl shadow-md transition-all cursor-pointer"
+              className="bg-white text-blue-800 hover:bg-blue-50 font-semibold
+                         px-8 py-3.5 rounded-xl shadow-lg hover:shadow-xl
+                         hover:-translate-y-0.5 transition-all cursor-pointer"
             >
               Get Started for Free
             </button>
-          )}
-        </div>
-      </section>
+          </div>
+        </section>
+      )}
 
       {/* Footer */}
-      <footer className="bg-white border-t border-gray-200 mt-auto py-8">
-        <div className="max-w-6xl mx-auto px-6 flex flex-col sm:flex-row justify-between items-center gap-4 text-xs text-gray-500">
-          <div className="flex items-center gap-2 font-medium text-gray-700">
-            <PawPrint size={16} className="text-blue-700" />
-            <span>PawBack © {new Date().getFullYear()}</span>
-          </div>
-          <p className="flex items-center gap-1">
-            Built with <Heart size={12} className="text-red-500 fill-red-500 mx-1" /> for pet owners everywhere.
-          </p>
-          <div className="flex items-center gap-6">
-            {isLoggedIn ? (
-              <Link to="/dashboard" className="hover:text-gray-900 transition-colors">Dashboard</Link>
-            ) : (
-              <>
-                <button onClick={openRegister} className="hover:text-gray-900 transition-colors cursor-pointer">Register</button>
-                <button onClick={openLogin} className="hover:text-gray-900 transition-colors cursor-pointer">Sign in</button>
-              </>
-            )}
-          </div>
-        </div>
-      </footer>
+      <Footer />
 
       {registerOpen && (
         <RegisterModal
           onClose={() => setRegisterOpen(false)}
-          onSuccess={() => navigate("/dashboard")}
+          onSuccess={handleAuthSuccess}
           onSwitchToLogin={openLogin}
         />
       )}
@@ -263,8 +222,16 @@ function LandingPage() {
       {loginOpen && (
         <LoginModal
           onClose={() => setLoginOpen(false)}
-          onSuccess={() => navigate("/dashboard")}
+          onSuccess={handleAuthSuccess}
           onSwitchToRegister={openRegister}
+          onForgotPassword={openForgot}
+        />
+      )}
+
+      {forgotOpen && (
+        <ForgotPasswordModal
+          onClose={() => setForgotOpen(false)}
+          onSwitchToLogin={openLogin}
         />
       )}
     </div>

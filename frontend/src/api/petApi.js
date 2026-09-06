@@ -1,7 +1,7 @@
 const API_BASE_URL = "http://localhost:8080/api";
 
 function authHeaders() {
-  const token = localStorage.getItem("token");
+  const token = sessionStorage.getItem("token");
   return token ? { Authorization: `Bearer ${token}` } : {};
 }
 

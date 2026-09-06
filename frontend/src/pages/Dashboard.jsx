@@ -15,6 +15,16 @@ function Dashboard() {
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [viewingQrPet, setViewingQrPet] = useState(null);
 
+  // Greeting name comes from the stored user, so the banner reflects whoever is
+  // actually signed in rather than a hard-coded owner.
+  let firstName = "";
+  try {
+    const user = JSON.parse(sessionStorage.getItem("user") || "null");
+    if (user && user.name) firstName = user.name.split(" ")[0];
+  } catch {
+    // Malformed user payload — fall back to the generic greeting
+  }
+
   useEffect(() => {
     async function fetchPets() {
       try {
@@ -60,7 +70,9 @@ function Dashboard() {
 
   return (
     <div className="min-h-screen bg-slate-50">
-      {/* Navbar + welcome banner share one continuous blue background */}
+      <Navbar />
+
+      {/* Welcome banner — its own blue band beneath the shared header */}
       <div className="bg-gradient-to-br from-blue-700 to-blue-900 relative overflow-hidden">
         <div className="absolute inset-0 opacity-10">
           <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
@@ -73,20 +85,17 @@ function Dashboard() {
           </svg>
         </div>
 
-        <div className="relative">
-          <Navbar />
-          <div className="max-w-5xl mx-auto px-6 pb-10">
-            <h1 className="text-2xl font-semibold text-white mb-1">
-              Welcome back, Dhananjaya
-            </h1>
-            <p className="text-blue-100 text-sm">
-              Keep your pets' profiles up to date so they can always find their way home.
-            </p>
-          </div>
+        <div className="relative w-full px-6 md:px-10 lg:px-16 py-8">
+          <h1 className="text-2xl font-semibold text-white mb-1">
+            {firstName ? `Welcome back, ${firstName}` : "Welcome back"}
+          </h1>
+          <p className="text-blue-100 text-sm">
+            Keep your pets' profiles up to date so they can always find their way home.
+          </p>
         </div>
       </div>
 
-      <div className="max-w-5xl mx-auto p-6">
+      <div className="w-full px-6 md:px-10 lg:px-16 py-6">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-lg font-medium text-gray-900">My pets</h2>
           <button
@@ -119,7 +128,7 @@ function Dashboard() {
         )}
 
         {!loading && !error && pets.length > 0 && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
             {pets.map((pet) => (
               <div
                 key={pet.id}
