@@ -1,8 +1,8 @@
 import { PawPrint, Mail, Globe, MessageCircle } from "lucide-react";
 
-// Marketing footer for the landing page — dark brand band, link columns and a
-// bottom legal bar. Matches the CTA banner's slate-900 surface and the header's
-// full-bleed width + padding.
+// Marketing footer for the landing page — dark brand band with the brand block
+// on the left and the link columns grouped tight on the right, over a slim
+// base bar. Matches the header's full-bleed width and padding.
 const LINK_GROUPS = [
   {
     title: "Support",
@@ -33,16 +33,16 @@ export default function Footer() {
   return (
     <footer className="bg-slate-900 text-slate-400 border-t border-white/10">
       <div className="w-full px-6 md:px-10 lg:px-16 py-14">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-10">
+        <div className="flex flex-col gap-12 md:flex-row md:items-start md:justify-between">
           {/* Brand */}
-          <div className="col-span-2">
+          <div className="max-w-sm">
             <div className="flex items-center gap-2 text-white">
               <div className="w-9 h-9 rounded-xl bg-blue-600/20 flex items-center justify-center">
                 <PawPrint size={20} className="text-blue-400" />
               </div>
               <span className="font-bold text-xl tracking-tight">PawBack</span>
             </div>
-            <p className="mt-4 text-sm leading-relaxed max-w-xs">
+            <p className="mt-4 text-sm leading-relaxed">
               Digital pet profiles and scannable QR tags that help lost pets find
               their way home faster.
             </p>
@@ -61,39 +61,43 @@ export default function Footer() {
             </div>
           </div>
 
-          {/* Link columns */}
-          {LINK_GROUPS.map((group) => (
-            <div key={group.title}>
-              <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-300">
-                {group.title}
-              </h3>
-              <ul className="mt-4 space-y-3">
-                {group.links.map((link) => (
-                  <li key={link.label}>
-                    <a
-                      href={link.href}
-                      className="text-sm text-slate-400 hover:text-white transition-colors"
-                    >
-                      {link.label}
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
+          {/* Link columns — kept close together and pushed to the right */}
+          <div className="flex gap-16 sm:gap-24">
+            {LINK_GROUPS.map((group) => (
+              <div key={group.title}>
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-300">
+                  {group.title}
+                </h3>
+                <ul className="mt-4 space-y-3">
+                  {group.links.map((link) => (
+                    <li key={link.label}>
+                      <a
+                        href={link.href}
+                        className="text-sm text-slate-400 hover:text-white transition-colors whitespace-nowrap"
+                      >
+                        {link.label}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
         </div>
 
-        {/* Bottom bar */}
+        {/* Base bar */}
         <div className="border-t border-white/10 mt-12 pt-8 flex flex-col sm:flex-row items-center justify-between gap-3">
           <p className="text-xs text-slate-500">
             © {new Date().getFullYear()} PawBack. All rights reserved.
           </p>
-          <a
-            href="mailto:hello@pawback.app"
-            className="text-xs text-slate-500 hover:text-slate-300 transition-colors"
-          >
-            hello@pawback.app
-          </a>
+          <div className="flex items-center gap-5">
+            <a href="#" className="text-xs text-slate-500 hover:text-slate-300 transition-colors">
+              Privacy
+            </a>
+            <a href="#" className="text-xs text-slate-500 hover:text-slate-300 transition-colors">
+              Terms
+            </a>
+          </div>
         </div>
       </div>
     </footer>
