@@ -7,6 +7,7 @@ import LoginModal from "../components/auth/LoginModal";
 import ForgotPasswordModal from "../components/auth/ForgotPasswordModal";
 import AccountMenu from "../components/AccountMenu";
 import AppHeader from "../components/AppHeader";
+import NotificationBell from "../components/NotificationBell";
 import Footer from "../components/layout/Footer";
 
 // Landing page — the register form opens as a modal overlay when a CTA is clicked
@@ -61,7 +62,10 @@ function LandingPage() {
       {/* Navigation Header — shared AppHeader shell */}
       <AppHeader showNavLinks={isLoggedIn}>
         {isLoggedIn ? (
-          <AccountMenu onLoggedOut={() => setIsLoggedIn(false)} />
+          <>
+            <NotificationBell />
+            <AccountMenu onLoggedOut={() => setIsLoggedIn(false)} />
+          </>
         ) : (
           <>
             <button
