@@ -1,11 +1,12 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { LogOut } from "lucide-react";
+import { ChevronDown, LogOut } from "lucide-react";
 
-// Account dropdown shared by the authenticated Navbar and the landing-page
-// header: avatar button opening a menu with the signed-in identity and a
-// Log out action. `onLoggedOut` lets the caller react after logout (e.g. the
-// landing page flips its local auth state); when omitted it sends the user home.
+// Account control shared by the authenticated Navbar and the landing-page
+// header: the signed-in name in the bar, opening a menu with the account
+// email and a Log out action. `onLoggedOut` lets the caller react after
+// logout (e.g. the landing page flips its local auth state); when omitted
+// it sends the user home.
 export default function AccountMenu({ onLoggedOut }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef(null);
@@ -22,7 +23,7 @@ export default function AccountMenu({ onLoggedOut }) {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Pull the stored owner details for the avatar, label and menu header
+  // Pull the stored owner details for the label and menu header
   let displayName = "";
   let email = "";
   try {
@@ -32,7 +33,6 @@ export default function AccountMenu({ onLoggedOut }) {
   } catch {
     // Ignore a malformed user payload — fall back to the generic label
   }
-  const initial = (displayName || "A").charAt(0).toUpperCase();
 
   // Clears the JWT and user data, then hands control back to the caller
   function handleLogout() {
@@ -52,29 +52,24 @@ export default function AccountMenu({ onLoggedOut }) {
         onClick={() => setMenuOpen((open) => !open)}
         aria-haspopup="menu"
         aria-expanded={menuOpen}
-        aria-label="Account menu"
-        className="w-9 h-9 rounded-full bg-white text-blue-800 flex items-center justify-center
-                   text-sm font-semibold cursor-pointer transition-shadow
-                   ring-2 ring-transparent hover:ring-white/40
-                   focus:outline-none focus-visible:ring-white/70"
+        className="flex items-center gap-1.5 rounded text-sm font-medium text-white
+                   hover:text-blue-100 cursor-pointer transition-colors
+                   focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
       >
-        {initial}
+        <span className="max-w-[10rem] truncate">{displayName || "Account"}</span>
+        <ChevronDown
+          size={15}
+          className={`text-blue-200 transition-transform ${menuOpen ? "rotate-180" : ""}`}
+        />
       </button>
 
       {menuOpen && (
         <div className="absolute right-0 mt-2 w-60 bg-white border border-gray-200 rounded-lg shadow-lg py-1 z-20">
-          <div className="flex items-center gap-3 px-3 py-3">
-            <div className="w-9 h-9 rounded-full bg-blue-700 flex items-center justify-center text-sm font-medium text-white shrink-0">
-              {initial}
-            </div>
-            <div className="min-w-0">
-              <p className="text-sm font-medium text-gray-900 truncate">
-                {displayName || "Account"}
-              </p>
-              {email && (
-                <p className="text-xs text-gray-500 truncate">{email}</p>
-              )}
-            </div>
+          <div className="px-3 py-2.5">
+            <p className="text-xs text-gray-500">Signed in as</p>
+            <p className="text-sm font-medium text-gray-900 truncate">
+              {email || displayName || "Account"}
+            </p>
           </div>
 
           <div className="border-t border-gray-100" />
