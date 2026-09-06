@@ -19,6 +19,8 @@ import lombok.RequiredArgsConstructor;
 import java.util.List;
 import java.util.UUID;
 
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -34,7 +36,6 @@ public class PetService {
 
     public PetResponse createPet(CreatePetRequest request, MultipartFile image) {
 
-        // TEMPORARY — will be replaced with real JWT-based lookup once PAW-18 merges
         Long ownerId = getCurrentOwnerId();
 
         User owner = userRepository.findById(ownerId)
@@ -62,8 +63,16 @@ public class PetService {
         return mapToResponse(savedPet);
     }
 
+    // Resolves the authenticated owner from the JWT-populated SecurityContext.
+    // JwtAuthenticationFilter sets the principal to the loaded User entity.
     private Long getCurrentOwnerId() {
-        return 1L; // stubbed — must exist as a real row in the users table
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication == null || !(authentication.getPrincipal() instanceof User user)) {
+            throw new RuntimeException("Not authenticated");
+        }
+
+        return user.getId();
     }
 
     private PetResponse mapToResponse(Pet pet) {
@@ -83,7 +92,6 @@ public class PetService {
     // Returns all pets belonging to the currently authenticated owner
     public List<PetResponse> getMyPets() {
 
-        // TEMPORARY — replace with real JWT-based lookup once PAW-18 merges
         Long ownerId = getCurrentOwnerId();
 
         List<Pet> pets = petRepository.findByOwnerId(ownerId);
