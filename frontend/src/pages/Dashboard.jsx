@@ -15,6 +15,16 @@ function Dashboard() {
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [viewingQrPet, setViewingQrPet] = useState(null);
 
+  // Greeting name comes from the stored user, so the banner reflects whoever is
+  // actually signed in rather than a hard-coded owner.
+  let firstName = "";
+  try {
+    const user = JSON.parse(localStorage.getItem("user") || "null");
+    if (user && user.name) firstName = user.name.split(" ")[0];
+  } catch {
+    // Malformed user payload — fall back to the generic greeting
+  }
+
   useEffect(() => {
     async function fetchPets() {
       try {
@@ -77,7 +87,7 @@ function Dashboard() {
 
         <div className="relative w-full px-6 md:px-10 lg:px-16 py-8">
           <h1 className="text-2xl font-semibold text-white mb-1">
-            Welcome back, Dhananjaya
+            {firstName ? `Welcome back, ${firstName}` : "Welcome back"}
           </h1>
           <p className="text-blue-100 text-sm">
             Keep your pets' profiles up to date so they can always find their way home.

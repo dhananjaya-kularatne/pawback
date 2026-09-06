@@ -19,7 +19,9 @@ export default function LoginModal({ onClose, onSuccess, onSwitchToRegister, onF
     try {
       const data = await loginUser({ email, password });
       if (data.token) localStorage.setItem("token", data.token);
+      // Always refresh the stored user so a previous account's details can't linger
       if (data.user) localStorage.setItem("user", JSON.stringify(data.user));
+      else localStorage.removeItem("user");
       onSuccess();
     } catch (err) {
       setError(err.message || "Login failed. Please check your credentials.");

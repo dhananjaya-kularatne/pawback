@@ -25,8 +25,11 @@ function Login() {
       if (data.token) {
         localStorage.setItem("token", data.token);
       }
+      // Always refresh the stored user so a previous account's details can't linger
       if (data.user) {
         localStorage.setItem("user", JSON.stringify(data.user));
+      } else {
+        localStorage.removeItem("user");
       }
 
       navigate("/dashboard");
