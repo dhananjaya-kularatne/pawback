@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ChevronDown, LogOut } from "lucide-react";
+import { LogOut } from "lucide-react";
 
 // Account dropdown shared by the authenticated Navbar and the landing-page
 // header: avatar button opening a menu with the signed-in identity and a
@@ -32,7 +32,6 @@ export default function AccountMenu({ onLoggedOut }) {
   } catch {
     // Ignore a malformed user payload — fall back to the generic label
   }
-  const firstName = displayName ? displayName.split(" ")[0] : "Account";
   const initial = (displayName || "A").charAt(0).toUpperCase();
 
   // Clears the JWT and user data, then hands control back to the caller
@@ -51,15 +50,15 @@ export default function AccountMenu({ onLoggedOut }) {
     <div className="relative" ref={menuRef}>
       <button
         onClick={() => setMenuOpen((open) => !open)}
-        className="flex items-center gap-2 pl-1 pr-2 py-1 rounded-full
-                   border border-white/30 hover:bg-white/10
-                   cursor-pointer transition-colors"
+        aria-haspopup="menu"
+        aria-expanded={menuOpen}
+        aria-label="Account menu"
+        className="w-9 h-9 rounded-full bg-white text-blue-800 flex items-center justify-center
+                   text-sm font-semibold cursor-pointer transition-shadow
+                   ring-2 ring-transparent hover:ring-white/40
+                   focus:outline-none focus-visible:ring-white/70"
       >
-        <div className="w-7 h-7 rounded-full bg-white flex items-center justify-center text-xs font-medium text-blue-800">
-          {initial}
-        </div>
-        <span className="text-sm text-white">{firstName}</span>
-        <ChevronDown size={14} className="text-blue-200" />
+        {initial}
       </button>
 
       {menuOpen && (
