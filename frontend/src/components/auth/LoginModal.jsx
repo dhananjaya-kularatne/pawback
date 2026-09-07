@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Mail, Lock, ArrowRight } from "lucide-react";
 import { loginUser } from "../../api/authApi";
 import AuthModalShell from "./AuthModalShell";
@@ -7,6 +8,7 @@ import AuthModalShell from "./AuthModalShell";
 // RegisterModal. On success it persists the returned token/user and calls
 // onSuccess so the landing page decides what happens next.
 export default function LoginModal({ onClose, onSuccess, onSwitchToRegister, onForgotPassword }) {
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -23,6 +25,8 @@ export default function LoginModal({ onClose, onSuccess, onSwitchToRegister, onF
       if (data.user) sessionStorage.setItem("user", JSON.stringify(data.user));
       else sessionStorage.removeItem("user");
       onSuccess();
+      // Admins land in the admin area; everyone else stays where they signed in
+      if (data.user?.role === "ADMIN") navigate("/admin");
     } catch (err) {
       setError(err.message || "Login failed. Please check your credentials.");
     } finally {

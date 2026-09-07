@@ -1,18 +1,23 @@
 import { NavLink } from "react-router-dom";
+import { isAdmin } from "../utils/auth";
 
 // Persistent header navigation shared by the landing header and the
 // authenticated Navbar, so moving between Home and the Dashboard feels like
 // the same app rather than separate pages. Styled for the blue header bar;
-// the active route is highlighted.
-const LINKS = [
+// the active route is highlighted. The Admin link only appears for admins.
+const BASE_LINKS = [
   { to: "/", label: "Home", end: true },
   { to: "/dashboard", label: "Dashboard" },
 ];
 
 export default function HeaderNavLinks() {
+  const links = isAdmin()
+    ? [...BASE_LINKS, { to: "/admin", label: "Admin" }]
+    : BASE_LINKS;
+
   return (
     <nav className="flex items-center gap-1">
-      {LINKS.map(({ to, label, end }) => (
+      {links.map(({ to, label, end }) => (
         <NavLink
           key={to}
           to={to}
