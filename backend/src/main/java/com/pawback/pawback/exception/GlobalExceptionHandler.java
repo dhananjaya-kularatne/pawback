@@ -57,6 +57,16 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
                 .body(ApiResponse.error(403, exception.getMessage()));
     }
 
+    // --- Role check failure — @PreAuthorize denials on admin-only endpoints ---
+    // Without this, the RuntimeException catch-all below would turn a wrong-role
+    // request into a 500 instead of the 403 the caller should see.
+    @ExceptionHandler(org.springframework.security.access.AccessDeniedException.class)
+    public ResponseEntity<ApiResponse<Void>> handleSecurityAccessDenied(
+            org.springframework.security.access.AccessDeniedException exception, HttpServletRequest request) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(ApiResponse.error(403, "You do not have permission to access this resource"));
+    }
+
     // --- Duplicate email during registration ---
     @ExceptionHandler(EmailAlreadyExistsException.class)
     public ResponseEntity<ApiResponse<Void>> handleEmailAlreadyExists(
