@@ -1,7 +1,9 @@
 package com.pawback.pawback.service;
 
+import com.pawback.pawback.dto.request.LoginRequest;
 import com.pawback.pawback.dto.request.RegisterRequest;
 import com.pawback.pawback.dto.response.AuthResponse;
+import com.pawback.pawback.exception.DisabledAccountException;
 import com.pawback.pawback.exception.EmailAlreadyExistsException;
 import com.pawback.pawback.model.AuthProvider;
 import com.pawback.pawback.model.Role;
@@ -15,6 +17,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
+
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -77,6 +81,26 @@ class AuthServiceTest {
 
         verify(passwordEncoder).encode("secret123");
         verify(userRepository).save(any(User.class));
+    }
+
+    @Test
+    void login_DisabledAccount_ThrowsDisabledAccountExceptionAndIssuesNoToken() {
+        savedUser.setEnabled(false);
+        LoginRequest loginRequest = LoginRequest.builder()
+                .email("jane@example.com")
+                .password("secret123")
+                .build();
+
+        when(userRepository.findByEmail("jane@example.com")).thenReturn(Optional.of(savedUser));
+        when(passwordEncoder.matches("secret123", "encoded_secret123")).thenReturn(true);
+
+        DisabledAccountException exception = assertThrows(
+                DisabledAccountException.class,
+                () -> authService.login(loginRequest)
+        );
+
+        assertTrue(exception.getMessage().toLowerCase().contains("disabled"));
+        verify(jwtUtil, never()).generateToken(any(User.class));
     }
 
     @Test

@@ -7,6 +7,7 @@ import com.pawback.pawback.dto.request.ResetPasswordRequest;
 import com.pawback.pawback.dto.request.VerifyOtpRequest;
 import com.pawback.pawback.dto.response.AuthResponse;
 import com.pawback.pawback.dto.response.UserResponse;
+import com.pawback.pawback.exception.DisabledAccountException;
 import com.pawback.pawback.exception.EmailAlreadyExistsException;
 import com.pawback.pawback.exception.InvalidCredentialsException;
 import com.pawback.pawback.model.AuthProvider;
@@ -66,6 +67,12 @@ public class AuthService {
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
             throw new InvalidCredentialsException("Invalid email or password");
+        }
+
+        // A user an admin has disabled can authenticate with the right password
+        // but must not be allowed a session — moderation is enforced here, not just in the UI.
+        if (!user.isEnabled()) {
+            throw new DisabledAccountException("This account has been disabled. Please contact support.");
         }
 
         String token = jwtUtil.generateToken(user);

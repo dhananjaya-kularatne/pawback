@@ -59,6 +59,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             userRepository.findByEmail(email).ifPresent(user -> {
+                // An account an admin has disabled keeps no session — even a token
+                // issued before it was disabled stops authenticating from here on.
+                if (!user.isEnabled()) {
+                    return;
+                }
+
                 var authority = new SimpleGrantedAuthority("ROLE_" + user.getRole().name());
                 var authentication = new UsernamePasswordAuthenticationToken(
                         user, null, List.of(authority));
