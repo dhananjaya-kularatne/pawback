@@ -83,6 +83,14 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
                 .body(ApiResponse.error(401, exception.getMessage()));
     }
 
+    // --- Login attempt against an admin-disabled account ---
+    @ExceptionHandler(DisabledAccountException.class)
+    public ResponseEntity<ApiResponse<Void>> handleDisabledAccount(
+            DisabledAccountException exception, HttpServletRequest request) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(ApiResponse.error(403, exception.getMessage()));
+    }
+
     // --- Catch-all fallback for anything unhandled ---
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<ApiResponse<Void>> handleRuntimeException(
