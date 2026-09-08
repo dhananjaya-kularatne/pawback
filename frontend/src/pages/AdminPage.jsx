@@ -33,10 +33,10 @@ function AdminPage() {
     };
   }, [navigate]);
 
-  // Placeholders for the admin capabilities that land in their own stories
-  // (user management, platform stats, scan-report moderation).
+  // Admin capabilities. Live tools carry a `to` route; the rest are placeholders
+  // for stories that haven't landed yet.
   const tools = [
-    { title: "Users", body: "View and disable user accounts." },
+    { title: "Users", body: "View all registered users and disable accounts.", to: "/admin/users" },
     { title: "Platform stats", body: "Registrations, pets, and scan activity at a glance." },
     { title: "Scan reports", body: "Review and remove scan reports." },
   ];
@@ -77,18 +77,34 @@ function AdminPage() {
 
         <h2 className="text-lg font-medium text-gray-900 mb-4">Admin tools</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          {tools.map(({ title, body }) => (
-            <div
-              key={title}
-              className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 border-l-4 border-l-blue-700"
-            >
-              <h3 className="text-sm font-semibold text-gray-900 mb-1">{title}</h3>
-              <p className="text-xs text-gray-600 leading-relaxed mb-3">{body}</p>
-              <span className="inline-block text-[11px] font-medium text-gray-400 uppercase tracking-wide">
-                Coming soon
-              </span>
-            </div>
-          ))}
+          {tools.map(({ title, body, to }) => {
+            const cardClass =
+              "bg-white rounded-2xl border border-gray-200 shadow-sm p-6 border-l-4 border-l-blue-700";
+            if (to) {
+              return (
+                <button
+                  key={title}
+                  onClick={() => navigate(to)}
+                  className={`${cardClass} text-left hover:shadow-md hover:-translate-y-0.5 transition-all cursor-pointer`}
+                >
+                  <h3 className="text-sm font-semibold text-gray-900 mb-1">{title}</h3>
+                  <p className="text-xs text-gray-600 leading-relaxed mb-3">{body}</p>
+                  <span className="inline-block text-[11px] font-medium text-blue-700 uppercase tracking-wide">
+                    Open
+                  </span>
+                </button>
+              );
+            }
+            return (
+              <div key={title} className={cardClass}>
+                <h3 className="text-sm font-semibold text-gray-900 mb-1">{title}</h3>
+                <p className="text-xs text-gray-600 leading-relaxed mb-3">{body}</p>
+                <span className="inline-block text-[11px] font-medium text-gray-400 uppercase tracking-wide">
+                  Coming soon
+                </span>
+              </div>
+            );
+          })}
         </div>
       </div>
     </div>
