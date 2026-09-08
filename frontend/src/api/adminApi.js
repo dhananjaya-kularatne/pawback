@@ -21,3 +21,40 @@ export async function getAdminProfile() {
 
   return result.data;
 }
+
+// Paginated list of every registered user. Returns the backend's PagedResponse
+// shape: { content, page, size, totalElements, totalPages, last }.
+export async function listUsers(page = 0, size = 20) {
+  const response = await fetch(
+    `${API_BASE_URL}/admin/users?page=${page}&size=${size}`,
+    {
+      method: "GET",
+      headers: authHeaders(),
+    }
+  );
+
+  const result = await response.json();
+
+  if (!response.ok) {
+    throw new Error(result.message || "Failed to load users");
+  }
+
+  return result.data;
+}
+
+// Disables a user account. The backend rejects an admin disabling their own
+// account with a 403, which surfaces here as a thrown Error.
+export async function disableUser(userId) {
+  const response = await fetch(`${API_BASE_URL}/admin/users/${userId}/disable`, {
+    method: "PATCH",
+    headers: authHeaders(),
+  });
+
+  const result = await response.json();
+
+  if (!response.ok) {
+    throw new Error(result.message || "Failed to disable user");
+  }
+
+  return result.data;
+}
