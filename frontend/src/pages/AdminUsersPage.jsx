@@ -1,27 +1,29 @@
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Ban, ChevronLeft, ChevronRight, Users } from "lucide-react";
-import Navbar from "../components/Navbar";
-import { listUsers, disableUser } from "../api/adminApi";
+import { useEffect, useMemo, useState } from "react";
+import { ChevronLeft, ChevronRight, Search } from "lucide-react";
+import AdminLayout from "../components/admin/AdminLayout";
+import ConfirmDialog from "../components/ConfirmDialog";
+import { listUsers, setUserEnabled } from "../api/adminApi";
 import { getCurrentUser } from "../utils/auth";
 
 const PAGE_SIZE = 20;
 
 // Admin moderation view — every registered user, paginated, with a per-row
-// disable action. The route is already gated to admins by AdminRoute; every
+// enable/disable toggle. The route is gated to admins by AdminRoute; every
 // request here also hits the ADMIN-only backend, and the self-disable rule is
 // enforced server-side regardless of what this page shows.
 function AdminUsersPage() {
-  const navigate = useNavigate();
   const currentUser = getCurrentUser();
 
   const [page, setPage] = useState(0);
-  // Bumped to force a refetch of the current page after a disable action
+  // Bumped to force a refetch of the current page after a toggle
   const [reloadKey, setReloadKey] = useState(0);
   const [pageData, setPageData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [query, setQuery] = useState("");
   const [pendingId, setPendingId] = useState(null);
+  // The user queued for a disable confirmation, or null
+  const [toDisable, setToDisable] = useState(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -51,178 +53,234 @@ function AdminUsersPage() {
     setPage(targetPage);
   }
 
-  async function handleDisable(user) {
-    const confirmed = window.confirm(
-      `Disable ${user.name || user.email}? They will be signed out and can no longer log in.`
-    );
-    if (!confirmed) return;
+  function refetch() {
+    setLoading(true);
+    setReloadKey((k) => k + 1);
+  }
 
+  async function toggleEnabled(user, enabled) {
     setPendingId(user.id);
+    setError("");
     try {
-      await disableUser(user.id);
-      // Refetch the current page so the row reflects the new status
-      setLoading(true);
-      setReloadKey((k) => k + 1);
+      await setUserEnabled(user.id, enabled);
+      setToDisable(null);
+      refetch();
     } catch (err) {
       setError(err.message);
+      setToDisable(null);
     } finally {
       setPendingId(null);
     }
   }
 
-  const users = pageData?.content ?? [];
   const totalPages = pageData?.totalPages ?? 0;
   const totalElements = pageData?.totalElements ?? 0;
   const isLast = pageData?.last ?? true;
 
+  // Client-side filter over the current page — quick lookup by name or email
+  const users = useMemo(() => {
+    const list = pageData?.content ?? [];
+    const q = query.trim().toLowerCase();
+    if (!q) return list;
+    return list.filter(
+      (u) =>
+        (u.name || "").toLowerCase().includes(q) ||
+        (u.email || "").toLowerCase().includes(q)
+    );
+  }, [pageData, query]);
+
   return (
-    <div className="min-h-screen bg-slate-50">
-      <Navbar />
-
-      {/* Admin banner — its own blue band beneath the shared header */}
-      <div className="bg-gradient-to-br from-blue-700 to-blue-900 relative overflow-hidden">
-        <div className="absolute inset-0 opacity-10">
-          <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
-            <defs>
-              <pattern id="admin-users-pattern" x="0" y="0" width="60" height="60" patternUnits="userSpaceOnUse">
-                <circle cx="30" cy="30" r="2" fill="white" />
-              </pattern>
-            </defs>
-            <rect width="100%" height="100%" fill="url(#admin-users-pattern)" />
-          </svg>
-        </div>
-
-        <div className="relative w-full px-6 md:px-10 lg:px-16 py-8">
-          <button
-            onClick={() => navigate("/admin")}
-            className="inline-flex items-center gap-1.5 text-xs font-medium text-blue-100 hover:text-white mb-3 cursor-pointer transition-colors"
-          >
-            <ArrowLeft size={14} />
-            Back to admin console
-          </button>
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/20 text-xs font-medium text-blue-100 mb-3 ml-3">
-            <Users size={14} />
-            User management
-          </div>
-          <h1 className="text-2xl font-semibold text-white mb-1">Registered users</h1>
-          <p className="text-blue-100 text-sm">
-            {totalElements === 1 ? "1 account" : `${totalElements} accounts`} on the platform.
+    <AdminLayout title="Users">
+      <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 mb-5">
+        <div>
+          <h2 className="text-lg font-semibold text-gray-900">All users</h2>
+          <p className="text-sm text-gray-500 mt-0.5">
+            {totalElements === 1
+              ? "1 registered account"
+              : `${totalElements} registered accounts`}
+            . Disabling an account blocks sign-in until it is re-enabled.
           </p>
+        </div>
+        <div className="relative w-full sm:w-72">
+          <Search
+            size={15}
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+          />
+          <input
+            type="text"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search this page"
+            className="w-full text-sm border border-gray-300 rounded-lg pl-8 pr-3 py-2 bg-white
+                       focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+          />
         </div>
       </div>
 
-      <div className="w-full px-6 md:px-10 lg:px-16 py-6">
-        {error && (
-          <p className="text-sm text-red-700 mb-4 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
-            {error}
-          </p>
-        )}
+      {error && (
+        <p className="text-sm text-red-700 mb-4 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+          {error}
+        </p>
+      )}
 
-        {loading && <p className="text-sm text-gray-600">Loading users...</p>}
+      <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="text-left text-xs font-semibold text-gray-600 uppercase tracking-wide bg-gray-50 border-b border-gray-200">
+                <th className="px-5 py-3">User</th>
+                <th className="px-5 py-3">Phone</th>
+                <th className="px-5 py-3">Role</th>
+                <th className="px-5 py-3">Status</th>
+                <th className="px-5 py-3 text-right">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {loading && (
+                <tr>
+                  <td colSpan={5} className="px-5 py-12 text-center text-sm text-gray-400">
+                    Loading users...
+                  </td>
+                </tr>
+              )}
 
-        {!loading && users.length === 0 && !error && (
-          <p className="text-sm text-gray-600">No users to show.</p>
-        )}
+              {!loading && users.length === 0 && (
+                <tr>
+                  <td colSpan={5} className="px-5 py-12 text-center text-sm text-gray-400">
+                    {query ? "No users match your search." : "No users to show."}
+                  </td>
+                </tr>
+              )}
 
-        {!loading && users.length > 0 && (
-          <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="bg-slate-50 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                    <th className="px-4 py-3">Name</th>
-                    <th className="px-4 py-3">Email</th>
-                    <th className="px-4 py-3">Phone</th>
-                    <th className="px-4 py-3">Role</th>
-                    <th className="px-4 py-3">Status</th>
-                    <th className="px-4 py-3 text-right">Action</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100">
-                  {users.map((user) => {
-                    const isSelf = currentUser?.id === user.id;
-                    return (
-                      <tr key={user.id} className="hover:bg-slate-50/60">
-                        <td className="px-4 py-3 font-medium text-gray-900">
-                          {user.name || "—"}
-                          {isSelf && (
-                            <span className="ml-2 text-[11px] font-normal text-gray-400">(you)</span>
-                          )}
-                        </td>
-                        <td className="px-4 py-3 text-gray-600">{user.email}</td>
-                        <td className="px-4 py-3 text-gray-600">{user.phone || "—"}</td>
-                        <td className="px-4 py-3">
-                          <span className="text-xs font-medium text-gray-700">{user.role}</span>
-                        </td>
-                        <td className="px-4 py-3">
+              {!loading &&
+                users.map((user) => {
+                  const isSelf = currentUser?.id === user.id;
+                  const isPending = pendingId === user.id;
+                  return (
+                    <tr
+                      key={user.id}
+                      className={`border-b border-gray-100 last:border-0 transition-colors ${
+                        user.enabled ? "hover:bg-blue-50/40" : "bg-rose-50/40 hover:bg-rose-50/70"
+                      }`}
+                    >
+                      <td className="px-5 py-3">
+                        <div className="min-w-0">
+                          <div className="font-medium text-gray-900 truncate">
+                            {user.name || "—"}
+                            {isSelf && (
+                              <span className="ml-2 text-[11px] font-normal text-gray-400">
+                                you
+                              </span>
+                            )}
+                          </div>
+                          <div className="text-gray-500 truncate">{user.email}</div>
+                        </div>
+                      </td>
+                      <td className="px-5 py-3 text-gray-600">{user.phone || "—"}</td>
+                      <td className="px-5 py-3">
+                        <span
+                          className={`text-xs font-medium px-2 py-0.5 rounded ${
+                            user.role === "ADMIN"
+                              ? "bg-violet-50 text-violet-700"
+                              : "bg-gray-100 text-gray-600"
+                          }`}
+                        >
+                          {user.role}
+                        </span>
+                      </td>
+                      <td className="px-5 py-3">
+                        <span
+                          className={`inline-flex items-center gap-1.5 text-xs font-medium px-2 py-0.5 rounded-full ring-1 ${
+                            user.enabled
+                              ? "bg-emerald-50 text-emerald-700 ring-emerald-600/20"
+                              : "bg-rose-50 text-rose-700 ring-rose-600/20"
+                          }`}
+                        >
                           <span
-                            className={`inline-block text-xs font-semibold px-2 py-0.5 rounded-full ${
-                              user.enabled
-                                ? "bg-green-100 text-green-700"
-                                : "bg-gray-200 text-gray-600"
+                            className={`w-1.5 h-1.5 rounded-full ${
+                              user.enabled ? "bg-emerald-500" : "bg-rose-500"
                             }`}
-                          >
-                            {user.enabled ? "Enabled" : "Disabled"}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3 text-right">
+                          />
+                          {user.enabled ? "Active" : "Disabled"}
+                        </span>
+                      </td>
+                      <td className="px-5 py-3 text-right">
+                        {user.enabled ? (
                           <button
-                            onClick={() => handleDisable(user)}
-                            disabled={!user.enabled || isSelf || pendingId === user.id}
-                            className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg
-                                       text-red-700 bg-red-50 hover:bg-red-100 transition-colors cursor-pointer
-                                       disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-red-50"
+                            onClick={() => setToDisable(user)}
+                            disabled={isSelf || isPending}
+                            className="text-xs font-medium px-3 py-1.5 rounded-lg border border-rose-200
+                                       text-rose-700 bg-white hover:bg-rose-50 transition-colors cursor-pointer
+                                       disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white"
                             title={
                               isSelf
                                 ? "You cannot disable your own account"
-                                : !user.enabled
-                                ? "Account is already disabled"
                                 : "Disable this account"
                             }
                           >
-                            <Ban size={13} />
-                            {pendingId === user.id ? "Disabling..." : "Disable"}
+                            Disable
                           </button>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+                        ) : (
+                          <button
+                            onClick={() => toggleEnabled(user, true)}
+                            disabled={isPending}
+                            className="text-xs font-medium px-3 py-1.5 rounded-lg bg-emerald-600 text-white
+                                       hover:bg-emerald-700 transition-colors cursor-pointer
+                                       disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            {isPending ? "Enabling..." : "Enable"}
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+            </tbody>
+          </table>
+        </div>
 
-            {/* Pagination controls */}
-            <div className="flex items-center justify-between px-4 py-3 border-t border-gray-100 bg-slate-50/60">
-              <span className="text-xs text-gray-500">
-                Page {page + 1} of {Math.max(totalPages, 1)}
-              </span>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => goToPage(Math.max(page - 1, 0))}
-                  disabled={page === 0 || loading}
-                  className="inline-flex items-center gap-1 text-xs font-medium px-3 py-1.5 rounded-lg
-                             border border-gray-200 bg-white hover:bg-gray-50 transition-colors cursor-pointer
-                             disabled:opacity-40 disabled:cursor-not-allowed"
-                >
-                  <ChevronLeft size={13} />
-                  Previous
-                </button>
-                <button
-                  onClick={() => goToPage(page + 1)}
-                  disabled={isLast || loading}
-                  className="inline-flex items-center gap-1 text-xs font-medium px-3 py-1.5 rounded-lg
-                             border border-gray-200 bg-white hover:bg-gray-50 transition-colors cursor-pointer
-                             disabled:opacity-40 disabled:cursor-not-allowed"
-                >
-                  Next
-                  <ChevronRight size={13} />
-                </button>
-              </div>
-            </div>
+        {/* Pagination footer */}
+        <div className="flex items-center justify-between px-5 py-3 border-t border-gray-200 bg-gray-50/60">
+          <span className="text-xs text-gray-500">
+            Page {page + 1} of {Math.max(totalPages, 1)}
+          </span>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => goToPage(Math.max(page - 1, 0))}
+              disabled={page === 0 || loading}
+              className="inline-flex items-center gap-1 text-xs font-medium px-2.5 py-1.5 rounded-lg
+                         border border-gray-300 bg-white hover:bg-gray-50 transition-colors cursor-pointer
+                         disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              <ChevronLeft size={14} />
+              Previous
+            </button>
+            <button
+              onClick={() => goToPage(page + 1)}
+              disabled={isLast || loading}
+              className="inline-flex items-center gap-1 text-xs font-medium px-2.5 py-1.5 rounded-lg
+                         border border-gray-300 bg-white hover:bg-gray-50 transition-colors cursor-pointer
+                         disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              Next
+              <ChevronRight size={14} />
+            </button>
           </div>
-        )}
+        </div>
       </div>
-    </div>
+
+      {toDisable && (
+        <ConfirmDialog
+          tone="danger"
+          title={`Disable ${toDisable.name || toDisable.email}?`}
+          message="They will be signed out and won't be able to log in until an admin re-enables the account."
+          confirmLabel="Disable account"
+          busy={pendingId === toDisable.id}
+          onConfirm={() => toggleEnabled(toDisable, false)}
+          onCancel={() => setToDisable(null)}
+        />
+      )}
+    </AdminLayout>
   );
 }
 

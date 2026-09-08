@@ -1,24 +1,27 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Shield } from "lucide-react";
-import Navbar from "../components/Navbar";
-import { getAdminProfile } from "../api/adminApi";
+import { Users, UserCheck, UserX, ShieldCheck, ArrowRight } from "lucide-react";
+import AdminLayout from "../components/admin/AdminLayout";
+import { getAdminProfile, getAdminStats } from "../api/adminApi";
 
-// Admin-only area. AdminRoute already gates the route on an ADMIN role, but we
-// also call the protected /admin/me endpoint on mount so a token that isn't
-// really an admin — or has gone stale — is caught server-side and bounced.
+// Admin console home. AdminRoute already gates the route on an ADMIN role, but we
+// also call the protected /admin endpoints on mount so a token that isn't really
+// an admin — or has gone stale — is caught server-side and bounced.
 function AdminPage() {
   const navigate = useNavigate();
-  const [admin, setAdmin] = useState(null);
+  const [stats, setStats] = useState(null);
   const [error, setError] = useState("");
 
   useEffect(() => {
     let cancelled = false;
 
-    async function verify() {
+    async function load() {
       try {
-        const data = await getAdminProfile();
-        if (!cancelled) setAdmin(data);
+        const [, statsData] = await Promise.all([
+          getAdminProfile(),
+          getAdminStats(),
+        ]);
+        if (!cancelled) setStats(statsData);
       } catch (err) {
         if (!cancelled) {
           setError(err.message);
@@ -27,87 +30,76 @@ function AdminPage() {
       }
     }
 
-    verify();
+    load();
     return () => {
       cancelled = true;
     };
   }, [navigate]);
 
-  // Admin capabilities. Live tools carry a `to` route; the rest are placeholders
-  // for stories that haven't landed yet.
-  const tools = [
-    { title: "Users", body: "View all registered users and disable accounts.", to: "/admin/users" },
-    { title: "Platform stats", body: "Registrations, pets, and scan activity at a glance." },
-    { title: "Scan reports", body: "Review and remove scan reports." },
+  const tiles = [
+    { label: "Total users", value: stats?.totalUsers, icon: Users, accent: "bg-blue-50 text-blue-600", bar: "border-t-blue-500" },
+    { label: "Active", value: stats?.activeUsers, icon: UserCheck, accent: "bg-emerald-50 text-emerald-600", bar: "border-t-emerald-500" },
+    { label: "Disabled", value: stats?.disabledUsers, icon: UserX, accent: "bg-rose-50 text-rose-600", bar: "border-t-rose-500" },
+    { label: "Admins", value: stats?.admins, icon: ShieldCheck, accent: "bg-violet-50 text-violet-600", bar: "border-t-violet-500" },
   ];
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <Navbar />
+    <AdminLayout title="Console">
+      {error && (
+        <p className="text-sm text-red-700 mb-4 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+          {error}
+        </p>
+      )}
 
-      {/* Admin banner — its own blue band beneath the shared header */}
-      <div className="bg-gradient-to-br from-blue-700 to-blue-900 relative overflow-hidden">
-        <div className="absolute inset-0 opacity-10">
-          <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
-            <defs>
-              <pattern id="admin-paw-pattern" x="0" y="0" width="60" height="60" patternUnits="userSpaceOnUse">
-                <circle cx="30" cy="30" r="2" fill="white" />
-              </pattern>
-            </defs>
-            <rect width="100%" height="100%" fill="url(#admin-paw-pattern)" />
-          </svg>
-        </div>
+      <div className="mb-6">
+        <h2 className="text-xl font-bold text-gray-900 tracking-tight">
+          Platform overview
+        </h2>
+        <p className="text-sm text-gray-500 mt-1">Users and access at a glance.</p>
+      </div>
 
-        <div className="relative w-full px-6 md:px-10 lg:px-16 py-8">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/20 text-xs font-medium text-blue-100 mb-3">
-            <Shield size={14} />
-            Admin area
+      {/* Summary tiles */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        {tiles.map(({ label, value, icon: Icon, accent, bar }) => (
+          <div
+            key={label}
+            className={`bg-white rounded-xl border border-gray-200 border-t-2 ${bar} shadow-sm p-5
+                        hover:shadow-md transition-shadow`}
+          >
+            <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${accent}`}>
+              <Icon size={20} />
+            </div>
+            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mt-3">
+              {label}
+            </p>
+            <p className="text-3xl font-bold text-gray-900 tabular-nums mt-0.5">
+              {value ?? "—"}
+            </p>
           </div>
-          <h1 className="text-2xl font-semibold text-white mb-1">
-            {admin?.name ? `Signed in as ${admin.name}` : "Admin console"}
-          </h1>
-          <p className="text-blue-100 text-sm">
-            {admin?.email || "Elevated access — restricted to administrators."}
+        ))}
+      </div>
+
+      {/* Primary action */}
+      <div className="bg-white rounded-xl border border-gray-200 shadow-sm border-l-4 border-l-blue-600 p-6 flex flex-col sm:flex-row sm:items-center gap-4">
+        <div className="w-11 h-11 rounded-lg bg-blue-50 flex items-center justify-center shrink-0">
+          <Users size={20} className="text-blue-600" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <h2 className="text-sm font-semibold text-gray-900">User management</h2>
+          <p className="text-sm text-gray-500 mt-0.5">
+            View every registered account, and enable or disable who can sign in.
           </p>
         </div>
+        <button
+          onClick={() => navigate("/admin/users")}
+          className="inline-flex items-center justify-center gap-1.5 bg-blue-600 hover:bg-blue-700
+                     text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors cursor-pointer shrink-0"
+        >
+          Manage users
+          <ArrowRight size={16} />
+        </button>
       </div>
-
-      <div className="w-full px-6 md:px-10 lg:px-16 py-6">
-        {error && <p className="text-sm text-red-700 mb-4">{error}</p>}
-
-        <h2 className="text-lg font-medium text-gray-900 mb-4">Admin tools</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          {tools.map(({ title, body, to }) => {
-            const cardClass =
-              "bg-white rounded-2xl border border-gray-200 shadow-sm p-6 border-l-4 border-l-blue-700";
-            if (to) {
-              return (
-                <button
-                  key={title}
-                  onClick={() => navigate(to)}
-                  className={`${cardClass} text-left hover:shadow-md hover:-translate-y-0.5 transition-all cursor-pointer`}
-                >
-                  <h3 className="text-sm font-semibold text-gray-900 mb-1">{title}</h3>
-                  <p className="text-xs text-gray-600 leading-relaxed mb-3">{body}</p>
-                  <span className="inline-block text-[11px] font-medium text-blue-700 uppercase tracking-wide">
-                    Open
-                  </span>
-                </button>
-              );
-            }
-            return (
-              <div key={title} className={cardClass}>
-                <h3 className="text-sm font-semibold text-gray-900 mb-1">{title}</h3>
-                <p className="text-xs text-gray-600 leading-relaxed mb-3">{body}</p>
-                <span className="inline-block text-[11px] font-medium text-gray-400 uppercase tracking-wide">
-                  Coming soon
-                </span>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-    </div>
+    </AdminLayout>
   );
 }
 
