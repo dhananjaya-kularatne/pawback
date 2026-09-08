@@ -1,9 +1,11 @@
 package com.pawback.pawback.service;
 
+import com.pawback.pawback.dto.response.AdminStatsResponse;
 import com.pawback.pawback.dto.response.PagedResponse;
 import com.pawback.pawback.dto.response.UserResponse;
 import com.pawback.pawback.exception.AccessDeniedException;
 import com.pawback.pawback.exception.ResourceNotFoundException;
+import com.pawback.pawback.model.Role;
 import com.pawback.pawback.model.User;
 import com.pawback.pawback.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -27,8 +29,19 @@ public class AdminUserService {
 
     private final UserRepository userRepository;
 
-    // Every registered user, newest control first via a stable id sort so page
-    // boundaries don't shift between requests.
+    // Headline counts for the admin console summary tiles.
+    @Transactional(readOnly = true)
+    public AdminStatsResponse stats() {
+        return AdminStatsResponse.builder()
+                .totalUsers(userRepository.count())
+                .activeUsers(userRepository.countByEnabled(true))
+                .disabledUsers(userRepository.countByEnabled(false))
+                .admins(userRepository.countByRole(Role.ADMIN))
+                .build();
+    }
+
+    // Every registered user, ordered by a stable id sort so page boundaries
+    // don't shift between requests.
     @Transactional(readOnly = true)
     public PagedResponse<UserResponse> listUsers(int page, int size) {
         Page<User> users = userRepository.findAll(
@@ -36,20 +49,18 @@ public class AdminUserService {
         return PagedResponse.from(users.map(UserResponse::fromUser));
     }
 
-    // Sets the target user's enabled flag to false. Rejects an admin trying to
-    // disable themselves before touching the database.
+    // Flips the target user's enabled flag. An admin may re-enable anyone, but
+    // must never disable their own account — that check runs before any DB write.
     @Transactional
-    public UserResponse disableUser(Long targetUserId) {
-        User currentAdmin = currentUser();
-
-        if (currentAdmin.getId().equals(targetUserId)) {
+    public UserResponse setUserEnabled(Long targetUserId, boolean enabled) {
+        if (!enabled && currentUser().getId().equals(targetUserId)) {
             throw new AccessDeniedException("An admin cannot disable their own account");
         }
 
         User target = userRepository.findById(targetUserId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
-        target.setEnabled(false);
+        target.setEnabled(enabled);
         return UserResponse.fromUser(userRepository.save(target));
     }
 

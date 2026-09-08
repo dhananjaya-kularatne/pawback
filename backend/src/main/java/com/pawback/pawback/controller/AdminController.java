@@ -1,5 +1,6 @@
 package com.pawback.pawback.controller;
 
+import com.pawback.pawback.dto.response.AdminStatsResponse;
 import com.pawback.pawback.dto.response.ApiResponse;
 import com.pawback.pawback.dto.response.PagedResponse;
 import com.pawback.pawback.dto.response.UserResponse;
@@ -20,7 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
  * Admin-only endpoints. Every route here requires an ADMIN role claim in the JWT —
  * the class-level @PreAuthorize gate rejects any other caller with 403 before the
  * handler runs. Beyond the baseline role check it now covers user moderation:
- * listing every registered user and disabling one.
+ * listing every registered user and enabling or disabling one.
  */
 @RestController
 @RequestMapping("/api/admin")
@@ -39,6 +40,14 @@ public class AdminController {
         );
     }
 
+    // Headline counts for the admin console summary tiles
+    @GetMapping("/stats")
+    public ResponseEntity<ApiResponse<AdminStatsResponse>> stats() {
+        return ResponseEntity.ok(
+                ApiResponse.success("Stats retrieved successfully", adminUserService.stats())
+        );
+    }
+
     // Paginated list of every registered user for the admin moderation view
     @GetMapping("/users")
     public ResponseEntity<ApiResponse<PagedResponse<UserResponse>>> listUsers(
@@ -54,7 +63,15 @@ public class AdminController {
     @PatchMapping("/users/{id}/disable")
     public ResponseEntity<ApiResponse<UserResponse>> disableUser(@PathVariable Long id) {
         return ResponseEntity.ok(
-                ApiResponse.success("User disabled successfully", adminUserService.disableUser(id))
+                ApiResponse.success("User disabled successfully", adminUserService.setUserEnabled(id, false))
+        );
+    }
+
+    // Re-enables a previously disabled user account
+    @PatchMapping("/users/{id}/enable")
+    public ResponseEntity<ApiResponse<UserResponse>> enableUser(@PathVariable Long id) {
+        return ResponseEntity.ok(
+                ApiResponse.success("User enabled successfully", adminUserService.setUserEnabled(id, true))
         );
     }
 }

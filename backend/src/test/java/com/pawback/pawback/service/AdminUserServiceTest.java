@@ -1,5 +1,6 @@
 package com.pawback.pawback.service;
 
+import com.pawback.pawback.dto.response.AdminStatsResponse;
 import com.pawback.pawback.dto.response.PagedResponse;
 import com.pawback.pawback.dto.response.UserResponse;
 import com.pawback.pawback.exception.AccessDeniedException;
@@ -70,11 +71,11 @@ class AdminUserServiceTest {
     }
 
     @Test
-    void disableUser_TargetUser_SetsEnabledFalseAndSaves() {
+    void setUserEnabled_DisableTargetUser_SetsEnabledFalseAndSaves() {
         when(userRepository.findById(2L)).thenReturn(Optional.of(member));
         when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        UserResponse result = adminUserService.disableUser(2L);
+        UserResponse result = adminUserService.setUserEnabled(2L, false);
 
         assertFalse(result.isEnabled());
         assertFalse(member.isEnabled());
@@ -82,10 +83,23 @@ class AdminUserServiceTest {
     }
 
     @Test
-    void disableUser_OwnAccount_ThrowsAndNeverTouchesRepository() {
+    void setUserEnabled_ReEnableDisabledUser_SetsEnabledTrueAndSaves() {
+        member.setEnabled(false);
+        when(userRepository.findById(2L)).thenReturn(Optional.of(member));
+        when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        UserResponse result = adminUserService.setUserEnabled(2L, true);
+
+        assertTrue(result.isEnabled());
+        assertTrue(member.isEnabled());
+        verify(userRepository).save(member);
+    }
+
+    @Test
+    void setUserEnabled_DisableOwnAccount_ThrowsAndNeverTouchesRepository() {
         AccessDeniedException exception = assertThrows(
                 AccessDeniedException.class,
-                () -> adminUserService.disableUser(1L)
+                () -> adminUserService.setUserEnabled(1L, false)
         );
 
         assertTrue(exception.getMessage().toLowerCase().contains("cannot disable their own"));
@@ -94,10 +108,34 @@ class AdminUserServiceTest {
     }
 
     @Test
-    void disableUser_UnknownUser_ThrowsResourceNotFound() {
+    void setUserEnabled_EnableOwnAccount_IsAllowed() {
+        when(userRepository.findById(1L)).thenReturn(Optional.of(admin));
+        when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        assertDoesNotThrow(() -> adminUserService.setUserEnabled(1L, true));
+        verify(userRepository).save(admin);
+    }
+
+    @Test
+    void setUserEnabled_UnknownUser_ThrowsResourceNotFound() {
         when(userRepository.findById(99L)).thenReturn(Optional.empty());
 
-        assertThrows(ResourceNotFoundException.class, () -> adminUserService.disableUser(99L));
+        assertThrows(ResourceNotFoundException.class, () -> adminUserService.setUserEnabled(99L, false));
         verify(userRepository, never()).save(any(User.class));
+    }
+
+    @Test
+    void stats_AggregatesCountsFromRepository() {
+        when(userRepository.count()).thenReturn(10L);
+        when(userRepository.countByEnabled(true)).thenReturn(8L);
+        when(userRepository.countByEnabled(false)).thenReturn(2L);
+        when(userRepository.countByRole(Role.ADMIN)).thenReturn(3L);
+
+        AdminStatsResponse stats = adminUserService.stats();
+
+        assertEquals(10L, stats.getTotalUsers());
+        assertEquals(8L, stats.getActiveUsers());
+        assertEquals(2L, stats.getDisabledUsers());
+        assertEquals(3L, stats.getAdmins());
     }
 }
