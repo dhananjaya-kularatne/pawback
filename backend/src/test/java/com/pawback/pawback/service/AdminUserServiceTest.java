@@ -5,8 +5,11 @@ import com.pawback.pawback.dto.response.PagedResponse;
 import com.pawback.pawback.dto.response.UserResponse;
 import com.pawback.pawback.exception.AccessDeniedException;
 import com.pawback.pawback.exception.ResourceNotFoundException;
+import com.pawback.pawback.model.PetStatus;
 import com.pawback.pawback.model.Role;
 import com.pawback.pawback.model.User;
+import com.pawback.pawback.repository.PetRepository;
+import com.pawback.pawback.repository.ScanReportRepository;
 import com.pawback.pawback.repository.UserRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -33,6 +36,12 @@ class AdminUserServiceTest {
 
     @Mock
     private UserRepository userRepository;
+
+    @Mock
+    private PetRepository petRepository;
+
+    @Mock
+    private ScanReportRepository scanReportRepository;
 
     @InjectMocks
     private AdminUserService adminUserService;
@@ -130,6 +139,9 @@ class AdminUserServiceTest {
         when(userRepository.countByEnabled(true)).thenReturn(8L);
         when(userRepository.countByEnabled(false)).thenReturn(2L);
         when(userRepository.countByRole(Role.ADMIN)).thenReturn(3L);
+        when(petRepository.count()).thenReturn(25L);
+        when(scanReportRepository.count()).thenReturn(40L);
+        when(petRepository.countByStatus(PetStatus.LOST)).thenReturn(5L);
 
         AdminStatsResponse stats = adminUserService.stats();
 
@@ -137,5 +149,8 @@ class AdminUserServiceTest {
         assertEquals(8L, stats.getActiveUsers());
         assertEquals(2L, stats.getDisabledUsers());
         assertEquals(3L, stats.getAdmins());
+        assertEquals(25L, stats.getTotalPets());
+        assertEquals(40L, stats.getTotalReports());
+        assertEquals(5L, stats.getLostPets());
     }
 }

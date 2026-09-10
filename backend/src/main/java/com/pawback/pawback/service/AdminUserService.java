@@ -5,8 +5,11 @@ import com.pawback.pawback.dto.response.PagedResponse;
 import com.pawback.pawback.dto.response.UserResponse;
 import com.pawback.pawback.exception.AccessDeniedException;
 import com.pawback.pawback.exception.ResourceNotFoundException;
+import com.pawback.pawback.model.PetStatus;
 import com.pawback.pawback.model.Role;
 import com.pawback.pawback.model.User;
+import com.pawback.pawback.repository.PetRepository;
+import com.pawback.pawback.repository.ScanReportRepository;
 import com.pawback.pawback.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -28,8 +31,12 @@ import org.springframework.transaction.annotation.Transactional;
 public class AdminUserService {
 
     private final UserRepository userRepository;
+    private final PetRepository petRepository;
+    private final ScanReportRepository scanReportRepository;
 
-    // Headline counts for the admin console summary tiles.
+    // Headline counts for the admin console summary tiles. Each value is a live
+    // repository count read on every request — nothing here is cached, so a
+    // refresh always reflects the current state of the data.
     @Transactional(readOnly = true)
     public AdminStatsResponse stats() {
         return AdminStatsResponse.builder()
@@ -37,6 +44,9 @@ public class AdminUserService {
                 .activeUsers(userRepository.countByEnabled(true))
                 .disabledUsers(userRepository.countByEnabled(false))
                 .admins(userRepository.countByRole(Role.ADMIN))
+                .totalPets(petRepository.count())
+                .totalReports(scanReportRepository.count())
+                .lostPets(petRepository.countByStatus(PetStatus.LOST))
                 .build();
     }
 
