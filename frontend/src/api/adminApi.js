@@ -23,11 +23,14 @@ export async function getAdminProfile() {
 }
 
 // Headline counts for the admin console tiles:
-// { totalUsers, activeUsers, disabledUsers, admins }.
+// { totalUsers, activeUsers, disabledUsers, admins, totalPets, totalReports, lostPets }.
+// `no-store` keeps the browser from serving a cached response, so every page load
+// or refresh shows counts computed live by the backend.
 export async function getAdminStats() {
   const response = await fetch(`${API_BASE_URL}/admin/stats`, {
     method: "GET",
     headers: authHeaders(),
+    cache: "no-store",
   });
 
   const result = await response.json();

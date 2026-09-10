@@ -1,8 +1,38 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Users, UserCheck, UserX, ShieldCheck, ArrowRight } from "lucide-react";
+import {
+  Users,
+  UserCheck,
+  UserX,
+  ShieldCheck,
+  PawPrint,
+  FileWarning,
+  MapPin,
+  ArrowRight,
+} from "lucide-react";
 import AdminLayout from "../components/admin/AdminLayout";
 import { getAdminProfile, getAdminStats } from "../api/adminApi";
+
+// A single summary tile. `value` is undefined until the stats request resolves,
+// so it falls back to a dash rather than rendering "undefined".
+function StatTile({ label, value, icon: Icon, accent, bar }) {
+  return (
+    <div
+      className={`bg-white rounded-xl border border-gray-200 border-t-2 ${bar} shadow-sm p-5
+                  hover:shadow-md transition-shadow`}
+    >
+      <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${accent}`}>
+        <Icon size={20} />
+      </div>
+      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mt-3">
+        {label}
+      </p>
+      <p className="text-3xl font-bold text-gray-900 tabular-nums mt-0.5">
+        {value ?? "—"}
+      </p>
+    </div>
+  );
+}
 
 // Admin console home. AdminRoute already gates the route on an ADMIN role, but we
 // also call the protected /admin endpoints on mount so a token that isn't really
@@ -36,11 +66,17 @@ function AdminPage() {
     };
   }, [navigate]);
 
-  const tiles = [
+  const userTiles = [
     { label: "Total users", value: stats?.totalUsers, icon: Users, accent: "bg-blue-50 text-blue-600", bar: "border-t-blue-500" },
     { label: "Active", value: stats?.activeUsers, icon: UserCheck, accent: "bg-emerald-50 text-emerald-600", bar: "border-t-emerald-500" },
     { label: "Disabled", value: stats?.disabledUsers, icon: UserX, accent: "bg-rose-50 text-rose-600", bar: "border-t-rose-500" },
     { label: "Admins", value: stats?.admins, icon: ShieldCheck, accent: "bg-violet-50 text-violet-600", bar: "border-t-violet-500" },
+  ];
+
+  const platformTiles = [
+    { label: "Total pets", value: stats?.totalPets, icon: PawPrint, accent: "bg-amber-50 text-amber-600", bar: "border-t-amber-500" },
+    { label: "Total reports", value: stats?.totalReports, icon: FileWarning, accent: "bg-sky-50 text-sky-600", bar: "border-t-sky-500" },
+    { label: "Pets lost", value: stats?.lostPets, icon: MapPin, accent: "bg-rose-50 text-rose-600", bar: "border-t-rose-500" },
   ];
 
   return (
@@ -55,27 +91,28 @@ function AdminPage() {
         <h2 className="text-xl font-bold text-gray-900 tracking-tight">
           Platform overview
         </h2>
-        <p className="text-sm text-gray-500 mt-1">Users and access at a glance.</p>
+        <p className="text-sm text-gray-500 mt-1">
+          Live counts across users, pets, and reports.
+        </p>
       </div>
 
-      {/* Summary tiles */}
+      {/* People */}
+      <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">
+        People
+      </p>
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        {tiles.map(({ label, value, icon: Icon, accent, bar }) => (
-          <div
-            key={label}
-            className={`bg-white rounded-xl border border-gray-200 border-t-2 ${bar} shadow-sm p-5
-                        hover:shadow-md transition-shadow`}
-          >
-            <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${accent}`}>
-              <Icon size={20} />
-            </div>
-            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mt-3">
-              {label}
-            </p>
-            <p className="text-3xl font-bold text-gray-900 tabular-nums mt-0.5">
-              {value ?? "—"}
-            </p>
-          </div>
+        {userTiles.map((tile) => (
+          <StatTile key={tile.label} {...tile} />
+        ))}
+      </div>
+
+      {/* Pets & reports */}
+      <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">
+        Pets &amp; reports
+      </p>
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+        {platformTiles.map((tile) => (
+          <StatTile key={tile.label} {...tile} />
         ))}
       </div>
 
