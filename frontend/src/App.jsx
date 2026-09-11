@@ -4,6 +4,7 @@ import Dashboard from "./pages/Dashboard";
 import ScanPage from "./pages/ScanPage";
 import AdminPage from "./pages/AdminPage";
 import AdminUsersPage from "./pages/AdminUsersPage";
+import AdminReportsPage from "./pages/AdminReportsPage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AdminRoute from "./components/AdminRoute";
 
@@ -34,6 +35,14 @@ function App() {
           element={
             <AdminRoute>
               <AdminUsersPage />
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/reports"
+          element={
+            <AdminRoute>
+              <AdminReportsPage />
             </AdminRoute>
           }
         />
