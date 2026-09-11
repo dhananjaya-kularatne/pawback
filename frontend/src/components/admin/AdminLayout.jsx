@@ -15,6 +15,7 @@ import { getCurrentUser } from "../../utils/auth";
 const NAV = [
   { to: "/admin", label: "Console", icon: LayoutDashboard, end: true },
   { to: "/admin/users", label: "Users", icon: Users, end: false },
+  { to: "/admin/reports", label: "Reports", icon: FileWarning, end: false },
 ];
 
 export default function AdminLayout({ title, children }) {
@@ -62,17 +63,6 @@ export default function AdminLayout({ title, children }) {
               <span className="hidden md:inline">{label}</span>
             </NavLink>
           ))}
-
-          <div
-            className="flex items-center justify-center md:justify-start gap-3 px-3 py-2 rounded-lg text-sm font-medium text-slate-500 cursor-not-allowed"
-            title="Scan reports — coming soon"
-          >
-            <FileWarning size={17} className="shrink-0" />
-            <span className="hidden md:inline">Scan reports</span>
-            <span className="ml-auto hidden md:inline text-[10px] font-semibold uppercase bg-slate-800 text-slate-400 px-1.5 py-0.5 rounded">
-              Soon
-            </span>
-          </div>
         </nav>
 
         <div className="p-2 md:p-3 border-t border-white/10 space-y-1">

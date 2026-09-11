@@ -82,3 +82,45 @@ export async function setUserEnabled(userId, enabled) {
 
   return result.data;
 }
+
+// Paginated, filterable list of every scan report platform-wide. `filters` may
+// include petId, from, and to (from/to are "YYYY-MM-DD" date strings). Returns
+// the backend's PagedResponse shape, with the owning pet's name/uuid folded
+// into each row. `no-store` so a refresh always shows current data.
+export async function listReports(page = 0, size = 20, filters = {}) {
+  const params = new URLSearchParams({ page, size });
+  if (filters.petId) params.set("petId", filters.petId);
+  if (filters.from) params.set("from", filters.from);
+  if (filters.to) params.set("to", filters.to);
+
+  const response = await fetch(`${API_BASE_URL}/admin/reports?${params}`, {
+    method: "GET",
+    headers: authHeaders(),
+    cache: "no-store",
+  });
+
+  const result = await response.json();
+
+  if (!response.ok) {
+    throw new Error(result.message || "Failed to load reports");
+  }
+
+  return result.data;
+}
+
+// Permanently deletes a scan report. Reports have no soft-delete flag, so the
+// backend removes the row outright; this cannot be undone.
+export async function deleteReport(reportId) {
+  const response = await fetch(`${API_BASE_URL}/admin/reports/${reportId}`, {
+    method: "DELETE",
+    headers: authHeaders(),
+  });
+
+  const result = await response.json();
+
+  if (!response.ok) {
+    throw new Error(result.message || "Failed to delete report");
+  }
+
+  return result.data;
+}
