@@ -61,8 +61,10 @@ public class SecurityConfig {
                         "/api/auth/forgot-password",
                         "/api/auth/verify-otp",
                         "/api/auth/reset-password",
-                        "/api/scans/**",
-                        "/api/reports/**"
+                        // ScanController lives at /api/scan (singular) and covers both the
+                        // finder's pet lookup and their report submission, so this one entry
+                        // is what actually needs to be public.
+                        "/api/scan/**"
                 ).permitAll()
                 // Every other endpoint requires a valid JWT
                 .anyRequest().authenticated()
