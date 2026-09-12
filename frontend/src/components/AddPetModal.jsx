@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { X, Camera } from "lucide-react";
+import PhotoCropModal from "./PhotoCropModal";
 
 function AddPetModal({ onClose, onSave }) {
   const [name, setName] = useState("");
@@ -7,8 +8,31 @@ function AddPetModal({ onClose, onSave }) {
   const [description, setDescription] = useState("");
   const [ifFoundInstructions, setIfFoundInstructions] = useState("");
   const [image, setImage] = useState(null);
+  // The just-selected file, staged as an object URL until the crop is confirmed
+  const [pendingPhoto, setPendingPhoto] = useState(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+
+  function handleFileSelected(e) {
+    const file = e.target.files[0];
+    // Reset so picking the same file again still fires a change event, letting
+    // the owner redo the crop on a re-selected file
+    e.target.value = "";
+    if (!file) return;
+
+    setPendingPhoto({ src: URL.createObjectURL(file), name: file.name });
+  }
+
+  function handleCropCancel() {
+    URL.revokeObjectURL(pendingPhoto.src);
+    setPendingPhoto(null);
+  }
+
+  function handleCropConfirm(croppedFile) {
+    URL.revokeObjectURL(pendingPhoto.src);
+    setPendingPhoto(null);
+    setImage(croppedFile);
+  }
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -76,7 +100,7 @@ function AddPetModal({ onClose, onSave }) {
                 type="file"
                 accept="image/*"
                 className="hidden"
-                onChange={(e) => setImage(e.target.files[0])}
+                onChange={handleFileSelected}
               />
             </label>
           </div>
@@ -137,6 +161,15 @@ function AddPetModal({ onClose, onSave }) {
           </p>
         </form>
       </div>
+
+      {pendingPhoto && (
+        <PhotoCropModal
+          imageSrc={pendingPhoto.src}
+          fileName={pendingPhoto.name}
+          onCancel={handleCropCancel}
+          onConfirm={handleCropConfirm}
+        />
+      )}
     </div>
   );
 }
