@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { X, Camera } from "lucide-react";
+import { X, Camera, Crop } from "lucide-react";
 import PhotoCropModal from "./PhotoCropModal";
 
 function AddPetModal({ onClose, onSave }) {
@@ -11,7 +11,11 @@ function AddPetModal({ onClose, onSave }) {
   // Object URL for the cropped image, so the chosen photo shows in the frame
   // instead of just its file name
   const [previewUrl, setPreviewUrl] = useState(null);
-  // The just-selected file, staged as an object URL until the crop is confirmed
+  // Name to reuse if the currently shown preview is re-cropped without
+  // picking a different file
+  const [photoFileName, setPhotoFileName] = useState();
+  // The photo staged for cropping: either a just-picked file, or the preview
+  // already shown, reopened via "Adjust crop"
   const [pendingPhoto, setPendingPhoto] = useState(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -26,18 +30,27 @@ function AddPetModal({ onClose, onSave }) {
     setPendingPhoto({ src: URL.createObjectURL(file), name: file.name });
   }
 
+  function handleAdjustCrop(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    setPendingPhoto({ src: previewUrl, name: photoFileName });
+  }
+
   function handleCropCancel() {
-    URL.revokeObjectURL(pendingPhoto.src);
+    // Don't revoke a URL that's still the one on screen (true when re-cropping
+    // the already-shown preview rather than a freshly picked file)
+    if (pendingPhoto.src !== previewUrl) URL.revokeObjectURL(pendingPhoto.src);
     setPendingPhoto(null);
   }
 
   function handleCropConfirm(croppedFile) {
-    URL.revokeObjectURL(pendingPhoto.src);
-    setPendingPhoto(null);
-
+    if (pendingPhoto.src !== previewUrl) URL.revokeObjectURL(pendingPhoto.src);
     if (previewUrl) URL.revokeObjectURL(previewUrl);
+
+    setPendingPhoto(null);
     setImage(croppedFile);
     setPreviewUrl(URL.createObjectURL(croppedFile));
+    setPhotoFileName(pendingPhoto.name);
   }
 
   async function handleSubmit(e) {
@@ -96,6 +109,17 @@ function AddPetModal({ onClose, onSave }) {
                     alt="Selected pet"
                     className="absolute inset-0 w-full h-full object-cover"
                   />
+                  <button
+                    type="button"
+                    onClick={handleAdjustCrop}
+                    className="absolute top-2 right-2 w-7 h-7 flex items-center justify-center
+                               rounded-full bg-white/90 hover:bg-white text-gray-700 cursor-pointer
+                               transition-colors shadow-sm"
+                    aria-label="Adjust crop"
+                    title="Adjust crop"
+                  >
+                    <Crop size={14} />
+                  </button>
                   <div
                     className="absolute inset-x-0 bottom-0 bg-black/50 text-white text-xs
                                font-medium text-center py-1.5"
