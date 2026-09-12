@@ -113,7 +113,7 @@ function ScanPage() {
           <img
             src={pet.photoUrl}
             alt={pet.name}
-            className="w-full h-56 object-cover"
+            className="w-full aspect-[4/5] object-cover"
           />
 
           <div className="p-6">
