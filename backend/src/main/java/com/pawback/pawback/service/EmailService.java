@@ -67,4 +67,41 @@ public class EmailService {
             // as it could break the generic "If this email is registered, we sent an OTP" response.
         }
     }
+
+    @org.springframework.scheduling.annotation.Async
+    public void sendReportNotification(String toEmail, String petName) {
+        if (brevoApiKey == null || brevoApiKey.isBlank()) {
+            log.warn("BREVO_API_KEY is not set. Simulating email sending. Report notification for {}'s owner: {}", petName, toEmail);
+            return;
+        }
+
+        String url = "https://api.brevo.com/v3/smtp/email";
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("api-key", brevoApiKey);
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setAccept(List.of(MediaType.APPLICATION_JSON));
+
+        // Constructing the payload
+        Map<String, Object> body = Map.of(
+                "sender", Map.of("name", senderName, "email", senderEmail),
+                "to", List.of(Map.of("email", toEmail)),
+                "subject", "Urgent: A report was submitted for " + petName + "!",
+                "htmlContent", "<html><body>" +
+                        "<h2>A Finder Submitted a Report!</h2>" +
+                        "<p>Good news! Someone scanned the QR code for <strong>" + petName + "</strong> and submitted a report.</p>" +
+                        "<p>Please log in to your PawBack dashboard immediately to check the report details, location, and any messages left by the finder.</p>" +
+                        "</body></html>"
+        );
+
+        HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
+
+        try {
+            restTemplate.exchange(url, HttpMethod.POST, request, String.class);
+            log.info("Report notification email sent successfully to {}", toEmail);
+        } catch (Exception e) {
+            // Catch all exceptions so the async thread doesn't crash and the caller isn't affected
+            log.error("Failed to send report notification email to {}", toEmail, e);
+        }
+    }
 }
