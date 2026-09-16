@@ -33,6 +33,7 @@ public class PetService {
     private final CloudinaryService cloudinaryService;
     private final QrCodeService qrCodeService;
     private final ScanReportRepository scanReportRepository; 
+    private final EmailService emailService;
 
     public PetResponse createPet(CreatePetRequest request, MultipartFile image) {
 
@@ -206,6 +207,10 @@ public class PetService {
                 .build();
 
         ScanReport savedReport = scanReportRepository.save(report);
+
+        if (pet.getStatus() == PetStatus.LOST) {
+            emailService.sendReportNotification(pet.getOwner().getEmail(), pet.getName());
+        }
 
         return ScanReportResponse.builder()
                 .id(savedReport.getId())
