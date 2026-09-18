@@ -2,6 +2,10 @@ package com.pawback.pawback.config;
 
 import com.pawback.pawback.filter.JwtAuthenticationFilter;
 import com.pawback.pawback.repository.UserRepository;
+import com.pawback.pawback.security.oauth2.CustomOAuth2UserService;
+import com.pawback.pawback.security.oauth2.HttpCookieOAuth2AuthorizationRequestRepository;
+import com.pawback.pawback.security.oauth2.OAuth2LoginFailureHandler;
+import com.pawback.pawback.security.oauth2.OAuth2LoginSuccessHandler;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -29,6 +33,12 @@ public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final UserRepository userRepository;
+    
+    // OAuth2 Dependencies
+    private final CustomOAuth2UserService customOAuth2UserService;
+    private final OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler;
+    private final OAuth2LoginFailureHandler oAuth2LoginFailureHandler;
+    private final HttpCookieOAuth2AuthorizationRequestRepository httpCookieOAuth2AuthorizationRequestRepository;
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -61,6 +71,9 @@ public class SecurityConfig {
                         "/api/auth/forgot-password",
                         "/api/auth/verify-otp",
                         "/api/auth/reset-password",
+                        // OAuth2 endpoints
+                        "/oauth2/**",
+                        "/login/oauth2/**",
                         // ScanController lives at /api/scan (singular) and covers both the
                         // finder's pet lookup and their report submission, so this one entry
                         // is what actually needs to be public.
@@ -68,6 +81,20 @@ public class SecurityConfig {
                 ).permitAll()
                 // Every other endpoint requires a valid JWT
                 .anyRequest().authenticated()
+            )
+            .oauth2Login(oauth2 -> oauth2
+                .authorizationEndpoint(authorization -> authorization
+                    .baseUri("/oauth2/authorization")
+                    .authorizationRequestRepository(httpCookieOAuth2AuthorizationRequestRepository)
+                )
+                .redirectionEndpoint(redirection -> redirection
+                    .baseUri("/login/oauth2/code/*")
+                )
+                .userInfoEndpoint(userInfo -> userInfo
+                    .userService(customOAuth2UserService)
+                )
+                .successHandler(oAuth2LoginSuccessHandler)
+                .failureHandler(oAuth2LoginFailureHandler)
             )
             // Run our filter before Spring's default username/password filter
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
