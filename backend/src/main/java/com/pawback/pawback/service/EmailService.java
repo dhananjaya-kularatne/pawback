@@ -1,5 +1,6 @@
 package com.pawback.pawback.service;
 
+import com.pawback.pawback.model.ScanReport;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
@@ -20,15 +21,18 @@ public class EmailService {
     private final String senderEmail;
     private final String senderName;
     private final RestTemplate restTemplate;
+    private final NotificationFormattingService notificationFormattingService;
 
     public EmailService(
             @Value("${brevo.api.key:}") String brevoApiKey,
             @Value("${brevo.sender.email:support@pawback.com}") String senderEmail,
-            @Value("${brevo.sender.name:PawBack Support}") String senderName) {
+            @Value("${brevo.sender.name:PawBack Support}") String senderName,
+            NotificationFormattingService notificationFormattingService) {
         this.brevoApiKey = brevoApiKey;
         this.senderEmail = senderEmail;
         this.senderName = senderName;
         this.restTemplate = new RestTemplate();
+        this.notificationFormattingService = notificationFormattingService;
     }
 
     public void sendPasswordResetOtp(String toEmail, String otp) {
@@ -69,7 +73,9 @@ public class EmailService {
     }
 
     @org.springframework.scheduling.annotation.Async
-    public void sendReportNotification(String toEmail, String petName) {
+    public void sendReportNotification(String toEmail, ScanReport report) {
+        String petName = report.getPet().getName();
+
         if (brevoApiKey == null || brevoApiKey.isBlank()) {
             log.warn("BREVO_API_KEY is not set. Simulating email sending. Report notification for {}'s owner: {}", petName, toEmail);
             return;
@@ -86,12 +92,8 @@ public class EmailService {
         Map<String, Object> body = Map.of(
                 "sender", Map.of("name", senderName, "email", senderEmail),
                 "to", List.of(Map.of("email", toEmail)),
-                "subject", "Urgent: A report was submitted for " + petName + "!",
-                "htmlContent", "<html><body>" +
-                        "<h2>A Finder Submitted a Report!</h2>" +
-                        "<p>Good news! Someone scanned the QR code for <strong>" + petName + "</strong> and submitted a report.</p>" +
-                        "<p>Please log in to your PawBack dashboard immediately to check the report details, location, and any messages left by the finder.</p>" +
-                        "</body></html>"
+                "subject", notificationFormattingService.buildReportNotificationSubject(petName),
+                "htmlContent", notificationFormattingService.buildReportNotificationHtml(report)
         );
 
         HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
