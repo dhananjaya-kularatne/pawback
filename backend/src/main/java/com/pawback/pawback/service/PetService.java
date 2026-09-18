@@ -209,7 +209,7 @@ public class PetService {
         ScanReport savedReport = scanReportRepository.save(report);
 
         if (pet.getStatus() == PetStatus.LOST) {
-            emailService.sendReportNotification(pet.getOwner().getEmail(), pet.getName());
+            emailService.sendReportNotification(pet.getOwner().getEmail(), savedReport);
         }
 
         return ScanReportResponse.builder()
