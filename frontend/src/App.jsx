@@ -5,6 +5,7 @@ import ScanPage from "./pages/ScanPage";
 import AdminPage from "./pages/AdminPage";
 import AdminUsersPage from "./pages/AdminUsersPage";
 import AdminReportsPage from "./pages/AdminReportsPage";
+import OAuth2RedirectHandler from "./pages/OAuth2RedirectHandler";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AdminRoute from "./components/AdminRoute";
 
@@ -14,6 +15,7 @@ function App() {
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/scan/:petUuid" element={<ScanPage />} />
+        <Route path="/oauth2/redirect" element={<OAuth2RedirectHandler />} />
         <Route
           path="/dashboard"
           element={
