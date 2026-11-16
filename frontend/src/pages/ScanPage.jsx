@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { PawPrint, Heart, Camera, MapPin } from "lucide-react";
 import { getPetByUuid, submitReport } from "../api/scanApi";
+import { PHOTO_ACCEPT, validatePhoto } from "../utils/validatePhoto";
 
 // Public page a finder lands on after scanning a pet's QR code.
 // No login required. Branches on the pet's status: Safe shows a calm message, Lost shows the pet's details (conditional fields) plus a
@@ -189,9 +190,15 @@ function ScanPetPage({ petUuid }) {
                   {photo ? photo.name : "Add a photo (optional)"}
                   <input
                     type="file"
-                    accept="image/*"
+                    accept={PHOTO_ACCEPT}
                     className="hidden"
-                    onChange={(e) => setPhoto(e.target.files[0])}
+                    onChange={async (e) => {
+                      const file = e.target.files[0];
+                      e.target.value = "";
+                      if (!file) return;
+                      try { await validatePhoto(file); setPhoto(file); setFormError(""); }
+                      catch (err) { setFormError(err.message); }
+                    }}
                   />
                 </label>
 

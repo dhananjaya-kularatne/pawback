@@ -33,6 +33,7 @@ public class OwnerReportService {
 
         Pet pet = petRepository.findById(petId)
                 .orElseThrow(() -> new ResourceNotFoundException("Pet not found"));
+        if (pet.getDeletedAt() != null) throw new ResourceNotFoundException("Pet not found");
         if (!pet.getOwner().getId().equals(owner.getId())) {
             throw new AccessDeniedException("You do not have permission to view this pet's reports");
         }

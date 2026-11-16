@@ -12,6 +12,9 @@ import java.time.Instant;
 public interface ScanReportRepository extends JpaRepository<ScanReport, Long> {
 
     Page<ScanReport> findByPetId(Long petId, Pageable pageable);
+    java.util.List<ScanReport> findByPetId(Long petId);
+    boolean existsByPhotoPublicId(String publicId);
+    boolean existsByPhotoUrl(String url);
 
     // Platform-wide report search for the admin moderation view. Every filter is
     // optional: a null bound is skipped, so passing nothing returns every report.

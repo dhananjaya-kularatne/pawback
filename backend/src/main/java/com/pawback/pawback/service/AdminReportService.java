@@ -27,6 +27,7 @@ import java.time.ZoneOffset;
 public class AdminReportService {
 
     private final ScanReportRepository scanReportRepository;
+    private final CloudinaryService cloudinaryService;
 
     // Every scan report platform-wide, newest first, optionally narrowed to one
     // pet and/or a date range. `from`/`to` are whole days in UTC; `to` is
@@ -56,10 +57,10 @@ public class AdminReportService {
     // pattern used for pets. Rejects an unknown id rather than silently no-op-ing.
     @Transactional
     public void deleteReport(Long reportId) {
-        if (!scanReportRepository.existsById(reportId)) {
-            throw new ResourceNotFoundException("Report not found");
-        }
-        scanReportRepository.deleteById(reportId);
+        ScanReport report = scanReportRepository.findById(reportId)
+                .orElseThrow(() -> new ResourceNotFoundException("Report not found"));
+        cloudinaryService.retire(report.getPhotoPublicId(), report.getPhotoUrl());
+        scanReportRepository.delete(report);
     }
 
     private AdminScanReportResponse toResponse(ScanReport report) {

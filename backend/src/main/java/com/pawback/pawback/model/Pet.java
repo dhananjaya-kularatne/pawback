@@ -30,6 +30,12 @@ public class Pet {
     private String photoUrl;
     
     private String qrCodeUrl;
+    private String photoPublicId;
+    private String qrCodePublicId;
+    @Column(unique = true, length = 64)
+    private String creationKey;
+    @Column(length = 64)
+    private String requestHash;
 
     private String breed;
     private String description;

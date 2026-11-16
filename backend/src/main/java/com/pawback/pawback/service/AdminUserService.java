@@ -44,9 +44,9 @@ public class AdminUserService {
                 .activeUsers(userRepository.countByEnabled(true))
                 .disabledUsers(userRepository.countByEnabled(false))
                 .admins(userRepository.countByRole(Role.ADMIN))
-                .totalPets(petRepository.count())
+                .totalPets(petRepository.countByDeletedAtIsNull())
                 .totalReports(scanReportRepository.count())
-                .lostPets(petRepository.countByStatus(PetStatus.LOST))
+                .lostPets(petRepository.countByStatusAndDeletedAtIsNull(PetStatus.LOST))
                 .build();
     }
 
