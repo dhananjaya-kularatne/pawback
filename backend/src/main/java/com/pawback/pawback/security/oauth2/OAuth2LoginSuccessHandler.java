@@ -1,6 +1,5 @@
 package com.pawback.pawback.security.oauth2;
 
-import com.pawback.pawback.util.CookieUtils;
 import com.pawback.pawback.util.JwtUtil;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
