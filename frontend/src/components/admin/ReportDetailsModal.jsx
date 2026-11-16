@@ -6,8 +6,13 @@ export default function ReportDetailsModal({ report, onClose }) {
 
   useEffect(() => {
     const dialog = dialogRef.current;
+    const opener = document.activeElement;
     dialog.showModal();
-    return () => dialog.close();
+    return () => {
+      dialog.close();
+      // The dialog unmounts on close, so native focus restoration alone is unreliable.
+      if (opener instanceof HTMLElement && opener.isConnected) opener.focus();
+    };
   }, []);
 
   function handleBackdropClick(event) {
