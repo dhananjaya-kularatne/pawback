@@ -8,6 +8,11 @@ import { getPetByUuid, submitReport } from "../api/scanApi";
 // working report form (message, optional photo, optional location).
 function ScanPage() {
   const { petUuid } = useParams();
+  // A different tag starts a fresh report, including photo/location and success state.
+  return <ScanPetPage key={petUuid} petUuid={petUuid} />;
+}
+
+function ScanPetPage({ petUuid }) {
   const [pet, setPet] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -20,17 +25,19 @@ function ScanPage() {
   const [photo, setPhoto] = useState(null);
 
   useEffect(() => {
+    let cancelled = false;
     async function fetchPet() {
       try {
         const data = await getPetByUuid(petUuid);
-        setPet(data);
+        if (!cancelled) setPet(data);
       } catch (err) {
-        setError(err.message);
+        if (!cancelled) setError(err.message);
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     }
     fetchPet();
+    return () => { cancelled = true; };
   }, [petUuid]);
 
   // Requests the browser's geolocation — silently does nothing if denied,
@@ -219,7 +226,7 @@ function ScanPage() {
               <div className="mt-4 pt-4 border-t border-gray-200 text-center py-4">
                 <p className="text-sm font-medium text-gray-900">Thank you!</p>
                 <p className="text-xs text-gray-500 mt-1">
-                  The owner has been notified and will reach out soon.
+                  Your report has been received. The owner can view it in their dashboard.
                 </p>
               </div>
             )}
