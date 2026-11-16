@@ -3,6 +3,7 @@ package com.pawback.pawback.service;
 import com.pawback.pawback.dto.response.AdminScanReportResponse;
 import com.pawback.pawback.dto.response.PagedResponse;
 import com.pawback.pawback.exception.ResourceNotFoundException;
+import com.pawback.pawback.exception.BadRequestException;
 import com.pawback.pawback.model.ScanReport;
 import com.pawback.pawback.repository.ScanReportRepository;
 import lombok.RequiredArgsConstructor;
@@ -34,12 +35,19 @@ public class AdminReportService {
     public PagedResponse<AdminScanReportResponse> listReports(
             Long petId, LocalDate from, LocalDate to, int page, int size) {
 
+        if (from != null && to != null && from.isAfter(to)) {
+            throw new BadRequestException("From date must be on or before To date");
+        }
+        if (LocalDate.MAX.equals(to)) {
+            throw new BadRequestException("To date is outside the supported range");
+        }
+
         Instant fromInstant = from != null ? from.atStartOfDay(ZoneOffset.UTC).toInstant() : null;
         Instant toInstant = to != null ? to.plusDays(1).atStartOfDay(ZoneOffset.UTC).toInstant() : null;
 
         Page<ScanReport> reports = scanReportRepository.search(
                 petId, fromInstant, toInstant,
-                PageRequest.of(page, size, Sort.by("createdAt").descending()));
+                PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt", "id")));
 
         return PagedResponse.from(reports.map(this::toResponse));
     }
