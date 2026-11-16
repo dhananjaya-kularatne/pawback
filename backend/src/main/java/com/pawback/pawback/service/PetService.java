@@ -6,6 +6,10 @@ import com.pawback.pawback.dto.request.UpdatePetRequest;
 import com.pawback.pawback.dto.response.PetResponse;
 import com.pawback.pawback.dto.response.PublicPetResponse;
 import com.pawback.pawback.dto.response.ScanReportResponse;
+import com.pawback.pawback.exception.AccessDeniedException;
+import com.pawback.pawback.exception.BadRequestException;
+import com.pawback.pawback.exception.ConflictException;
+import com.pawback.pawback.exception.ResourceNotFoundException;
 import com.pawback.pawback.model.Pet;
 import com.pawback.pawback.model.PetStatus;
 import com.pawback.pawback.model.ScanReport;
@@ -40,7 +44,7 @@ public class PetService {
         Long ownerId = getCurrentOwnerId();
 
         User owner = userRepository.findById(ownerId)
-                .orElseThrow(() -> new RuntimeException("Owner not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Owner not found"));
 
         String photoUrl = cloudinaryService.uploadPetImage(image);
 
@@ -70,7 +74,7 @@ public class PetService {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
         if (authentication == null || !(authentication.getPrincipal() instanceof User user)) {
-            throw new RuntimeException("Not authenticated");
+            throw new AccessDeniedException("Not authenticated");
         }
 
         return user.getId();
@@ -105,15 +109,7 @@ public class PetService {
     // Updates an existing pet's details, including an optional new photo
     public PetResponse updatePet(Long petId, UpdatePetRequest request, MultipartFile image) {
 
-        Long ownerId = getCurrentOwnerId();
-
-        Pet pet = petRepository.findById(petId)
-                .orElseThrow(() -> new RuntimeException("Pet not found"));
-
-        // Ownership check — enforced here, server-side
-        if (!pet.getOwner().getId().equals(ownerId)) {
-            throw new RuntimeException("You do not have permission to edit this pet");
-        }
+        Pet pet = getOwnedPet(petId);
 
         pet.setName(request.getName());
         pet.setBreed(request.getBreed());
@@ -133,29 +129,13 @@ public class PetService {
 
     // Returns a single pet by id — only if it belongs to the current owner
     public PetResponse getPetById(Long petId) {
-        Long ownerId = getCurrentOwnerId();
-
-        Pet pet = petRepository.findById(petId)
-                .orElseThrow(() -> new RuntimeException("Pet not found"));
-
-        if (!pet.getOwner().getId().equals(ownerId)) {
-            throw new RuntimeException("You do not have permission to view this pet");
-        }
-
-        return mapToResponse(pet);
+        return mapToResponse(getOwnedPet(petId));
     }
 
     // Updates a pet's status (Safe/Lost) — only the owning user may perform this
     public PetResponse updateStatus(Long petId, PetStatus newStatus) {
 
-        Long ownerId = getCurrentOwnerId();
-
-        Pet pet = petRepository.findById(petId)
-                .orElseThrow(() -> new RuntimeException("Pet not found"));
-
-        if (!pet.getOwner().getId().equals(ownerId)) {
-            throw new RuntimeException("You do not have permission to change this pet's status");
-        }
+        Pet pet = getOwnedPet(petId);
 
         pet.setStatus(newStatus);
         Pet updatedPet = petRepository.save(pet);
@@ -166,11 +146,7 @@ public class PetService {
     // Returns public-safe info for a pet by its UUID — no authentication required.
     // Used by the finder-facing scan page. Never exposes owner details.
     public PublicPetResponse getPetByUuid(String petUuid) {
-        Pet pet = petRepository.findByPetUuid(UUID.fromString(petUuid));
-
-        if (pet == null) {
-            throw new RuntimeException("Pet not found");
-        }
+        Pet pet = getPublicPet(petUuid);
 
         return PublicPetResponse.builder()
                 .name(pet.getName())
@@ -187,10 +163,10 @@ public class PetService {
     // (the finder), matching the "no login required" requirement.
     public ScanReportResponse createReport(String petUuid, CreateReportRequest request, MultipartFile photo) {
 
-        Pet pet = petRepository.findByPetUuid(UUID.fromString(petUuid));
-
-        if (pet == null) {
-            throw new RuntimeException("Pet not found");
+        Pet pet = getPublicPet(petUuid);
+        // Check before any upload or save; the public page alone cannot enforce this.
+        if (pet.getStatus() != PetStatus.LOST) {
+            throw new ConflictException("This pet is no longer marked as lost. Reports are not being accepted.");
         }
 
         String photoUrl = null;
@@ -220,5 +196,32 @@ public class PetService {
                 .longitude(savedReport.getLongitude())
                 .createdAt(savedReport.getCreatedAt())
                 .build();
+    }
+
+    private Pet getOwnedPet(Long petId) {
+        Long ownerId = getCurrentOwnerId();
+        Pet pet = petRepository.findById(petId)
+                .orElseThrow(() -> new ResourceNotFoundException("Pet not found"));
+        if (!pet.getOwner().getId().equals(ownerId)) {
+            throw new AccessDeniedException("You do not have permission to access this pet");
+        }
+        return pet;
+    }
+
+    private Pet getPublicPet(String petUuid) {
+        UUID uuid;
+        try {
+            uuid = UUID.fromString(petUuid);
+            if (!uuid.toString().equalsIgnoreCase(petUuid)) {
+                throw new IllegalArgumentException("Non-canonical UUID");
+            }
+        } catch (IllegalArgumentException exception) {
+            throw new BadRequestException("Invalid pet QR code");
+        }
+        Pet pet = petRepository.findByPetUuid(uuid);
+        if (pet == null) {
+            throw new ResourceNotFoundException("Pet not found");
+        }
+        return pet;
     }
 }
