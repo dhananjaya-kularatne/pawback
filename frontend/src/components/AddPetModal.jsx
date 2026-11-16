@@ -151,6 +151,7 @@ function AddPetModal({ onClose, onSave }) {
               <input
                 type="text"
                 value={name}
+                maxLength={100}
                 onChange={(e) => setName(e.target.value)}
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm mt-1
                            focus:outline-none focus:ring-2 focus:ring-blue-700 transition-shadow"
@@ -164,6 +165,7 @@ function AddPetModal({ onClose, onSave }) {
               <input
                 type="text"
                 value={breed}
+                maxLength={100}
                 onChange={(e) => setBreed(e.target.value)}
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm mt-1
                            focus:outline-none focus:ring-2 focus:ring-blue-700 transition-shadow"
@@ -176,6 +178,7 @@ function AddPetModal({ onClose, onSave }) {
               </label>
               <textarea
                 value={description}
+                maxLength={255}
                 onChange={(e) => setDescription(e.target.value)}
                 rows={2}
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm mt-1
@@ -189,6 +192,7 @@ function AddPetModal({ onClose, onSave }) {
               </label>
               <textarea
                 value={ifFoundInstructions}
+                maxLength={255}
                 onChange={(e) => setIfFoundInstructions(e.target.value)}
                 rows={2}
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm mt-1
