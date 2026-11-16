@@ -2,6 +2,8 @@ import { useState } from "react";
 import { User, Mail, Lock, Phone, ArrowRight } from "lucide-react";
 import { registerUser } from "../../api/authApi";
 import AuthModalShell from "./AuthModalShell";
+import { saveSession } from "../../utils/auth";
+import { GOOGLE_LOGIN_URL } from "../../api/config";
 
 // Register form rendered as a modal on the landing page. On success it persists
 // the returned token/user and hands control back to the caller via onSuccess so
@@ -30,8 +32,7 @@ export default function RegisterModal({ onClose, onSuccess, onSwitchToLogin }) {
     setLoading(true);
     try {
       const data = await registerUser({ name, email, phone, password });
-      if (data.token) sessionStorage.setItem("token", data.token);
-      if (data.user) sessionStorage.setItem("user", JSON.stringify(data.user));
+      saveSession(data);
       onSuccess();
     } catch (err) {
       setError(err.message || "Registration failed. Please try again.");
@@ -137,8 +138,8 @@ export default function RegisterModal({ onClose, onSuccess, onSwitchToLogin }) {
               id="reg-password"
               type="password"
               required
-              minLength={6}
-              placeholder="At least 6 characters"
+              minLength={8}
+              placeholder="8+ characters, uppercase, number, special character"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="w-full pl-9 pr-3 py-2 text-sm border border-gray-300 rounded-lg
@@ -190,7 +191,7 @@ export default function RegisterModal({ onClose, onSuccess, onSwitchToLogin }) {
 
         <button
           type="button"
-          onClick={() => window.location.href = 'http://localhost:8080/oauth2/authorization/google'}
+          onClick={() => window.location.href = GOOGLE_LOGIN_URL}
           className="w-full flex items-center justify-center gap-2 bg-white hover:bg-gray-50
                      text-gray-700 text-sm font-semibold py-2.5 px-4 rounded-lg shadow-sm
                      border border-gray-200 transition-all cursor-pointer"

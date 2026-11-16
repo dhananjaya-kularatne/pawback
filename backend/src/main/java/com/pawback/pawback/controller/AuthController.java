@@ -23,6 +23,12 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthController {
 
     private final AuthService authService;
+    @org.springframework.web.bind.annotation.GetMapping("/me")
+    public ResponseEntity<ApiResponse<com.pawback.pawback.dto.response.UserResponse>> currentUser(
+            org.springframework.security.core.Authentication authentication) {
+        var user = (com.pawback.pawback.model.User) authentication.getPrincipal();
+        return ResponseEntity.ok(ApiResponse.success("Account retrieved", com.pawback.pawback.dto.response.UserResponse.fromUser(user)));
+    }
 
     // Registers a new user account with email and password, returning JWT token
     @PostMapping("/register")

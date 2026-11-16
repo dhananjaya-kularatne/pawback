@@ -1,6 +1,6 @@
-import { readApiResponse } from "./readApiResponse";
+import { readApiResponse, authenticatedFetch as fetch } from "./readApiResponse";
 
-const API_BASE_URL = "http://localhost:8080/api";
+import { API_BASE_URL } from "./config";
 
 function authHeaders() {
   const token = sessionStorage.getItem("token");
@@ -22,7 +22,7 @@ export async function createPet(petData, imageFile, requestKey) {
     body: formData,
   });
 
-  return readApiResponse(response, "Failed to register pet");
+  return readApiResponse(response, "Failed to register pet", true);
 }
 
 // Fetches all pets belonging to the logged-in owner
@@ -32,7 +32,7 @@ export async function getMyPets() {
     headers: authHeaders(),
   });
 
-  return readApiResponse(response, "Failed to fetch pets");
+  return readApiResponse(response, "Failed to fetch pets", true);
 }
 
 // Fetches a single pet by id
@@ -40,7 +40,7 @@ export async function getPetById(petId) {
   const response = await fetch(`${API_BASE_URL}/pets/${petId}`, {
     headers: authHeaders(),
   });
-  return readApiResponse(response, "Failed to fetch pet");
+  return readApiResponse(response, "Failed to fetch pet", true);
 }
 
 // Updates an existing pet, with an optional new photo
@@ -62,7 +62,7 @@ export async function updatePet(petId, petData, imageFile) {
     body: formData,
   });
 
-  return readApiResponse(response, "Failed to update pet");
+  return readApiResponse(response, "Failed to update pet", true);
 }
 
 // Private, paginated finder reports for a pet belonging to the signed-in owner.
@@ -71,7 +71,7 @@ export async function getPetReports(petId, page = 0, size = 20, signal) {
     `${API_BASE_URL}/pets/${petId}/reports?page=${page}&size=${size}`,
     { headers: authHeaders(), cache: "no-store", signal }
   );
-  return readApiResponse(response, "Failed to load reports");
+  return readApiResponse(response, "Failed to load reports", true);
 }
 
 // Toggles a pet's status between SAFE and LOST
@@ -82,10 +82,10 @@ export async function updatePetStatus(petId, status) {
     body: JSON.stringify({ status }),
   });
 
-  return readApiResponse(response, "Failed to update pet status");
+  return readApiResponse(response, "Failed to update pet status", true);
 }
 
 export async function deletePet(petId) {
   const response = await fetch(`${API_BASE_URL}/pets/${petId}`, { method: "DELETE", headers: authHeaders() });
-  return readApiResponse(response, "Failed to remove pet");
+  return readApiResponse(response, "Failed to remove pet", true);
 }

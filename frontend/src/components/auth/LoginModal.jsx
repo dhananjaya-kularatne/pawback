@@ -3,15 +3,17 @@ import { useNavigate } from "react-router-dom";
 import { Mail, Lock, ArrowRight } from "lucide-react";
 import { loginUser } from "../../api/authApi";
 import AuthModalShell from "./AuthModalShell";
+import { saveSession } from "../../utils/auth";
+import { GOOGLE_LOGIN_URL } from "../../api/config";
 
 // Sign-in form rendered as a modal on the landing page — the counterpart to
 // RegisterModal. On success it persists the returned token/user and calls
 // onSuccess so the landing page decides what happens next.
-export default function LoginModal({ onClose, onSuccess, onSwitchToRegister, onForgotPassword }) {
+export default function LoginModal({ onClose, onSuccess, onSwitchToRegister, onForgotPassword, initialError = "" }) {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
+  const [error, setError] = useState(initialError);
   const [loading, setLoading] = useState(false);
 
   async function handleSubmit(e) {
@@ -20,10 +22,7 @@ export default function LoginModal({ onClose, onSuccess, onSwitchToRegister, onF
     setLoading(true);
     try {
       const data = await loginUser({ email, password });
-      if (data.token) sessionStorage.setItem("token", data.token);
-      // Always refresh the stored user so a previous account's details can't linger
-      if (data.user) sessionStorage.setItem("user", JSON.stringify(data.user));
-      else sessionStorage.removeItem("user");
+      saveSession(data);
       onSuccess();
       // Admins land in the admin area; everyone else stays where they signed in
       if (data.user?.role === "ADMIN") navigate("/admin");
@@ -126,7 +125,7 @@ export default function LoginModal({ onClose, onSuccess, onSwitchToRegister, onF
 
         <button
           type="button"
-          onClick={() => window.location.href = 'http://localhost:8080/oauth2/authorization/google'}
+          onClick={() => window.location.href = GOOGLE_LOGIN_URL}
           className="w-full flex items-center justify-center gap-2 bg-white hover:bg-gray-50
                      text-gray-700 text-sm font-semibold py-2.5 px-4 rounded-lg shadow-sm
                      border border-gray-200 transition-all cursor-pointer"

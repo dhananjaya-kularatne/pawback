@@ -1,4 +1,5 @@
-const API_BASE_URL = "http://localhost:8080/api";
+import { readApiResponse, authenticatedFetch as fetch } from "./readApiResponse";
+import { API_BASE_URL } from "./config";
 
 function authHeaders() {
   const token = sessionStorage.getItem("token");
@@ -13,13 +14,7 @@ export async function getAdminProfile() {
     headers: authHeaders(),
   });
 
-  const result = await response.json();
-
-  if (!response.ok) {
-    throw new Error(result.message || "Failed to load the admin area");
-  }
-
-  return result.data;
+  return readApiResponse(response, "Failed to load the admin area", true);
 }
 
 // Headline counts for the admin console tiles:
@@ -33,13 +28,7 @@ export async function getAdminStats() {
     cache: "no-store",
   });
 
-  const result = await response.json();
-
-  if (!response.ok) {
-    throw new Error(result.message || "Failed to load admin stats");
-  }
-
-  return result.data;
+  return readApiResponse(response, "Failed to load admin stats", true);
 }
 
 // Paginated list of every registered user. Returns the backend's PagedResponse
@@ -53,13 +42,7 @@ export async function listUsers(page = 0, size = 20) {
     }
   );
 
-  const result = await response.json();
-
-  if (!response.ok) {
-    throw new Error(result.message || "Failed to load users");
-  }
-
-  return result.data;
+  return readApiResponse(response, "Failed to load users", true);
 }
 
 // Enables or disables a user account. The backend rejects an admin disabling
@@ -74,13 +57,7 @@ export async function setUserEnabled(userId, enabled) {
     }
   );
 
-  const result = await response.json();
-
-  if (!response.ok) {
-    throw new Error(result.message || `Failed to ${action} user`);
-  }
-
-  return result.data;
+  return readApiResponse(response, `Failed to ${action} user`, true);
 }
 
 // Paginated, filterable list of every scan report platform-wide. `filters` may
@@ -99,13 +76,7 @@ export async function listReports(page = 0, size = 20, filters = {}) {
     cache: "no-store",
   });
 
-  const result = await response.json();
-
-  if (!response.ok) {
-    throw new Error(result.message || "Failed to load reports");
-  }
-
-  return result.data;
+  return readApiResponse(response, "Failed to load reports", true);
 }
 
 // Permanently deletes a scan report. Reports have no soft-delete flag, so the
@@ -116,11 +87,5 @@ export async function deleteReport(reportId) {
     headers: authHeaders(),
   });
 
-  const result = await response.json();
-
-  if (!response.ok) {
-    throw new Error(result.message || "Failed to delete report");
-  }
-
-  return result.data;
+  return readApiResponse(response, "Failed to delete report", true);
 }

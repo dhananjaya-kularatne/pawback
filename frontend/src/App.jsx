@@ -8,10 +8,12 @@ import AdminReportsPage from "./pages/AdminReportsPage";
 import OAuth2RedirectHandler from "./pages/OAuth2RedirectHandler";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AdminRoute from "./components/AdminRoute";
+import SessionMonitor from "./components/SessionMonitor";
 
 function App() {
   return (
     <BrowserRouter>
+      <SessionMonitor />
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/scan/:petUuid" element={<ScanPage />} />

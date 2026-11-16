@@ -1,53 +1,31 @@
 import { useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
-import { authApi } from "../api/authApi";
+import { useLocation, useNavigate } from "react-router-dom";
+import { getCurrentProfile } from "../api/authApi";
+import { clearSession, isTokenValid, saveSession } from "../utils/auth";
 
 export default function OAuth2RedirectHandler() {
-  const navigate = useNavigate();
   const location = useLocation();
-  const { login } = useAuth(); // Assuming login or setToken exists in AuthContext
-
+  const navigate = useNavigate();
   useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    const token = params.get("token");
-    const error = params.get("error");
-
-    if (token) {
-      // Decode the token locally to extract user info (just like we do on normal login)
+    let active = true;
+    const token = new URLSearchParams(location.search).get("token");
+    // Remove callback credentials from browser history before any network request.
+    window.history.replaceState(null, "", location.pathname);
+    async function complete() {
       try {
-        const payloadStr = atob(token.split('.')[1]);
-        const payload = JSON.parse(payloadStr);
-
-        const userData = {
-          token,
-          user: {
-            id: payload.userId,
-            email: payload.sub,
-            role: payload.role?.replace("ROLE_", "")
-          }
-        };
-
-        // Call the context login method with the parsed user data
-        login(userData);
-        navigate("/dashboard", { replace: true });
-      } catch (err) {
-        console.error("Failed to parse OAuth2 token", err);
-        navigate("/login?error=invalid_token", { replace: true });
+        if (!isTokenValid(token)) throw new Error("Invalid callback");
+        const user = await getCurrentProfile(token);
+        if (!active) return;
+        saveSession({ token, user });
+        navigate(user.role === "ADMIN" ? "/admin" : "/dashboard", { replace: true });
+      } catch {
+        if (!active) return;
+        clearSession();
+        navigate("/", { replace: true, state: { authError: "Google sign-in could not be completed. Please try again." } });
       }
-    } else if (error) {
-      navigate(`/login?error=${error}`, { replace: true });
-    } else {
-      navigate("/login", { replace: true });
     }
-  }, [location, navigate, login]);
-
-  return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-      <div className="bg-white p-8 rounded-2xl shadow-sm max-w-md w-full text-center">
-        <h2 className="text-xl font-semibold mb-2">Authenticating...</h2>
-        <p className="text-gray-500">Please wait while we log you in.</p>
-      </div>
-    </div>
-  );
+    complete();
+    return () => { active = false; };
+  }, [location.pathname, location.search, navigate]);
+  return <p className="p-8 text-center text-gray-600">Completing sign-in...</p>;
 }

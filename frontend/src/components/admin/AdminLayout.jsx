@@ -7,7 +7,8 @@ import {
   ArrowLeft,
   LogOut,
 } from "lucide-react";
-import { getCurrentUser } from "../../utils/auth";
+import { clearSession } from "../../utils/auth";
+import { useSession } from "../../utils/useSession";
 
 // Shared chrome for the admin area: a dark fixed sidebar for section nav plus a
 // light top bar showing the current page and the signed-in admin. Pages pass
@@ -20,11 +21,10 @@ const NAV = [
 
 export default function AdminLayout({ title, children }) {
   const navigate = useNavigate();
-  const user = getCurrentUser();
+  const { user } = useSession();
 
   function signOut() {
-    sessionStorage.removeItem("token");
-    sessionStorage.removeItem("user");
+    clearSession();
     navigate("/");
   }
 
