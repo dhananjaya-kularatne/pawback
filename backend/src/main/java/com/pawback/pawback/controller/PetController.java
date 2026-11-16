@@ -5,8 +5,13 @@ import com.pawback.pawback.dto.request.UpdatePetRequest;
 import com.pawback.pawback.dto.request.UpdateStatusRequest;
 import com.pawback.pawback.dto.response.ApiResponse;
 import com.pawback.pawback.dto.response.PetResponse;
+import com.pawback.pawback.dto.response.PagedResponse;
+import com.pawback.pawback.dto.response.ScanReportResponse;
+import com.pawback.pawback.service.OwnerReportService;
 import com.pawback.pawback.service.PetService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Max;
 import lombok.RequiredArgsConstructor;
 
 
@@ -23,6 +28,7 @@ import org.springframework.web.multipart.MultipartFile;
 public class PetController {
 
     private final PetService petService;
+    private final OwnerReportService ownerReportService;
     
 
     @PostMapping(consumes = "multipart/form-data")
@@ -65,6 +71,16 @@ public class PetController {
     public ResponseEntity<ApiResponse<PetResponse>> getPetById(@PathVariable Long id) {
         PetResponse response = petService.getPetById(id);
         return ResponseEntity.ok(ApiResponse.success("Pet retrieved successfully", response));
+    }
+
+    // Report history is private to the pet's owner, including after it is Safe again.
+    @GetMapping("/{id}/reports")
+    public ResponseEntity<ApiResponse<PagedResponse<ScanReportResponse>>> getReports(
+            @PathVariable Long id,
+            @RequestParam(defaultValue = "0") @Min(0) int page,
+            @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size) {
+        return ResponseEntity.ok(ApiResponse.success("Reports retrieved successfully",
+                ownerReportService.listReports(id, page, size)));
     }
 
     // Updates a pet's Lost/Safe status
