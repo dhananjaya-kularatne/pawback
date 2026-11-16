@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import Modal from "./Modal";
 import { AlertTriangle, X } from "lucide-react";
 
 // Small in-app confirmation modal — used instead of window.confirm so the
@@ -17,27 +17,13 @@ function ConfirmDialog({
   onConfirm,
   onCancel,
 }) {
-  // Escape closes the dialog, matching native dialog behaviour
-  useEffect(() => {
-    function onKey(e) {
-      if (e.key === "Escape" && !busy) onCancel();
-    }
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [busy, onCancel]);
-
   const confirmClass =
     tone === "danger"
       ? "bg-red-600 hover:bg-red-700"
       : "bg-blue-700 hover:bg-blue-800";
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm px-4"
-      onClick={() => !busy && onCancel()}
-      role="dialog"
-      aria-modal="true"
-    >
+    <Modal onClose={onCancel} busy={busy} titleId="confirm-title" className="max-w-md">
       <div
         className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 relative"
         onClick={(e) => e.stopPropagation()}
@@ -60,7 +46,7 @@ function ConfirmDialog({
             </div>
           )}
           <div className="min-w-0">
-            <h2 className="text-base font-semibold text-gray-900">{title}</h2>
+            <h2 id="confirm-title" className="text-base font-semibold text-gray-900">{title}</h2>
             {message && (
               <p className="text-sm text-gray-600 mt-1 leading-relaxed">{message}</p>
             )}
@@ -87,7 +73,7 @@ function ConfirmDialog({
           </button>
         </div>
       </div>
-    </div>
+    </Modal>
   );
 }
 

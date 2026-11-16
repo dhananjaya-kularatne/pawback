@@ -1,9 +1,12 @@
+import Modal from "./Modal";
+import { useObjectUrls } from "../utils/useObjectUrls";
 import { useState } from "react";
 import { X, Camera, Crop } from "lucide-react";
 import PhotoCropModal from "./PhotoCropModal";
 import { PHOTO_ACCEPT, validatePhoto } from "../utils/validatePhoto";
 
 function EditPetModal({ pet, onClose, onSave }) {
+  const { createObjectUrl, revokeObjectUrl } = useObjectUrls();
   const [name, setName] = useState(pet.name);
   const [breed, setBreed] = useState(pet.breed || "");
   const [description, setDescription] = useState(pet.description || "");
@@ -31,7 +34,8 @@ function EditPetModal({ pet, onClose, onSave }) {
     if (!file) return;
     setError("");
     try { await validatePhoto(file); } catch (err) { setError(err.message); return; }
-    setPendingPhoto({ src: URL.createObjectURL(file), name: file.name });
+    const src = createObjectUrl(file);
+    if (src) setPendingPhoto({ src, name: file.name });
   }
 
   function handleAdjustCrop(e) {
@@ -43,20 +47,20 @@ function EditPetModal({ pet, onClose, onSave }) {
   function handleCropCancel() {
     // Don't revoke a URL that's still the one on screen (true when re-cropping
     // the already-shown photo rather than a freshly picked file)
-    if (pendingPhoto.src !== previewUrl) URL.revokeObjectURL(pendingPhoto.src);
+    if (pendingPhoto.src !== previewUrl) revokeObjectUrl(pendingPhoto.src);
     setPendingPhoto(null);
   }
 
   function handleCropConfirm(croppedFile) {
-    if (pendingPhoto.src !== previewUrl) URL.revokeObjectURL(pendingPhoto.src);
+    if (pendingPhoto.src !== previewUrl) revokeObjectUrl(pendingPhoto.src);
 
     // Only revoke the previous preview if it was itself a local object URL,
     // not the pet's original (remote) photoUrl
-    if (previewUrl && previewUrl !== pet.photoUrl) URL.revokeObjectURL(previewUrl);
+    if (previewUrl && previewUrl !== pet.photoUrl) revokeObjectUrl(previewUrl);
 
     setPendingPhoto(null);
     setImage(croppedFile);
-    setPreviewUrl(URL.createObjectURL(croppedFile));
+    setPreviewUrl(createObjectUrl(croppedFile));
     setPhotoFileName(pendingPhoto.name);
   }
 
@@ -80,12 +84,14 @@ function EditPetModal({ pet, onClose, onSave }) {
   }
 
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+    <Modal onClose={onClose} busy={saving || Boolean(pendingPhoto)} titleId="edit-pet-title" className="max-w-2xl">
       <div className="bg-white rounded-xl p-6 w-full max-w-2xl shadow-lg">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-base font-medium text-gray-900">Edit pet</h2>
+          <h2 id="edit-pet-title" className="text-base font-medium text-gray-900">Edit pet</h2>
           <button
             onClick={onClose}
+            disabled={saving}
+            aria-label="Close pet form"
             className="text-gray-500 hover:text-gray-700 hover:bg-gray-100
                        p-1 rounded-md cursor-pointer transition-colors"
           >
@@ -137,6 +143,7 @@ function EditPetModal({ pet, onClose, onSave }) {
               <input
                 type="file"
                 accept={PHOTO_ACCEPT}
+                aria-label="Pet photo"
                 className="hidden"
                 onChange={handleFileSelected}
               />
@@ -146,9 +153,10 @@ function EditPetModal({ pet, onClose, onSave }) {
           {/* Right: details */}
           <div className="space-y-3">
             <div>
-              <label className="text-sm text-gray-600">Name</label>
+              <label htmlFor="edit-pet-name" className="text-sm text-gray-600">Name</label>
               <input
                 type="text"
+                id="edit-pet-name"
                 value={name}
                 maxLength={100}
                 onChange={(e) => setName(e.target.value)}
@@ -158,9 +166,10 @@ function EditPetModal({ pet, onClose, onSave }) {
               />
             </div>
             <div>
-              <label className="text-sm text-gray-600">Breed</label>
+              <label htmlFor="edit-pet-breed" className="text-sm text-gray-600">Breed</label>
               <input
                 type="text"
+                id="edit-pet-breed"
                 value={breed}
                 maxLength={100}
                 onChange={(e) => setBreed(e.target.value)}
@@ -170,8 +179,9 @@ function EditPetModal({ pet, onClose, onSave }) {
               />
             </div>
             <div>
-              <label className="text-sm text-gray-600">Description</label>
+              <label htmlFor="edit-pet-description" className="text-sm text-gray-600">Description</label>
               <textarea
+                id="edit-pet-description"
                 value={description}
                 maxLength={255}
                 onChange={(e) => setDescription(e.target.value)}
@@ -182,8 +192,9 @@ function EditPetModal({ pet, onClose, onSave }) {
               />
             </div>
             <div>
-              <label className="text-sm text-gray-600">If found instructions</label>
+              <label htmlFor="edit-pet-ifFoundInstructions" className="text-sm text-gray-600">If found instructions</label>
               <textarea
+                id="edit-pet-ifFoundInstructions"
                 value={ifFoundInstructions}
                 maxLength={255}
                 onChange={(e) => setIfFoundInstructions(e.target.value)}
@@ -196,7 +207,7 @@ function EditPetModal({ pet, onClose, onSave }) {
           </div>
 
           <div className="sm:col-span-2">
-            {error && <p className="text-sm text-red-700 mb-3">{error}</p>}
+            {error && <p role="alert" className="text-sm text-red-700 mb-3">{error}</p>}
 
             <button
               type="submit"
@@ -219,7 +230,7 @@ function EditPetModal({ pet, onClose, onSave }) {
           onConfirm={handleCropConfirm}
         />
       )}
-    </div>
+    </Modal>
   );
 }
 

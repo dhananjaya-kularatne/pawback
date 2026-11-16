@@ -1,23 +1,13 @@
+import Modal from "./Modal";
 import { X, Download } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 
 // Modal showing a pet's QR code with a download option
 function QrCodeModal({ pet, onClose }) {
-  const dialogRef = useRef(null);
   const downloadLock = useRef(false);
   const [downloading, setDownloading] = useState(false);
   const [error, setError] = useState("");
   const [previewFailed, setPreviewFailed] = useState(false);
-
-  useEffect(() => {
-    const dialog = dialogRef.current;
-    const opener = document.activeElement;
-    dialog.showModal();
-    return () => {
-      dialog.close();
-      if (opener instanceof HTMLElement && opener.isConnected) opener.focus();
-    };
-  }, []);
 
   // Fetches the image as a blob first — a plain <a download> often fails for cross-origin URLs like Cloudinary, so this forces a real download
   async function handleDownload() {
@@ -54,8 +44,7 @@ function QrCodeModal({ pet, onClose }) {
   }
 
   return (
-    <dialog ref={dialogRef} onCancel={onClose} aria-labelledby="pet-qr-title"
-      className="m-auto w-[calc(100%_-_2rem)] max-w-xs max-h-[85dvh] overflow-y-auto bg-white rounded-xl p-6 shadow-lg text-center backdrop:bg-black/40">
+    <Modal onClose={onClose} titleId="pet-qr-title" className="max-w-xs p-6 text-center">
         <div className="flex justify-between items-center mb-4">
           <h2 id="pet-qr-title" className="text-base font-medium text-gray-900 break-words">
             {pet.name}'s QR code
@@ -100,7 +89,7 @@ function QrCodeModal({ pet, onClose }) {
           <Download size={16} />
           {downloading ? "Downloading..." : "Download QR code"}
         </button>
-    </dialog>
+    </Modal>
   );
 }
 

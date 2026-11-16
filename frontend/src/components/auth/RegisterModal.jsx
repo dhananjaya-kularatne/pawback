@@ -43,6 +43,7 @@ export default function RegisterModal({ onClose, onSuccess, onSwitchToLogin }) {
 
   return (
     <AuthModalShell
+      busy={loading}
       onClose={onClose}
       title="Create your account"
       subtitle="Register your pet and start protecting them today."

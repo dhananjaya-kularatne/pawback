@@ -1,3 +1,4 @@
+import Modal from "./Modal";
 import { useState } from "react";
 import Cropper from "react-easy-crop";
 import { ZoomIn } from "lucide-react";
@@ -33,13 +34,9 @@ function PhotoCropModal({ imageSrc, fileName, onCancel, onConfirm }) {
   }
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm px-4"
-      role="dialog"
-      aria-modal="true"
-    >
+    <Modal onClose={onCancel} busy={saving} titleId="crop-title" className="max-w-md">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6">
-        <h2 className="text-base font-semibold text-gray-900">Adjust photo</h2>
+        <h2 id="crop-title" className="text-base font-semibold text-gray-900">Adjust photo</h2>
         <p className="text-sm text-gray-600 mt-1">
           Drag to reposition, use the slider to zoom. The framed area is what shows on the pet's card.
         </p>
@@ -93,7 +90,7 @@ function PhotoCropModal({ imageSrc, fileName, onCancel, onConfirm }) {
           </button>
         </div>
       </div>
-    </div>
+    </Modal>
   );
 }
 

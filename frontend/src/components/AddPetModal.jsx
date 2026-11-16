@@ -1,9 +1,12 @@
+import Modal from "./Modal";
+import { useObjectUrls } from "../utils/useObjectUrls";
 import { useRef, useState } from "react";
 import { PHOTO_ACCEPT, validatePhoto } from "../utils/validatePhoto";
 import { X, Camera, Crop } from "lucide-react";
 import PhotoCropModal from "./PhotoCropModal";
 
 function AddPetModal({ onClose, onSave }) {
+  const { createObjectUrl, revokeObjectUrl } = useObjectUrls();
   const [name, setName] = useState("");
   const [breed, setBreed] = useState("");
   const [description, setDescription] = useState("");
@@ -30,7 +33,8 @@ function AddPetModal({ onClose, onSave }) {
     if (!file) return;
     setError("");
     try { await validatePhoto(file); } catch (err) { setError(err.message); return; }
-    setPendingPhoto({ src: URL.createObjectURL(file), name: file.name });
+    const src = createObjectUrl(file);
+    if (src) setPendingPhoto({ src, name: file.name });
   }
 
   function handleAdjustCrop(e) {
@@ -42,17 +46,17 @@ function AddPetModal({ onClose, onSave }) {
   function handleCropCancel() {
     // Don't revoke a URL that's still the one on screen (true when re-cropping
     // the already-shown preview rather than a freshly picked file)
-    if (pendingPhoto.src !== previewUrl) URL.revokeObjectURL(pendingPhoto.src);
+    if (pendingPhoto.src !== previewUrl) revokeObjectUrl(pendingPhoto.src);
     setPendingPhoto(null);
   }
 
   function handleCropConfirm(croppedFile) {
-    if (pendingPhoto.src !== previewUrl) URL.revokeObjectURL(pendingPhoto.src);
-    if (previewUrl) URL.revokeObjectURL(previewUrl);
+    if (pendingPhoto.src !== previewUrl) revokeObjectUrl(pendingPhoto.src);
+    if (previewUrl) revokeObjectUrl(previewUrl);
 
     setPendingPhoto(null);
     setImage(croppedFile);
-    setPreviewUrl(URL.createObjectURL(croppedFile));
+    setPreviewUrl(createObjectUrl(croppedFile));
     setPhotoFileName(pendingPhoto.name);
   }
 
@@ -81,12 +85,14 @@ function AddPetModal({ onClose, onSave }) {
   }
 
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+    <Modal onClose={onClose} busy={saving || Boolean(pendingPhoto)} titleId="add-pet-title" className="max-w-2xl">
       <div className="bg-white rounded-xl p-6 w-full max-w-2xl shadow-lg">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-base font-medium text-gray-900">Register a pet</h2>
+          <h2 id="add-pet-title" className="text-base font-medium text-gray-900">Register a pet</h2>
           <button
             onClick={onClose}
+            disabled={saving}
+            aria-label="Close pet form"
             className="text-gray-500 hover:text-gray-700 hover:bg-gray-100
                        p-1 rounded-md cursor-pointer transition-colors"
           >
@@ -140,6 +146,7 @@ function AddPetModal({ onClose, onSave }) {
               <input
                 type="file"
                 accept={PHOTO_ACCEPT}
+                aria-label="Pet photo"
                 className="hidden"
                 onChange={handleFileSelected}
               />
@@ -149,11 +156,12 @@ function AddPetModal({ onClose, onSave }) {
           {/* Right: details */}
           <div className="space-y-3">
             <div>
-              <label className="text-sm text-gray-600">
+              <label htmlFor="add-pet-name" className="text-sm text-gray-600">
                 Name <span className="text-red-700">*</span>
               </label>
               <input
                 type="text"
+                id="add-pet-name"
                 value={name}
                 maxLength={100}
                 onChange={(e) => setName(e.target.value)}
@@ -163,11 +171,12 @@ function AddPetModal({ onClose, onSave }) {
             </div>
 
             <div>
-              <label className="text-sm text-gray-600">
+              <label htmlFor="add-pet-breed" className="text-sm text-gray-600">
                 Breed <span className="text-gray-400">(optional)</span>
               </label>
               <input
                 type="text"
+                id="add-pet-breed"
                 value={breed}
                 maxLength={100}
                 onChange={(e) => setBreed(e.target.value)}
@@ -177,10 +186,11 @@ function AddPetModal({ onClose, onSave }) {
             </div>
 
             <div>
-              <label className="text-sm text-gray-600">
+              <label htmlFor="add-pet-description" className="text-sm text-gray-600">
                 Description <span className="text-gray-400">(optional)</span>
               </label>
               <textarea
+                id="add-pet-description"
                 value={description}
                 maxLength={255}
                 onChange={(e) => setDescription(e.target.value)}
@@ -191,10 +201,11 @@ function AddPetModal({ onClose, onSave }) {
             </div>
 
             <div>
-              <label className="text-sm text-gray-600">
+              <label htmlFor="add-pet-ifFoundInstructions" className="text-sm text-gray-600">
                 If found instructions <span className="text-gray-400">(optional)</span>
               </label>
               <textarea
+                id="add-pet-ifFoundInstructions"
                 value={ifFoundInstructions}
                 maxLength={255}
                 onChange={(e) => setIfFoundInstructions(e.target.value)}
@@ -206,7 +217,7 @@ function AddPetModal({ onClose, onSave }) {
           </div>
 
           <div className="sm:col-span-2">
-            {error && <p className="text-sm text-red-700 mb-3">{error}</p>}
+            {error && <p role="alert" className="text-sm text-red-700 mb-3">{error}</p>}
 
             <button
               type="submit"
@@ -233,7 +244,7 @@ function AddPetModal({ onClose, onSave }) {
           onConfirm={handleCropConfirm}
         />
       )}
-    </div>
+    </Modal>
   );
 }
 

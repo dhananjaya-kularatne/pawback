@@ -35,6 +35,7 @@ export default function LoginModal({ onClose, onSuccess, onSwitchToRegister, onF
 
   return (
     <AuthModalShell
+      busy={loading}
       onClose={onClose}
       title="Sign in to your account"
       subtitle="Access your dashboard and manage your pets."

@@ -1,24 +1,14 @@
-import { useEffect, useRef, useState } from "react";
+import Modal from "./Modal";
+import { useEffect, useState } from "react";
 import { ChevronLeft, ChevronRight, MapPin, RefreshCw, X } from "lucide-react";
 import { getPetReports } from "../api/petApi";
 
 export default function PetReportsModal({ pet, onClose }) {
-  const dialogRef = useRef(null);
   const [request, setRequest] = useState({ page: 0 });
   const [result, setResult] = useState(null);
   const loading = result?.request !== request;
   const data = loading ? null : result?.data;
   const error = loading ? "" : result?.error;
-
-  useEffect(() => {
-    const dialog = dialogRef.current;
-    const opener = document.activeElement;
-    dialog.showModal();
-    return () => {
-      dialog.close();
-      if (opener instanceof HTMLElement && opener.isConnected) opener.focus();
-    };
-  }, []);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -41,22 +31,8 @@ export default function PetReportsModal({ pet, onClose }) {
     return () => controller.abort();
   }, [pet.id, request]);
 
-  function handleBackdropClick(event) {
-    if (event.target !== event.currentTarget) return;
-    const bounds = event.currentTarget.getBoundingClientRect();
-    if (event.clientX < bounds.left || event.clientX > bounds.right ||
-        event.clientY < bounds.top || event.clientY > bounds.bottom) onClose();
-  }
-
   return (
-    <dialog
-      ref={dialogRef}
-      aria-labelledby="pet-reports-title"
-      onCancel={onClose}
-      onClick={handleBackdropClick}
-      className="m-auto w-[calc(100%_-_2rem)] max-w-2xl max-h-[85dvh] overflow-y-auto
-                 rounded-2xl bg-white p-0 shadow-xl backdrop:bg-black/50"
-    >
+    <Modal onClose={onClose} titleId="pet-reports-title" className="max-w-2xl">
       <div className="sticky top-0 z-10 flex items-center justify-between gap-3 border-b border-gray-200 bg-white px-5 py-4">
         <div className="min-w-0">
           <h2 id="pet-reports-title" className="text-lg font-semibold text-gray-900 break-words">
@@ -133,6 +109,6 @@ export default function PetReportsModal({ pet, onClose }) {
           </div>
         )}
       </div>
-    </dialog>
+    </Modal>
   );
 }
