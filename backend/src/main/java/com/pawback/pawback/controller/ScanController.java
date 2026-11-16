@@ -18,6 +18,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.bind.annotation.RequestHeader;
+import jakarta.servlet.http.HttpServletRequest;
 
 // Public endpoints for finders scanning a pet's QR code — no authentication required
 @RestController
@@ -26,6 +28,7 @@ import org.springframework.web.multipart.MultipartFile;
 public class ScanController {
 
     private final PetService petService;
+    private final com.pawback.pawback.security.ClientAddressResolver clientAddressResolver;
 
     @GetMapping("/{petUuid}")
     public ResponseEntity<ApiResponse<PublicPetResponse>> getPetByUuid(@PathVariable String petUuid) {
@@ -40,9 +43,11 @@ public class ScanController {
     public ResponseEntity<ApiResponse<ScanReportResponse>> createReport(
             @PathVariable String petUuid,
             @RequestPart("report") @Valid CreateReportRequest request,
-            @RequestPart(value = "photo", required = false) MultipartFile photo) {
+            @RequestPart(value = "photo", required = false) MultipartFile photo,
+            @RequestHeader(value = "Idempotency-Key", required = false) String idempotencyKey,
+            HttpServletRequest servletRequest) {
 
-        ScanReportResponse response = petService.createReport(petUuid, request, photo);
+        ScanReportResponse response = petService.createReport(petUuid, request, photo, clientAddressResolver.resolve(servletRequest), idempotencyKey);
 
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.success(201, "Report submitted successfully", response));

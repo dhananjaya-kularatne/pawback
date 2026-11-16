@@ -15,6 +15,7 @@ public interface ScanReportRepository extends JpaRepository<ScanReport, Long> {
     java.util.List<ScanReport> findByPetId(Long petId);
     boolean existsByPhotoPublicId(String publicId);
     boolean existsByPhotoUrl(String url);
+    java.util.Optional<ScanReport> findBySubmissionKey(String key);
 
     // Platform-wide report search for the admin moderation view. Every filter is
     // optional: a null bound is skipped, so passing nothing returns every report.

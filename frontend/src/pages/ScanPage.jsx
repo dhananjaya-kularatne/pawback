@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import { PawPrint, Heart, Camera, MapPin } from "lucide-react";
 import { getPetByUuid, submitReport } from "../api/scanApi";
@@ -14,6 +14,7 @@ function ScanPage() {
 }
 
 function ScanPetPage({ petUuid }) {
+  const requestKey = useRef(null);
   const [pet, setPet] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -73,6 +74,7 @@ function ScanPetPage({ petUuid }) {
 
     setSubmitting(true);
     try {
+      requestKey.current ??= crypto.randomUUID();
       await submitReport(
         petUuid,
         {
@@ -80,7 +82,8 @@ function ScanPetPage({ petUuid }) {
           latitude: location?.latitude ?? null,
           longitude: location?.longitude ?? null,
         },
-        photo
+        photo,
+        requestKey.current
       );
       setSubmitted(true);
     } catch (err) {

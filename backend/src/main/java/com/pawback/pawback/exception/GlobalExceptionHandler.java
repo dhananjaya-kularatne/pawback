@@ -24,6 +24,12 @@ import java.util.Map;
 @RestControllerAdvice
 public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
+    @ExceptionHandler(TooManyReportsException.class)
+    public ResponseEntity<ApiResponse<Void>> handleReportLimit(TooManyReportsException exception) {
+        return ResponseEntity.status(429).header("Retry-After", String.valueOf(exception.getRetryAfterSeconds()))
+                .body(ApiResponse.error(429, exception.getMessage()));
+    }
+
     @Override
     protected ResponseEntity<Object> handleMaxUploadSizeExceededException(
             org.springframework.web.multipart.MaxUploadSizeExceededException exception,
