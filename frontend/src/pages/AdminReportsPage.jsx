@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
-import { ChevronLeft, ChevronRight, MapPin, Trash2, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, Eye, MapPin, RefreshCw, Trash2, X } from "lucide-react";
 import AdminLayout from "../components/admin/AdminLayout";
 import ConfirmDialog from "../components/ConfirmDialog";
+import ReportDetailsModal from "../components/admin/ReportDetailsModal";
 import { deleteReport, listReports } from "../api/adminApi";
 
 const PAGE_SIZE = 20;
@@ -22,6 +23,8 @@ function AdminReportsPage() {
   // Applied filters (drive the fetch) vs. the draft values in the inputs
   const [filters, setFilters] = useState({ petId: "", from: "", to: "" });
   const [draft, setDraft] = useState({ petId: "", from: "", to: "" });
+  const [filterError, setFilterError] = useState("");
+  const [viewingReport, setViewingReport] = useState(null);
 
   const [pendingId, setPendingId] = useState(null);
   // The report queued for a delete confirmation, or null
@@ -31,16 +34,26 @@ function AdminReportsPage() {
     let cancelled = false;
 
     async function fetchReports() {
+      let correctingPage = false;
       try {
         const data = await listReports(page, PAGE_SIZE, filters);
         if (!cancelled) {
+          // Deletions (including by another admin) can remove the last page.
+          if (page > 0 && page >= data.totalPages) {
+            correctingPage = true;
+            setPage(Math.max(0, data.totalPages - 1));
+            return;
+          }
           setPageData(data);
           setError("");
         }
       } catch (err) {
-        if (!cancelled) setError(err.message);
+        if (!cancelled) {
+          setPageData(null);
+          setError(err.message);
+        }
       } finally {
-        if (!cancelled) setLoading(false);
+        if (!cancelled && !correctingPage) setLoading(false);
       }
     }
 
@@ -62,14 +75,21 @@ function AdminReportsPage() {
 
   function applyFilters(e) {
     e.preventDefault();
+    if (draft.from && draft.to && draft.from > draft.to) {
+      setFilterError("From date must be on or before To date.");
+      return;
+    }
+    setFilterError("");
     setLoading(true);
     setPage(0);
-    setFilters(draft);
+    // A fresh object also re-fetches when the applied values have not changed.
+    setFilters({ ...draft });
   }
 
   function clearFilters() {
     const cleared = { petId: "", from: "", to: "" };
     setDraft(cleared);
+    setFilterError("");
     setLoading(true);
     setPage(0);
     setFilters(cleared);
@@ -113,8 +133,9 @@ function AdminReportsPage() {
                    flex flex-wrap items-end gap-3"
       >
         <div>
-          <label className="block text-xs font-medium text-gray-500 mb-1">Pet ID</label>
+          <label htmlFor="report-filter-pet" className="block text-xs font-medium text-gray-500 mb-1">Pet ID</label>
           <input
+            id="report-filter-pet"
             type="number"
             min="1"
             value={draft.petId}
@@ -125,8 +146,9 @@ function AdminReportsPage() {
           />
         </div>
         <div>
-          <label className="block text-xs font-medium text-gray-500 mb-1">From</label>
+          <label htmlFor="report-filter-from" className="block text-xs font-medium text-gray-500 mb-1">From (UTC)</label>
           <input
+            id="report-filter-from"
             type="date"
             value={draft.from}
             onChange={(e) => setDraft((d) => ({ ...d, from: e.target.value }))}
@@ -135,8 +157,9 @@ function AdminReportsPage() {
           />
         </div>
         <div>
-          <label className="block text-xs font-medium text-gray-500 mb-1">To</label>
+          <label htmlFor="report-filter-to" className="block text-xs font-medium text-gray-500 mb-1">To (UTC)</label>
           <input
+            id="report-filter-to"
             type="date"
             value={draft.to}
             onChange={(e) => setDraft((d) => ({ ...d, to: e.target.value }))}
@@ -164,9 +187,16 @@ function AdminReportsPage() {
         )}
       </form>
 
+      {filterError && <p role="alert" className="text-sm text-red-700 mb-4">{filterError}</p>}
+      <p className="text-xs text-gray-500 mb-4">Date filters include whole days in UTC. Report times are displayed in your local time.</p>
+
       {error && (
         <p className="text-sm text-red-700 mb-4 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
-          {error}
+          {error}{" "}
+          <button type="button" onClick={refetch} disabled={loading}
+            className="inline-flex items-center gap-1 underline disabled:opacity-40 cursor-pointer">
+            <RefreshCw size={12} /> Retry
+          </button>
         </p>
       )}
 
@@ -191,7 +221,7 @@ function AdminReportsPage() {
                 </tr>
               )}
 
-              {!loading && reports.length === 0 && (
+              {!loading && !error && reports.length === 0 && (
                 <tr>
                   <td colSpan={5} className="px-5 py-12 text-center text-sm text-gray-400">
                     {hasFilters ? "No reports match these filters." : "No reports to show."}
@@ -209,6 +239,7 @@ function AdminReportsPage() {
                     >
                       <td className="px-5 py-3">
                         <div className="font-medium text-gray-900">{report.petName || "—"}</div>
+                        <div className="text-gray-500 text-xs">Pet ID {report.petId}</div>
                         <div className="text-gray-400 text-xs truncate max-w-[10rem]">
                           {report.petUuid}
                         </div>
@@ -218,10 +249,12 @@ function AdminReportsPage() {
                       </td>
                       <td className="px-5 py-3 text-gray-600">
                         {report.latitude != null && report.longitude != null ? (
-                          <span className="inline-flex items-center gap-1">
+                          <a className="inline-flex items-center gap-1 text-blue-700 hover:underline"
+                            href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${report.latitude},${report.longitude}`)}`}
+                            target="_blank" rel="noopener noreferrer" aria-label={`View location for report ${report.id}`}>
                             <MapPin size={13} className="text-gray-400" />
                             {report.latitude.toFixed(3)}, {report.longitude.toFixed(3)}
-                          </span>
+                          </a>
                         ) : (
                           "—"
                         )}
@@ -230,6 +263,10 @@ function AdminReportsPage() {
                         {report.createdAt ? new Date(report.createdAt).toLocaleString() : "—"}
                       </td>
                       <td className="px-5 py-3 text-right">
+                        <button type="button" onClick={() => setViewingReport(report)}
+                          className="inline-flex items-center gap-1 text-xs font-medium px-3 py-1.5 rounded-lg border border-blue-200 text-blue-700 hover:bg-blue-50 mr-2 cursor-pointer">
+                          <Eye size={13} /> View
+                        </button>
                         <button
                           onClick={() => setToDelete(report)}
                           disabled={isPending}
@@ -289,6 +326,7 @@ function AdminReportsPage() {
           onCancel={() => setToDelete(null)}
         />
       )}
+      {viewingReport && <ReportDetailsModal report={viewingReport} onClose={() => setViewingReport(null)} />}
     </AdminLayout>
   );
 }
