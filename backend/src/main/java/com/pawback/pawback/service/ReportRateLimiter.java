@@ -5,8 +5,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.*;
-import java.time.Instant;
-import java.sql.Timestamp;
 import java.util.UUID;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
@@ -34,12 +32,11 @@ public class ReportRateLimiter {
     }
     public int retryAfterSeconds() { return windowMinutes * 60; }
     private boolean consume(String key, int maximum) {
-        Timestamp now=Timestamp.from(Instant.now()), cutoff=Timestamp.from(Instant.now().minusSeconds(windowMinutes * 60L));
         jdbc.update("""
-            INSERT INTO report_budgets(budget_key, attempts, window_started_at) VALUES(?, 1, ?)
-            ON DUPLICATE KEY UPDATE attempts=IF(window_started_at <= ?, 1, LEAST(attempts+1, ?)),
-              window_started_at=IF(window_started_at <= ?, ?, window_started_at)
-            """, key, now, cutoff, maximum+1, cutoff, now);
+            INSERT INTO report_budgets(budget_key, attempts, window_started_at) VALUES(?, 1, UTC_TIMESTAMP(6))
+            ON DUPLICATE KEY UPDATE attempts=IF(window_started_at <= TIMESTAMPADD(MINUTE, ?, UTC_TIMESTAMP(6)), 1, LEAST(attempts+1, ?)),
+              window_started_at=IF(window_started_at <= TIMESTAMPADD(MINUTE, ?, UTC_TIMESTAMP(6)), UTC_TIMESTAMP(6), window_started_at)
+            """, key, -windowMinutes, maximum+1, -windowMinutes);
         return jdbc.queryForObject("SELECT attempts FROM report_budgets WHERE budget_key=? FOR UPDATE", Integer.class, key) <= maximum;
     }
     private String clientHash(String address) {
@@ -49,5 +46,5 @@ public class ReportRateLimiter {
         } catch (java.security.GeneralSecurityException exception) { throw new IllegalStateException(exception); }
     }
     @Scheduled(fixedDelay = 3600000)
-    public void expire() { jdbc.update("DELETE FROM report_budgets WHERE window_started_at < ?", Timestamp.from(Instant.now().minusSeconds(172800))); }
+    public void expire() { jdbc.update("DELETE FROM report_budgets WHERE window_started_at < TIMESTAMPADD(DAY, -2, UTC_TIMESTAMP(6))"); }
 }

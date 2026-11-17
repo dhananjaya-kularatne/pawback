@@ -3,11 +3,21 @@ import { X, Download } from "lucide-react";
 import { useRef, useState } from "react";
 
 // Modal showing a pet's QR code with a download option
-function QrCodeModal({ pet, onClose }) {
+function QrCodeModal({ pet, onClose, onRegenerate }) {
   const downloadLock = useRef(false);
   const [downloading, setDownloading] = useState(false);
   const [error, setError] = useState("");
   const [previewFailed, setPreviewFailed] = useState(false);
+  const [regenerating, setRegenerating] = useState(false);
+  const regenerationLock = useRef(false);
+
+  async function regenerate() {
+    if (regenerationLock.current || downloading) return;
+    regenerationLock.current = true; setRegenerating(true); setError("");
+    try { await onRegenerate(); }
+    catch (err) { setError(err.message || "Could not generate a QR image. Please try again."); }
+    finally { regenerationLock.current = false; setRegenerating(false); }
+  }
 
   // Fetches the image as a blob first — a plain <a download> often fails for cross-origin URLs like Cloudinary, so this forces a real download
   async function handleDownload() {
@@ -44,7 +54,7 @@ function QrCodeModal({ pet, onClose }) {
   }
 
   return (
-    <Modal onClose={onClose} titleId="pet-qr-title" className="max-w-xs p-6 text-center">
+    <Modal onClose={onClose} busy={downloading || regenerating} titleId="pet-qr-title" className="max-w-xs p-6 text-center">
         <div className="flex justify-between items-center mb-4">
           <h2 id="pet-qr-title" className="text-base font-medium text-gray-900 break-words">
             {pet.name}'s QR code
@@ -52,6 +62,7 @@ function QrCodeModal({ pet, onClose }) {
           <button
             type="button"
             onClick={onClose}
+            disabled={downloading || regenerating}
             aria-label="Close QR code"
             autoFocus
             className="text-gray-500 hover:text-gray-700 hover:bg-gray-100
@@ -80,7 +91,7 @@ function QrCodeModal({ pet, onClose }) {
         <button
           type="button"
           onClick={handleDownload}
-          disabled={downloading || !pet.qrCodeUrl}
+          disabled={downloading || regenerating || !pet.qrCodeUrl}
           aria-busy={downloading}
           className="w-full flex items-center justify-center gap-2 bg-blue-700
                      hover:bg-blue-800 text-white text-sm font-medium py-2
@@ -89,6 +100,11 @@ function QrCodeModal({ pet, onClose }) {
           <Download size={16} />
           {downloading ? "Downloading..." : "Download QR code"}
         </button>
+        {onRegenerate && <button type="button" onClick={regenerate} disabled={downloading || regenerating}
+          className="mt-3 text-sm text-blue-700 underline disabled:opacity-50 cursor-pointer">
+          {regenerating ? "Generating..." : pet.qrCodeUrl ? "Regenerate QR image" : "Generate QR image"}
+        </button>}
+        <p className="mt-2 text-xs text-gray-500">If an old tag no longer opens your pet's page, generate a new image, download it, and replace the printed tag.</p>
     </Modal>
   );
 }

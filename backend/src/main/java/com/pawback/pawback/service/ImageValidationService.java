@@ -13,7 +13,7 @@ public class ImageValidationService {
     public void validate(MultipartFile file) {
         if (file == null || file.isEmpty()) throw new BadRequestException("A pet photo is required");
         if (file.getSize() > 5L * 1024 * 1024) throw new BadRequestException("Photo must be 5 MB or smaller");
-        try (var stream = ImageIO.createImageInputStream(file.getInputStream())) {
+        try (var input = file.getInputStream(); var stream = ImageIO.createImageInputStream(input)) {
             var readers = ImageIO.getImageReaders(stream);
             if (!readers.hasNext()) throw new BadRequestException("Choose a valid JPEG or PNG photo");
             ImageReader reader = readers.next();

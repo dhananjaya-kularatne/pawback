@@ -1,4 +1,5 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { useEffect } from "react";
+import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import LandingPage from "./pages/LandingPage";
 import Dashboard from "./pages/Dashboard";
 import ScanPage from "./pages/ScanPage";
@@ -9,13 +10,24 @@ import OAuth2RedirectHandler from "./pages/OAuth2RedirectHandler";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AdminRoute from "./components/AdminRoute";
 import SessionMonitor from "./components/SessionMonitor";
+import InformationPage from "./pages/InformationPage";
+
+function RouteScrollReset() {
+  const { pathname } = useLocation();
+  useEffect(() => { window.scrollTo(0, 0); }, [pathname]);
+  return null;
+}
 
 function App() {
   return (
     <BrowserRouter>
+      <RouteScrollReset />
       <SessionMonitor />
       <Routes>
         <Route path="/" element={<LandingPage />} />
+        <Route path="/help" element={<InformationPage />} />
+        <Route path="/privacy" element={<InformationPage />} />
+        <Route path="*" element={<div className="p-10 text-center"><h1 className="text-xl font-semibold">Page not found</h1><a className="text-blue-700 underline" href="/">Return to PawBack</a></div>} />
         <Route path="/scan/:petUuid" element={<ScanPage />} />
         <Route path="/oauth2/redirect" element={<OAuth2RedirectHandler />} />
         <Route

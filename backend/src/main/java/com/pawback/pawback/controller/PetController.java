@@ -49,6 +49,11 @@ public class PetController {
         return ResponseEntity.ok(ApiResponse.success("Pet removed successfully", null));
     }
 
+    @PostMapping("/{id}/qr")
+    public ResponseEntity<ApiResponse<PetResponse>> regenerateQr(@PathVariable Long id) {
+        return ResponseEntity.ok(ApiResponse.success("QR image generated", petService.regenerateQr(id)));
+    }
+
     // Returns all pets belonging to the currently authenticated owner
     @GetMapping
     public ResponseEntity<ApiResponse<List<PetResponse>>> getMyPets() {

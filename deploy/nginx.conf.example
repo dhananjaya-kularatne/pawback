@@ -1,0 +1,27 @@
+# Private listener behind the hosting platform's HTTPS terminator.
+# Do not expose this HTTP listener as the public production endpoint.
+server {
+    listen 80;
+    server_name _;
+    root /srv/pawback/frontend;
+    client_max_body_size 6m;
+
+    location /api/ {
+        proxy_pass http://127.0.0.1:8080;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-For $remote_addr;
+    }
+    location /oauth2/ {
+        proxy_pass http://127.0.0.1:8080;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-For $remote_addr;
+    }
+    location /login/oauth2/ {
+        proxy_pass http://127.0.0.1:8080;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-For $remote_addr;
+    }
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+}
