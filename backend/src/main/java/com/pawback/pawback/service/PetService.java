@@ -44,6 +44,7 @@ public class PetService {
     private final AssetCleanupService assetCleanup;
     private final ImageValidationService imageValidation;
     private final jakarta.persistence.EntityManager entityManager;
+    private final ReportRateLimiter reportRateLimiter;
 
     @Transactional
     public PetResponse createPet(CreatePetRequest request, MultipartFile image, String idempotencyKey) {
@@ -196,7 +197,8 @@ public class PetService {
     // No ownership check — this is intentionally callable by anyone
     // (the finder), matching the "no login required" requirement.
     @Transactional
-    public ScanReportResponse createReport(String petUuid, CreateReportRequest request, MultipartFile photo) {
+    public ScanReportResponse createReport(String petUuid, CreateReportRequest request, MultipartFile photo,
+            String remoteAddress, String idempotencyKey) {
 
         Pet pet = getPublicPet(petUuid);
         // Check before any upload or save; the public page alone cannot enforce this.
@@ -204,6 +206,25 @@ public class PetService {
         if (pet.getDeletedAt() != null) throw new ResourceNotFoundException("Pet not found");
         if (pet.getStatus() != PetStatus.LOST) {
             throw new ConflictException("This pet is no longer marked as lost. Reports are not being accepted.");
+        }
+
+        String submissionKey = idempotencyKey == null ? null : hash(petUuid + ":" + validateKey(idempotencyKey));
+        String requestHash;
+        try {
+            requestHash = hashFields(photo == null ? new byte[0] : photo.getBytes(), request.getMessage(),
+                    String.valueOf(request.getLatitude()), String.valueOf(request.getLongitude()));
+        } catch (java.io.IOException exception) { throw new IllegalStateException(exception); }
+        if (submissionKey != null) {
+            var previous = scanReportRepository.findBySubmissionKey(submissionKey);
+            if (previous.isPresent()) {
+                if (!requestHash.equals(previous.get().getRequestHash())) throw new ConflictException("This report was already submitted with different details.");
+                ScanReport existing = previous.get();
+                return ScanReportResponse.builder().id(existing.getId()).message(existing.getMessage()).photoUrl(existing.getPhotoUrl())
+                        .latitude(existing.getLatitude()).longitude(existing.getLongitude()).createdAt(existing.getCreatedAt()).build();
+            }
+        }
+        if (!reportRateLimiter.tryConsume(pet.getPetUuid(), remoteAddress)) {
+            throw new com.pawback.pawback.exception.TooManyReportsException(reportRateLimiter.retryAfterSeconds());
         }
 
         UploadedAsset photoAsset = photo == null ? null : cloudinaryService.uploadReportImage(photo);
@@ -215,6 +236,8 @@ public class PetService {
                 .latitude(request.getLatitude())
                 .longitude(request.getLongitude())
                 .pet(pet)
+                .submissionKey(submissionKey)
+                .requestHash(requestHash)
                 .build();
 
         ScanReport savedReport = scanReportRepository.saveAndFlush(report);
@@ -296,14 +319,19 @@ public class PetService {
     }
     private String registrationHash(CreatePetRequest request, MultipartFile image) {
         try {
+            return hashFields(image.getBytes(), request.getName(), request.getBreed(), request.getDescription(), request.getIfFoundInstructions());
+        } catch (java.io.IOException exception) { throw new IllegalStateException(exception); }
+    }
+    private String hashFields(byte[] image, String... fields) {
+        try {
             var digest = java.security.MessageDigest.getInstance("SHA-256");
-            for (String field : new String[]{request.getName(), request.getBreed(), request.getDescription(), request.getIfFoundInstructions()}) {
+            for (String field : fields) {
                 byte[] bytes = field == null ? new byte[0] : field.getBytes(java.nio.charset.StandardCharsets.UTF_8);
                 digest.update(java.nio.ByteBuffer.allocate(4).putInt(field == null ? -1 : bytes.length).array());
                 digest.update(bytes);
             }
-            digest.update(image.getBytes());
+            digest.update(image);
             return java.util.HexFormat.of().formatHex(digest.digest());
-        } catch (java.io.IOException | java.security.NoSuchAlgorithmException exception) { throw new IllegalStateException(exception); }
+        } catch (java.security.NoSuchAlgorithmException exception) { throw new IllegalStateException(exception); }
     }
 }

@@ -24,6 +24,10 @@ public class ScanReport {
 
     private String photoUrl;
     private String photoPublicId;
+    @Column(unique = true, length = 64)
+    private String submissionKey;
+    @Column(length = 64)
+    private String requestHash;
 
     private Double latitude;
     private Double longitude;
