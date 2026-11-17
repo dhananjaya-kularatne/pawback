@@ -3,6 +3,7 @@ import { Plus, Pencil, MessageSquare, Trash2, QrCode as QrCodeIcon } from "lucid
 import Navbar from "../components/Navbar";
 import { getMyPets, updatePet, createPet, updatePetStatus, deletePet } from "../api/petApi";
 import ConfirmDialog from "../components/ConfirmDialog";
+import { useSession } from "../utils/useSession";
 import EditPetModal from "../components/EditPetModal";
 import AddPetModal from "../components/AddPetModal";
 import QrCodeModal from "../components/QrCodeModal";
@@ -10,6 +11,7 @@ import PetReportsModal from "../components/PetReportsModal";
 
 // Owner's dashboard — lists all registered pets, with inline add/edit/QR view/status toggle
 function Dashboard() {
+  const { user } = useSession();
   const [pets, setPets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -26,13 +28,7 @@ function Dashboard() {
 
   // Greeting name comes from the stored user, so the banner reflects whoever is
   // actually signed in rather than a hard-coded owner.
-  let firstName = "";
-  try {
-    const user = JSON.parse(sessionStorage.getItem("user") || "null");
-    if (user && user.name) firstName = user.name.split(" ")[0];
-  } catch {
-    // Malformed user payload — fall back to the generic greeting
-  }
+  const firstName = user?.name?.split(" ")[0] || "";
 
   useEffect(() => {
     async function fetchPets() {

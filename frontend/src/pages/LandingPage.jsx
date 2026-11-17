@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import { useSession } from "../utils/useSession";
 import { Shield, QrCode, Bell, ArrowRight } from "lucide-react";
 import heroImg from "../assets/hero.jpg";
 import RegisterModal from "../components/auth/RegisterModal";
@@ -7,28 +8,21 @@ import LoginModal from "../components/auth/LoginModal";
 import ForgotPasswordModal from "../components/auth/ForgotPasswordModal";
 import AccountMenu from "../components/AccountMenu";
 import AppHeader from "../components/AppHeader";
-import NotificationBell from "../components/NotificationBell";
 import Footer from "../components/layout/Footer";
 
 // Landing page — the register form opens as a modal overlay when a CTA is clicked
 function LandingPage() {
   const navigate = useNavigate();
+  const location = useLocation();
 
   // Auth state is derived from token presence — kept in state so signing in or
   // out updates the page in place. The storage listener catches token changes
   // from other contexts in this tab session.
-  const [isLoggedIn, setIsLoggedIn] = useState(() => Boolean(sessionStorage.getItem("token")));
-
-  useEffect(() => {
-    function syncAuth() {
-      setIsLoggedIn(Boolean(sessionStorage.getItem("token")));
-    }
-    window.addEventListener("storage", syncAuth);
-    return () => window.removeEventListener("storage", syncAuth);
-  }, []);
+  const { token } = useSession();
+  const isLoggedIn = Boolean(token);
 
   const [registerOpen, setRegisterOpen] = useState(false);
-  const [loginOpen, setLoginOpen] = useState(false);
+  const [loginOpen, setLoginOpen] = useState(() => Boolean(location.state?.authError || location.state?.sessionExpired));
   const [forgotOpen, setForgotOpen] = useState(false);
 
   // Called by both auth modals once a token has been stored — close the modal
@@ -36,7 +30,6 @@ function LandingPage() {
   function handleAuthSuccess() {
     setLoginOpen(false);
     setRegisterOpen(false);
-    setIsLoggedIn(true);
   }
 
   function openLogin() {
@@ -63,8 +56,7 @@ function LandingPage() {
       <AppHeader showNavLinks={isLoggedIn}>
         {isLoggedIn ? (
           <>
-            <NotificationBell />
-            <AccountMenu onLoggedOut={() => setIsLoggedIn(false)} />
+            <AccountMenu />
           </>
         ) : (
           <>
@@ -221,6 +213,7 @@ function LandingPage() {
 
       {loginOpen && (
         <LoginModal
+          initialError={location.state?.authError || (location.state?.sessionExpired ? "Your session has ended. Please sign in again." : "")}
           onClose={() => setLoginOpen(false)}
           onSuccess={handleAuthSuccess}
           onSwitchToRegister={openRegister}

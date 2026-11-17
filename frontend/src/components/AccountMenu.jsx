@@ -1,6 +1,8 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ChevronDown, LogOut } from "lucide-react";
+import { clearSession } from "../utils/auth";
+import { useSession } from "../utils/useSession";
 
 // Account control shared by the authenticated Navbar and the landing-page
 // header: the signed-in name in the bar, opening a menu with the account
@@ -11,6 +13,7 @@ export default function AccountMenu({ onLoggedOut }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef(null);
   const navigate = useNavigate();
+  const { user } = useSession();
 
   // Close the dropdown when clicking anywhere outside it
   useEffect(() => {
@@ -24,20 +27,12 @@ export default function AccountMenu({ onLoggedOut }) {
   }, []);
 
   // Pull the stored owner details for the label and menu header
-  let displayName = "";
-  let email = "";
-  try {
-    const user = JSON.parse(sessionStorage.getItem("user") || "null");
-    if (user && user.name) displayName = user.name;
-    if (user && user.email) email = user.email;
-  } catch {
-    // Ignore a malformed user payload — fall back to the generic label
-  }
+  const displayName = user?.name || "";
+  const email = user?.email || "";
 
   // Clears the JWT and user data, then hands control back to the caller
   function handleLogout() {
-    sessionStorage.removeItem("token");
-    sessionStorage.removeItem("user");
+    clearSession();
     setMenuOpen(false);
     if (onLoggedOut) {
       onLoggedOut();

@@ -1,5 +1,5 @@
 import { NavLink } from "react-router-dom";
-import { isAdmin } from "../utils/auth";
+import { useSession } from "../utils/useSession";
 
 // Persistent header navigation shared by the landing header and the
 // authenticated Navbar, so moving between Home and the Dashboard feels like
@@ -11,7 +11,8 @@ const BASE_LINKS = [
 ];
 
 export default function HeaderNavLinks() {
-  const links = isAdmin()
+  const { user } = useSession();
+  const links = user?.role === "ADMIN"
     ? [...BASE_LINKS, { to: "/admin", label: "Admin" }]
     : BASE_LINKS;
 

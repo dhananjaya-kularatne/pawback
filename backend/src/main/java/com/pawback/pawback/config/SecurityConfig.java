@@ -39,6 +39,8 @@ public class SecurityConfig {
     private final OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler;
     private final OAuth2LoginFailureHandler oAuth2LoginFailureHandler;
     private final HttpCookieOAuth2AuthorizationRequestRepository httpCookieOAuth2AuthorizationRequestRepository;
+    @org.springframework.beans.factory.annotation.Value("${app.cors.allowed-origins:${app.frontend-url}}")
+    private String allowedOrigins;
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -61,6 +63,15 @@ public class SecurityConfig {
         http
             .csrf(csrf -> csrf.disable())
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+            .exceptionHandling(errors -> errors
+                .authenticationEntryPoint((request, response, exception) -> {
+                    response.setStatus(401); response.setContentType("application/json");
+                    response.getWriter().write("{\"success\":false,\"status\":401,\"message\":\"Please sign in again\",\"data\":null}");
+                })
+                .accessDeniedHandler((request, response, exception) -> {
+                    response.setStatus(403); response.setContentType("application/json");
+                    response.getWriter().write("{\"success\":false,\"status\":403,\"message\":\"You do not have permission to access this resource\",\"data\":null}");
+                }))
             // Stateless — no HTTP sessions; every request must carry a JWT
             .sessionManagement(session ->
                     session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -105,7 +116,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of("http://localhost:5173"));
+        config.setAllowedOrigins(java.util.Arrays.stream(allowedOrigins.split(",")).map(String::trim).filter(s -> !s.isEmpty()).toList());
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
 

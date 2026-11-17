@@ -1,4 +1,10 @@
-const API_BASE_URL = "http://localhost:8080/api";
+import { readApiResponse } from "./readApiResponse";
+import { API_BASE_URL } from "./config";
+
+export async function getCurrentProfile(token = sessionStorage.getItem("token")) {
+  const response = await fetch(`${API_BASE_URL}/auth/me`, { headers: { Authorization: `Bearer ${token}` }, cache: "no-store" });
+  return readApiResponse(response, "Could not verify your account", token);
+}
 
 // Registers a new user account with name, email, password, and optional phone
 export async function registerUser(userData) {
@@ -10,13 +16,7 @@ export async function registerUser(userData) {
     body: JSON.stringify(userData),
   });
 
-  const result = await response.json();
-
-  if (!response.ok) {
-    throw new Error(result.message || "Failed to register account");
-  }
-
-  return result.data;
+  return readApiResponse(response, "Failed to register account");
 }
 
 // Authenticates a user with email and password
@@ -29,13 +29,7 @@ export async function loginUser(credentials) {
     body: JSON.stringify(credentials),
   });
 
-  const result = await response.json();
-
-  if (!response.ok) {
-    throw new Error(result.message || "Failed to login");
-  }
-
-  return result.data;
+  return readApiResponse(response, "Failed to login");
 }
 
 // Requests a password reset code to be sent to the user's email
@@ -48,13 +42,7 @@ export async function forgotPassword(email) {
     body: JSON.stringify({ email }),
   });
 
-  const result = await response.json();
-
-  if (!response.ok) {
-    throw new Error(result.message || "Failed to request password reset");
-  }
-
-  return result;
+  return readApiResponse(response, "Failed to request password reset");
 }
 
 // Verifies the 6-digit OTP code sent to the email
@@ -67,13 +55,7 @@ export async function verifyOtp(email, otp) {
     body: JSON.stringify({ email, otp }),
   });
 
-  const result = await response.json();
-
-  if (!response.ok) {
-    throw new Error(result.message || "Invalid or expired OTP");
-  }
-
-  return result;
+  return readApiResponse(response, "Invalid or expired OTP");
 }
 
 // Sets a new password using the verified OTP
@@ -86,11 +68,5 @@ export async function resetPassword(email, otp, newPassword) {
     body: JSON.stringify({ email, otp, newPassword }),
   });
 
-  const result = await response.json();
-
-  if (!response.ok) {
-    throw new Error(result.message || "Failed to reset password");
-  }
-
-  return result;
+  return readApiResponse(response, "Failed to reset password");
 }
