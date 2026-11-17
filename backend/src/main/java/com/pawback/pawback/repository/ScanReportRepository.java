@@ -8,11 +8,10 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.Instant;
-import java.util.List;
 
 public interface ScanReportRepository extends JpaRepository<ScanReport, Long> {
 
-    List<ScanReport> findByPetIdOrderByCreatedAtDesc(Long petId);
+    Page<ScanReport> findByPetId(Long petId, Pageable pageable);
 
     // Platform-wide report search for the admin moderation view. Every filter is
     // optional: a null bound is skipped, so passing nothing returns every report.

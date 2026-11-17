@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
-import { Plus, Pencil, QrCode as QrCodeIcon } from "lucide-react";
+import { Plus, Pencil, MessageSquare, QrCode as QrCodeIcon } from "lucide-react";
 import Navbar from "../components/Navbar";
 import { getMyPets, updatePet, createPet, updatePetStatus } from "../api/petApi";
 import EditPetModal from "../components/EditPetModal";
 import AddPetModal from "../components/AddPetModal";
 import QrCodeModal from "../components/QrCodeModal";
+import PetReportsModal from "../components/PetReportsModal";
 
 // Owner's dashboard — lists all registered pets, with inline add/edit/QR view/status toggle
 function Dashboard() {
@@ -14,6 +15,7 @@ function Dashboard() {
   const [editingPet, setEditingPet] = useState(null);
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [viewingQrPet, setViewingQrPet] = useState(null);
+  const [viewingReportsPet, setViewingReportsPet] = useState(null);
 
   // Greeting name comes from the stored user, so the banner reflects whoever is
   // actually signed in rather than a hard-coded owner.
@@ -206,6 +208,14 @@ function Dashboard() {
                   {!pet.description && !pet.ifFoundInstructions && (
                     <p className="text-xs text-gray-400">No additional details</p>
                   )}
+                  <button
+                    type="button"
+                    onClick={() => setViewingReportsPet(pet)}
+                    className="mt-3 inline-flex items-center gap-1.5 text-sm font-medium text-blue-700 hover:text-blue-900 cursor-pointer"
+                    aria-label={`View reports for ${pet.name}`}
+                  >
+                    <MessageSquare size={15} /> View reports
+                  </button>
                 </div>
               </div>
             ))}
@@ -232,6 +242,13 @@ function Dashboard() {
         <QrCodeModal
           pet={viewingQrPet}
           onClose={() => setViewingQrPet(null)}
+        />
+      )}
+      {viewingReportsPet && (
+        <PetReportsModal
+          key={viewingReportsPet.id}
+          pet={viewingReportsPet}
+          onClose={() => setViewingReportsPet(null)}
         />
       )}
     </div>

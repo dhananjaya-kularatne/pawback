@@ -87,6 +87,19 @@ export async function updatePet(petId, petData, imageFile) {
   return result.data;
 }
 
+// Private, paginated finder reports for a pet belonging to the signed-in owner.
+export async function getPetReports(petId, page = 0, size = 20, signal) {
+  const response = await fetch(
+    `${API_BASE_URL}/pets/${petId}/reports?page=${page}&size=${size}`,
+    { headers: authHeaders(), cache: "no-store", signal }
+  );
+  const result = await response.json();
+  if (!response.ok) {
+    throw new Error(result.message || "Failed to load reports");
+  }
+  return result.data;
+}
+
 // Toggles a pet's status between SAFE and LOST
 export async function updatePetStatus(petId, status) {
   const response = await fetch(`${API_BASE_URL}/pets/${petId}/status`, {
