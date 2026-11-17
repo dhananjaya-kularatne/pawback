@@ -19,7 +19,7 @@ public class User {
     @Column(unique = true, nullable = false)
     private String email;
 
-    private String passwordHash; // nullable — null for OAuth-only users
+    private String passwordHash; // nullable â€” null for OAuth-only users
 
     private String name;
     private String phone;
@@ -36,6 +36,10 @@ public class User {
     @Builder.Default
     private boolean enabled = true;
 
+    @Builder.Default
+    private long tokenVersion = 0;
+    @Builder.Default
+    private int resetOtpAttempts = 0;
     private String resetOtpHash;
     private java.time.LocalDateTime resetOtpExpiry;
 }

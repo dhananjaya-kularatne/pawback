@@ -33,6 +33,7 @@ public class JwtUtil {
         return Jwts.builder()
                 .subject(user.getEmail())
                 .claim("userId", user.getId())
+                .claim("version", user.getTokenVersion())
                 .claim("role", user.getRole().name())
                 .issuedAt(now)
                 .expiration(expiryDate)
@@ -62,5 +63,14 @@ public class JwtUtil {
         } catch (JwtException | IllegalArgumentException e) {
             return false;
         }
+    }
+    public boolean isTokenValidForUser(String token, User user) {
+        try {
+            var claims=Jwts.parser().verifyWith(key).build().parseSignedClaims(token).getPayload();
+            Number version=claims.get("version",Number.class);
+            Number id=claims.get("userId",Number.class);
+            return user.isEnabled() && user.getEmail().equals(claims.getSubject()) && id!=null && user.getId()==id.longValue()
+                    && user.getTokenVersion()==(version==null?0:version.longValue());
+        } catch(JwtException|IllegalArgumentException exception){return false;}
     }
 }

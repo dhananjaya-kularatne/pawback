@@ -31,17 +31,21 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
     private final EmailService emailService;
+    private final com.pawback.pawback.security.LoginRateLimiter limiter;
+    @org.springframework.beans.factory.annotation.Value("${app.security.rate-limit.login.max-attempts:10}") private int loginLimit;
+    @org.springframework.beans.factory.annotation.Value("${app.security.rate-limit.login.window-minutes:15}") private int loginWindow;
+
     private final SecureRandom secureRandom = new SecureRandom();
 
     // Registers a new user account with email and BCrypt hashed password
     @Transactional
     public AuthResponse register(RegisterRequest request) {
-        if (userRepository.existsByEmail(request.getEmail())) {
+        if (userRepository.existsByEmail(normalize(request.getEmail()))) {
             throw new EmailAlreadyExistsException("An account with this email already exists");
         }
 
         User user = User.builder()
-                .email(request.getEmail())
+                .email(normalize(request.getEmail()))
                 .passwordHash(passwordEncoder.encode(request.getPassword()))
                 .name(request.getName())
                 .phone(request.getPhone())
@@ -61,16 +65,20 @@ public class AuthService {
 
     // Authenticates a user with email and password, returning JWT token
     @Transactional(readOnly = true)
-    public AuthResponse login(LoginRequest request) {
-        User user = userRepository.findByEmail(request.getEmail())
+    public AuthResponse login(LoginRequest request, String client) {
+        String email=normalize(request.getEmail());
+        if(loginLimit<1 || loginLimit>1000 || loginWindow<1 || loginWindow>1440) throw new IllegalStateException("Invalid login rate-limit configuration");
+        if(!limiter.tryConsume("login-client",client,loginLimit,loginWindow) || !limiter.tryConsume("login-account",email,loginLimit,loginWindow)) throw limited(loginWindow);
+
+        User user = userRepository.findByEmail(normalize(request.getEmail()))
                 .orElseThrow(() -> new InvalidCredentialsException("Invalid email or password"));
 
-        if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
+        if (user.getPasswordHash()==null || !passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
             throw new InvalidCredentialsException("Invalid email or password");
         }
 
         // A user an admin has disabled can authenticate with the right password
-        // but must not be allowed a session — moderation is enforced here, not just in the UI.
+        // but must not be allowed a session â€” moderation is enforced here, not just in the UI.
         if (!user.isEnabled()) {
             throw new DisabledAccountException("This account has been disabled. Please contact support.");
         }
@@ -83,51 +91,53 @@ public class AuthService {
                 .build();
     }
 
-    // Triggers a password reset by generating a 6-digit OTP, storing its hash, and emailing it
     @Transactional
-    public void forgotPassword(ForgotPasswordRequest request) {
-        // We look up the user, but we don't throw an exception if not found to prevent enumeration
-        userRepository.findByEmail(request.getEmail()).ifPresent(user -> {
-            String otp = String.format("%06d", secureRandom.nextInt(1000000));
+    public void forgotPassword(ForgotPasswordRequest request,String client) {
+        String email=normalize(request.getEmail());
+        if(!limiter.tryConsume("reset-request-client",client,5,15)) throw limited(15);
+        if(!limiter.tryConsume("reset-request-account",email,3,60) || !limiter.tryConsume("reset-cooldown",email,1,1)) return;
+        userRepository.findForReset(email).filter(u->u.isEnabled() && u.getProvider()==AuthProvider.LOCAL).ifPresent(user->{
+            String otp=String.format("%06d",secureRandom.nextInt(1000000));
             user.setResetOtpHash(passwordEncoder.encode(otp));
-            user.setResetOtpExpiry(LocalDateTime.now().plusMinutes(10));
+            user.setResetOtpExpiry(LocalDateTime.now(java.time.ZoneOffset.UTC).plusMinutes(10));
+            user.setResetOtpAttempts(0);
             userRepository.save(user);
-            emailService.sendPasswordResetOtp(user.getEmail(), otp);
+            org.springframework.transaction.support.TransactionSynchronizationManager.registerSynchronization(new org.springframework.transaction.support.TransactionSynchronization(){
+                @Override public void afterCommit(){emailService.sendPasswordResetOtp(user.getEmail(),otp);}
+            });
         });
     }
-
-    // Verifies the provided OTP against the hashed OTP in the DB, checking expiry
-    @Transactional(readOnly = true)
-    public void verifyOtp(VerifyOtpRequest request) {
-        User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new InvalidCredentialsException("Invalid OTP or expired"));
-
-        if (user.getResetOtpHash() == null || user.getResetOtpExpiry() == null || user.getResetOtpExpiry().isBefore(LocalDateTime.now())) {
-            throw new InvalidCredentialsException("Invalid OTP or expired");
-        }
-
-        if (!passwordEncoder.matches(request.getOtp(), user.getResetOtpHash())) {
-            throw new InvalidCredentialsException("Invalid OTP or expired");
-        }
+    @Transactional(noRollbackFor=InvalidCredentialsException.class)
+    public void verifyOtp(VerifyOtpRequest request,String client) {
+        verifyBudget(request.getEmail(),client);
+        verifyCode(request.getEmail(),request.getOtp());
     }
-
-    // Sets a new password for the user, verifying the OTP one last time and invalidating it
-    @Transactional
-    public void resetPassword(ResetPasswordRequest request) {
-        User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new InvalidCredentialsException("Invalid OTP or expired"));
-
-        if (user.getResetOtpHash() == null || user.getResetOtpExpiry() == null || user.getResetOtpExpiry().isBefore(LocalDateTime.now())) {
-            throw new InvalidCredentialsException("Invalid OTP or expired");
-        }
-
-        if (!passwordEncoder.matches(request.getOtp(), user.getResetOtpHash())) {
-            throw new InvalidCredentialsException("Invalid OTP or expired");
-        }
-
+    @Transactional(noRollbackFor=InvalidCredentialsException.class)
+    public void resetPassword(ResetPasswordRequest request,String client) {
+        verifyBudget(request.getEmail(),client);
+        User user=verifyCode(request.getEmail(),request.getOtp());
         user.setPasswordHash(passwordEncoder.encode(request.getNewPassword()));
-        user.setResetOtpHash(null);
-        user.setResetOtpExpiry(null);
-        userRepository.save(user);
+        user.setResetOtpHash(null);user.setResetOtpExpiry(null);user.setResetOtpAttempts(0);
+        user.setTokenVersion(user.getTokenVersion()+1);
+        userRepository.saveAndFlush(user);
     }
+    private void verifyBudget(String email,String client){
+        if(!limiter.tryConsume("reset-verify-client",client,20,15) || !limiter.tryConsume("reset-verify-account",normalize(email),10,15)) throw limited(15);
+    }
+    private User verifyCode(String email,String otp){
+        User user=userRepository.findForReset(normalize(email)).orElseThrow(this::invalidCode);
+        if(!user.isEnabled() || user.getProvider()!=AuthProvider.LOCAL || user.getResetOtpHash()==null || user.getResetOtpExpiry()==null
+                || !user.getResetOtpExpiry().isAfter(LocalDateTime.now(java.time.ZoneOffset.UTC)) || user.getResetOtpAttempts()>=5){
+            user.setResetOtpHash(null);user.setResetOtpExpiry(null);userRepository.saveAndFlush(user);throw invalidCode();
+        }
+        if(!passwordEncoder.matches(otp,user.getResetOtpHash())){
+            user.setResetOtpAttempts(user.getResetOtpAttempts()+1);
+            if(user.getResetOtpAttempts()>=5){user.setResetOtpHash(null);user.setResetOtpExpiry(null);}
+            userRepository.saveAndFlush(user);throw invalidCode();
+        }
+        return user;
+    }
+    private InvalidCredentialsException invalidCode(){return new InvalidCredentialsException("Invalid OTP or expired");}
+    private com.pawback.pawback.exception.AuthenticationLimitException limited(int minutes){return new com.pawback.pawback.exception.AuthenticationLimitException(minutes*60);}
+    private String normalize(String email){return email.trim().toLowerCase(java.util.Locale.ROOT);}
 }

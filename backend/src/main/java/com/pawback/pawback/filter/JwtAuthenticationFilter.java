@@ -22,7 +22,7 @@ import java.util.List;
  * validates it via JwtUtil, loads the user from the DB, and sets the authentication
  * in the SecurityContext so Spring Security's route rules can apply.
  * If the token is missing or invalid the filter simply passes the request along
- * — the SecurityConfig route rules then decide whether to allow or reject it.
+ * â€” the SecurityConfig route rules then decide whether to allow or reject it.
  */
 @Component
 @RequiredArgsConstructor
@@ -39,7 +39,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         String authHeader = request.getHeader("Authorization");
 
-        // No Bearer token present — pass along; SecurityConfig will block if needed
+        // No Bearer token present â€” pass along; SecurityConfig will block if needed
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
             return;
@@ -47,21 +47,21 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         String token = authHeader.substring(7);
 
-        // Invalid or expired token — clear context and pass along
+        // Invalid or expired token â€” clear context and pass along
         if (!jwtUtil.isTokenValid(token)) {
             SecurityContextHolder.clearContext();
             filterChain.doFilter(request, response);
             return;
         }
 
-        // Valid token — load the user and set authentication in the SecurityContext
+        // Valid token â€” load the user and set authentication in the SecurityContext
         String email = jwtUtil.extractEmail(token);
 
         if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             userRepository.findByEmail(email).ifPresent(user -> {
-                // An account an admin has disabled keeps no session — even a token
+                // An account an admin has disabled keeps no session â€” even a token
                 // issued before it was disabled stops authenticating from here on.
-                if (!user.isEnabled()) {
+                if (!jwtUtil.isTokenValidForUser(token, user)) {
                     return;
                 }
 

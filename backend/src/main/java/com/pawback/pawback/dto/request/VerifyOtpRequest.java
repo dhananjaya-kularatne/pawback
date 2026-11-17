@@ -13,5 +13,6 @@ public class VerifyOtpRequest {
 
     @NotBlank(message = "OTP is required")
     @Size(min = 6, max = 6, message = "OTP must be exactly 6 characters")
+    @jakarta.validation.constraints.Pattern(regexp="[0-9]{6}", message="OTP must contain six digits")
     private String otp;
 }
