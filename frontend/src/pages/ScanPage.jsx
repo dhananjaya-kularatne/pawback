@@ -163,17 +163,21 @@ function ScanPetPage({ petUuid }) {
             {isLost && !submitted && (
               <div className="mt-4 pt-4 border-t border-gray-200 space-y-3">
                 <div>
-                  <label className="text-sm text-gray-600">
+                  <label htmlFor="finder-message" className="text-sm text-gray-600">
                     Message <span className="text-red-700">*</span>
                   </label>
                   <textarea
+                    id="finder-message"
                     value={message}
+                    maxLength={255}
+                    aria-describedby="finder-message-count"
                     onChange={(e) => setMessage(e.target.value)}
                     rows={3}
                     placeholder="Where did you see this pet?"
                     className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm mt-1
                                focus:outline-none focus:ring-2 focus:ring-red-500 transition-shadow"
                   />
+                  <p id="finder-message-count" className="mt-1 text-xs text-gray-500">{message.length}/255 characters</p>
                 </div>
 
                 <label

@@ -1,3 +1,5 @@
+import { readApiResponse } from "./readApiResponse";
+
 const API_BASE_URL = "http://localhost:8080/api";
 
 function authHeaders() {
@@ -20,13 +22,7 @@ export async function createPet(petData, imageFile) {
     body: formData,
   });
 
-  const result = await response.json();
-
-  if (!response.ok) {
-    throw new Error(result.message || "Failed to register pet");
-  }
-
-  return result.data;
+  return readApiResponse(response, "Failed to register pet");
 }
 
 // Fetches all pets belonging to the logged-in owner
@@ -36,13 +32,7 @@ export async function getMyPets() {
     headers: authHeaders(),
   });
 
-  const result = await response.json();
-
-  if (!response.ok) {
-    throw new Error(result.message || "Failed to fetch pets");
-  }
-
-  return result.data;
+  return readApiResponse(response, "Failed to fetch pets");
 }
 
 // Fetches a single pet by id
@@ -50,13 +40,7 @@ export async function getPetById(petId) {
   const response = await fetch(`${API_BASE_URL}/pets/${petId}`, {
     headers: authHeaders(),
   });
-  const result = await response.json();
-
-  if (!response.ok) {
-    throw new Error(result.message || "Failed to fetch pet");
-  }
-
-  return result.data;
+  return readApiResponse(response, "Failed to fetch pet");
 }
 
 // Updates an existing pet, with an optional new photo
@@ -78,13 +62,7 @@ export async function updatePet(petId, petData, imageFile) {
     body: formData,
   });
 
-  const result = await response.json();
-
-  if (!response.ok) {
-    throw new Error(result.message || "Failed to update pet");
-  }
-
-  return result.data;
+  return readApiResponse(response, "Failed to update pet");
 }
 
 // Private, paginated finder reports for a pet belonging to the signed-in owner.
@@ -93,11 +71,7 @@ export async function getPetReports(petId, page = 0, size = 20, signal) {
     `${API_BASE_URL}/pets/${petId}/reports?page=${page}&size=${size}`,
     { headers: authHeaders(), cache: "no-store", signal }
   );
-  const result = await response.json();
-  if (!response.ok) {
-    throw new Error(result.message || "Failed to load reports");
-  }
-  return result.data;
+  return readApiResponse(response, "Failed to load reports");
 }
 
 // Toggles a pet's status between SAFE and LOST
@@ -108,11 +82,5 @@ export async function updatePetStatus(petId, status) {
     body: JSON.stringify({ status }),
   });
 
-  const result = await response.json();
-
-  if (!response.ok) {
-    throw new Error(result.message || "Failed to update pet status");
-  }
-
-  return result.data;
+  return readApiResponse(response, "Failed to update pet status");
 }
