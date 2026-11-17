@@ -28,8 +28,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.transaction.support.TransactionSynchronization;
-import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 @Service
 @RequiredArgsConstructor
@@ -245,9 +243,7 @@ public class PetService {
 
         if (pet.getStatus() == PetStatus.LOST) {
             String email = pet.getOwner().getEmail();
-            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
-                @Override public void afterCommit() { emailService.sendReportNotification(email, savedReport); }
-            });
+            emailService.sendReportNotification(email, savedReport);
         }
 
         return ScanReportResponse.builder()

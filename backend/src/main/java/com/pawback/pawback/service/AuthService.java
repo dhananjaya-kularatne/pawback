@@ -102,9 +102,7 @@ public class AuthService {
             user.setResetOtpExpiry(LocalDateTime.now(java.time.ZoneOffset.UTC).plusMinutes(10));
             user.setResetOtpAttempts(0);
             userRepository.save(user);
-            org.springframework.transaction.support.TransactionSynchronizationManager.registerSynchronization(new org.springframework.transaction.support.TransactionSynchronization(){
-                @Override public void afterCommit(){emailService.sendPasswordResetOtp(user.getEmail(),otp);}
-            });
+            emailService.sendPasswordResetOtp(user.getEmail(),otp);
         });
     }
     @Transactional(noRollbackFor=InvalidCredentialsException.class)
