@@ -1,16 +1,18 @@
-# React + Vite
+# PawBack frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+React/Vite application. See the [project README](../README.md) for the complete setup and [operations guide](../docs/OPERATIONS.md) for deployment.
 
-Currently, two official plugins are available:
+```powershell
+npm ci
+npm run dev
+npm run lint
+npm run build
+npm run preview
+```
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+Use Node 22.17 or newer. Optional `.env.local` settings are listed in `.env.example`:
 
-## React Compiler
+- `VITE_API_BASE_URL`: API root, including `/api`. Use `/api` when the production web server proxies to the backend on the same origin.
+- `VITE_SUPPORT_EMAIL`: real support address; leave empty to hide contact links.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+Build-time settings require a rebuild. Serve `dist/` with an SPA fallback for dashboard, scan, information, and OAuth callback URLs. Vite preview is a local verification server, not the production web server.

@@ -78,6 +78,7 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(
                         "/api/auth/register",
+                        "/api/health",
                         "/api/auth/login",
                         "/api/auth/forgot-password",
                         "/api/auth/verify-otp",
@@ -124,4 +125,4 @@ public class SecurityConfig {
         source.registerCorsConfiguration("/**", config);
         return source;
     }
-}
+}

@@ -89,3 +89,8 @@ export async function deletePet(petId) {
   const response = await fetch(`${API_BASE_URL}/pets/${petId}`, { method: "DELETE", headers: authHeaders() });
   return readApiResponse(response, "Failed to remove pet", true);
 }
+
+export async function regeneratePetQr(petId) {
+  const response = await fetch(`${API_BASE_URL}/pets/${petId}/qr`, { method: "POST", headers: authHeaders() });
+  return readApiResponse(response, "Could not generate a QR image", true);
+}

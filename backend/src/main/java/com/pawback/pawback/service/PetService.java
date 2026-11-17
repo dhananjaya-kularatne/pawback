@@ -208,7 +208,7 @@ public class PetService {
             throw new ConflictException("This pet is no longer marked as lost. Reports are not being accepted.");
         }
 
-        String submissionKey = idempotencyKey == null ? null : hash(petUuid + ":" + validateKey(idempotencyKey));
+        String submissionKey = idempotencyKey == null ? null : hash(pet.getPetUuid() + ":" + validateKey(idempotencyKey));
         String requestHash;
         try {
             requestHash = hashFields(photo == null ? new byte[0] : photo.getBytes(), request.getMessage(),
@@ -290,7 +290,10 @@ public class PetService {
 
     @Transactional
     public void deletePet(Long petId) {
-        Pet pet = lockOwnedPet(petId);
+        Pet pet = petRepository.findById(petId).orElseThrow(() -> new ResourceNotFoundException("Pet not found"));
+        if (!pet.getOwner().getId().equals(getCurrentOwnerId())) throw new AccessDeniedException("You do not have permission to remove this pet");
+        entityManager.refresh(pet, jakarta.persistence.LockModeType.PESSIMISTIC_WRITE);
+        if (pet.getDeletedAt() != null) return;
         for (ScanReport report : scanReportRepository.findByPetId(petId)) {
             cloudinaryService.retire(report.getPhotoPublicId(), report.getPhotoUrl());
             scanReportRepository.delete(report);
@@ -300,6 +303,16 @@ public class PetService {
         pet.setDeletedAt(java.time.Instant.now());
         pet.setStatus(PetStatus.SAFE);
         petRepository.save(pet);
+    }
+
+    @Transactional
+    public PetResponse regenerateQr(Long petId) {
+        Pet pet = lockOwnedPet(petId);
+        UploadedAsset qr = qrCodeService.generateAndUploadQrCode(pet.getPetUuid().toString());
+        cloudinaryService.retire(pet.getQrCodePublicId(), pet.getQrCodeUrl());
+        pet.setQrCodePublicId(qr.publicId()); pet.setQrCodeUrl(qr.url());
+        assetCleanup.attach(qr);
+        return mapToResponse(petRepository.saveAndFlush(pet));
     }
 
     private String validateKey(String key) {

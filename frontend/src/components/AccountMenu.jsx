@@ -51,7 +51,7 @@ export default function AccountMenu({ onLoggedOut }) {
                    hover:text-blue-100 cursor-pointer transition-colors
                    focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
       >
-        <span className="max-w-[10rem] truncate">{displayName || "Account"}</span>
+        <span className="max-w-[6rem] sm:max-w-[10rem] truncate">{displayName || "Account"}</span>
         <ChevronDown
           size={15}
           className={`text-blue-200 transition-transform ${menuOpen ? "rotate-180" : ""}`}

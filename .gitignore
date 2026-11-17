@@ -1,0 +1,6 @@
+.browser-review/
+.verification/
+backups/
+**/.env
+**/.env.*
+!**/.env.example

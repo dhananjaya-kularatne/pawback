@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Plus, Pencil, MessageSquare, Trash2, QrCode as QrCodeIcon } from "lucide-react";
 import Navbar from "../components/Navbar";
-import { getMyPets, updatePet, createPet, updatePetStatus, deletePet } from "../api/petApi";
+import { getMyPets, updatePet, createPet, updatePetStatus, deletePet, regeneratePetQr } from "../api/petApi";
 import ConfirmDialog from "../components/ConfirmDialog";
 import { useSession } from "../utils/useSession";
 import EditPetModal from "../components/EditPetModal";
@@ -68,8 +68,14 @@ function Dashboard() {
       await deletePet(pet.id);
       setPets((prev) => prev.filter((item) => item.id !== pet.id));
       setRemovingPet(null);
-    } catch (err) { setDeleteError(err.message); }
+    } catch (err) { setDeleteError(err.message); setRemovingPet(null); }
     finally { setDeletingId(null); }
+  }
+
+  async function handleRegenerateQr(pet) {
+    const updated = await regeneratePetQr(pet.id);
+    setPets((prev) => prev.map((item) => item.id === updated.id ? updated : item));
+    setViewingQrPet(updated);
   }
 
   // Toggles a pet's status between SAFE and LOST, updating in place
@@ -280,7 +286,9 @@ function Dashboard() {
 
       {viewingQrPet && (
         <QrCodeModal
+          key={`${viewingQrPet.id}:${viewingQrPet.qrCodeUrl}`}
           pet={viewingQrPet}
+          onRegenerate={() => handleRegenerateQr(viewingQrPet)}
           onClose={() => setViewingQrPet(null)}
         />
       )}

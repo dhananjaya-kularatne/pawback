@@ -1,1 +1,75 @@
-# pawback
+# PawBack
+
+Pet profiles, printable QR tags, finder reports, and an owner/admin dashboard.
+
+## Local setup
+
+Use Java 21, Node 22.17 or newer, npm, and MySQL 8.0 or newer. The Maven wrapper is included. Dependencies require internet access on the first install.
+
+Set the backend process environment using the names in [backend/.env.example](backend/.env.example). **Spring does not automatically load that file.** Use your IDE's environment configuration or export the variables in the terminal that starts Java. Required local values are `DB_PASSWORD`, `JWT_SECRET`, the three `CLOUDINARY_*` values, and `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`. Use a private database account; `DB_URL` and `DB_USERNAME` override the local defaults. Do not commit real secrets.
+
+Generate a random JWT secret rather than using a memorable password. For example, in PowerShell:
+
+```powershell
+$pawbackBytes = New-Object byte[] 64
+$pawbackRng = [Security.Cryptography.RandomNumberGenerator]::Create()
+$pawbackRng.GetBytes($pawbackBytes)
+$env:JWT_SECRET = [Convert]::ToBase64String($pawbackBytes)
+$pawbackRng.Dispose()
+```
+
+In the backend terminal:
+
+```powershell
+cd backend
+.\mvnw.cmd spring-boot:run
+```
+
+In a second terminal, copy `frontend/.env.example` to `frontend/.env.local` if different settings are needed, then:
+
+```powershell
+cd frontend
+npm ci
+npm run dev
+```
+
+Open `http://localhost:5173`. The API defaults to `http://localhost:8080/api`. `VITE_API_BASE_URL` is a **build-time** frontend setting; rebuild after changing it. The development and build commands use Vite's native config loader.
+
+## Existing databases
+
+Schema changes now use Flyway, and Hibernate validates the result. A new empty database is migrated automatically. A pre-existing Hibernate-era database intentionally refuses an implicit baseline: back it up, check the target URL/schema, and follow [the upgrade instructions](docs/OPERATIONS.md#existing-database-upgrade) before setting `FLYWAY_BASELINE_ON_MIGRATE=true` for its first migrated start. Do not edit an already-applied migration.
+
+## Provider setup
+
+- Google: configure authorized JavaScript origin `http://localhost:5173` and redirect URI `http://localhost:8080/login/oauth2/code/google` for local development. Use your real HTTPS backend callback in production.
+- Cloudinary: supply the cloud name/API key/API secret. New uploads have tracked public IDs. Recovery jobs remove unused images and retry provider failures.
+- Email: set `BREVO_API_KEY`, `BREVO_SENDER_EMAIL`, and optionally `BREVO_SENDER_NAME`. The sender must be verified with the provider. Without a key, local email is simulated; this is not acceptable production configuration.
+
+## Build and verify
+
+```powershell
+cd frontend
+npm run lint
+npm run build
+npm run preview
+```
+
+```powershell
+cd backend
+.\mvnw.cmd package '-Dmaven.test.skip=true'
+```
+
+Backend unit tests and CI are outside the agreed project scope. [The manual release checklist](docs/RELEASE.md) covers application checks. `GET /api/health` returns `{"status":"UP"}` when the application can query the database.
+
+If the IDE rewrites `backend/target/classes` during a Maven build, stop its incremental builder or build in a separate checkout before verifying the artifact. Do not run a mixture of IDE-generated and Maven-generated classes.
+
+## Product behavior
+
+- Images: decoded JPEG/PNG only, at most 5 MiB, 4096 pixels per side, and 16 megapixels. Create/edit descriptions, instructions, and report messages support 255 characters; pet names/breeds support 100.
+- Finder location is optional and must contain both latitude and longitude. Reports are accepted only while the pet is Lost.
+- Report limits default to five submissions per client and twenty per pet per hour. Shared database counters work across app instances and expire automatically. Request keys prevent duplicate successful retries.
+- Removing a pet disables its public QR lookup and removes its reports. Cloud cleanup is asynchronous. The internal pet row remains soft-deleted; backups follow the operator's retention policy.
+- Owners can regenerate a QR image. If the public domain changes, old printed localhost/domain links cannot be repaired remotely: generate/download a new image and replace the physical tags.
+- Report history is available from each pet's **View reports** action. The unfinished notification bell has been removed.
+
+See [operations and deployment](docs/OPERATIONS.md), [release gates](docs/RELEASE.md), and the public `/help` and `/privacy` pages.
