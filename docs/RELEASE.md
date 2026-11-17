@@ -15,8 +15,8 @@ Backend unit tests and CI are excluded from the agreed scope. This checklist cov
 - Use keyboard-only navigation and short 320px screens for add/edit/crop/auth/report/QR/confirmation dialogs. Verify preview URLs are released on close.
 - Verify support/help/data links, browser title, unknown-route handling, deep-link refresh, and QR regeneration.
 
-## Remaining backend security work
+## Authentication and email follow-up
 
-- Existing backend authentication/email audit items remain separate release gates: OAuth cookie serialization/integrity, OAuth identity linking/disabled login/redirect validation, long-lived token transport, OTP attempt protection, password-reset token revocation, login limiter trust/expiry, email HTML escaping, and durable delivery behavior. The frontend callback integration is repaired; it does not resolve these backend concerns.
+The original backend authentication/email audit items are addressed by PAW-55 through PAW-59: server-side OAuth state, verified provider identities, safe failure redirects, browser-bound one-use exchange codes, shared request/verification limits, reset token-version revocation, escaped email content, and encrypted persistent delivery jobs. The frontend callback and field-feedback checks are complete. See [AUTHENTICATION.md](AUTHENTICATION.md) for behavior, local configuration, and limitations.
 
-Live providers and physical phone scanning remain unverified. Deployment work will be planned separately.
+Live Google consent, verified-sender delivery, and physical phone scanning remain unverified. Deployment work will be planned separately.

@@ -43,7 +43,7 @@ Schema changes now use Flyway, and Hibernate validates the result. A new empty d
 
 - Google: configure authorized JavaScript origin `http://localhost:5173` and redirect URI `http://localhost:8080/login/oauth2/code/google` for local development.
 - Cloudinary: supply the cloud name/API key/API secret. New uploads have tracked public IDs. Recovery jobs remove unused images and retry provider failures.
-- Email: set `BREVO_API_KEY`, `BREVO_SENDER_EMAIL`, and optionally `BREVO_SENDER_NAME`. The sender must be verified with the provider. Without a key, local email is simulated; live delivery has not been verified.
+- Email: set `BREVO_API_KEY`, `BREVO_SENDER_EMAIL`, and optionally `BREVO_SENDER_NAME`. The sender must be verified with the provider. Without a key, encrypted email jobs remain pending until configured or expired; OTPs are never logged. Live delivery has not been verified.
 
 ## Build and verify
 
@@ -73,3 +73,5 @@ If the IDE rewrites `backend/target/classes` during a Maven build, stop its incr
 - Report history is available from each pet's **View reports** action. The unfinished notification bell has been removed.
 
 See [local database and recovery guidance](docs/OPERATIONS.md), [application checks](docs/RELEASE.md), and the public `/help` and `/privacy` pages. Deployment preparation is deferred.
+
+Authentication, reset limits, Google identity rules, and mail recovery are described in [authentication and email behavior](docs/AUTHENTICATION.md). Deployment remains deferred.
