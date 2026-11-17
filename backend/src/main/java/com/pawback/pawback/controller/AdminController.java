@@ -9,6 +9,8 @@ import com.pawback.pawback.model.User;
 import com.pawback.pawback.service.AdminReportService;
 import com.pawback.pawback.service.AdminUserService;
 import lombok.RequiredArgsConstructor;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Max;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -58,8 +60,8 @@ public class AdminController {
     // Paginated list of every registered user for the admin moderation view
     @GetMapping("/users")
     public ResponseEntity<ApiResponse<PagedResponse<UserResponse>>> listUsers(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
+            @RequestParam(defaultValue = "0") @Min(0) int page,
+            @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size) {
 
         return ResponseEntity.ok(
                 ApiResponse.success("Users retrieved successfully", adminUserService.listUsers(page, size))
@@ -86,11 +88,11 @@ public class AdminController {
     // and/or a from/to date range for the admin moderation view
     @GetMapping("/reports")
     public ResponseEntity<ApiResponse<PagedResponse<AdminScanReportResponse>>> listReports(
-            @RequestParam(required = false) Long petId,
+            @RequestParam(required = false) @Min(1) Long petId,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
+            @RequestParam(defaultValue = "0") @Min(0) int page,
+            @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size) {
 
         return ResponseEntity.ok(
                 ApiResponse.success("Reports retrieved successfully",
