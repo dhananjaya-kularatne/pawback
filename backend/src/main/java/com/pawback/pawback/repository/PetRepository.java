@@ -16,4 +16,12 @@ public interface PetRepository extends JpaRepository<Pet, Long> {
     // Live count of pets in a given status — used by the admin platform stats
     // to report how many pets are currently marked Lost.
     long countByStatus(PetStatus status);
+    List<Pet> findByOwnerIdAndDeletedAtIsNull(Long ownerId);
+    java.util.Optional<Pet> findByCreationKey(String creationKey);
+    long countByDeletedAtIsNull();
+    long countByStatusAndDeletedAtIsNull(PetStatus status);
+    boolean existsByDeletedAtIsNullAndPhotoPublicId(String publicId);
+    boolean existsByDeletedAtIsNullAndQrCodePublicId(String publicId);
+    boolean existsByDeletedAtIsNullAndPhotoUrl(String url);
+    boolean existsByDeletedAtIsNullAndQrCodeUrl(String url);
 }

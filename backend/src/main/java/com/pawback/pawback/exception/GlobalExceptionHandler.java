@@ -24,6 +24,13 @@ import java.util.Map;
 @RestControllerAdvice
 public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
+    @Override
+    protected ResponseEntity<Object> handleMaxUploadSizeExceededException(
+            org.springframework.web.multipart.MaxUploadSizeExceededException exception,
+            HttpHeaders headers, HttpStatusCode status, WebRequest request) {
+        return ResponseEntity.status(413).body(ApiResponse.error(413, "Photo must be 5 MB or smaller"));
+    }
+
     // --- @Valid failures on any request DTO, across every epic ---
     @Override
     protected ResponseEntity<Object> handleMethodArgumentNotValid(

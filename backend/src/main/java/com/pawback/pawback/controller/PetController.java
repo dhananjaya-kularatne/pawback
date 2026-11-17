@@ -34,12 +34,19 @@ public class PetController {
     @PostMapping(consumes = "multipart/form-data")
     public ResponseEntity<ApiResponse<PetResponse>> createPet(
             @RequestPart("pet") @Valid CreatePetRequest request,
-            @RequestPart("image") MultipartFile image) {
+            @RequestPart("image") MultipartFile image,
+            @RequestHeader(value = "Idempotency-Key", required = false) String idempotencyKey) {
 
-        PetResponse response = petService.createPet(request, image);
+        PetResponse response = petService.createPet(request, image, idempotencyKey);
 
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.success(201, "Pet registered successfully", response));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<ApiResponse<Void>> deletePet(@PathVariable Long id) {
+        petService.deletePet(id);
+        return ResponseEntity.ok(ApiResponse.success("Pet removed successfully", null));
     }
 
     // Returns all pets belonging to the currently authenticated owner

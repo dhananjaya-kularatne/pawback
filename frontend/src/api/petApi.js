@@ -7,7 +7,7 @@ function authHeaders() {
   return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
-export async function createPet(petData, imageFile) {
+export async function createPet(petData, imageFile, requestKey) {
   const formData = new FormData();
 
   const petBlob = new Blob([JSON.stringify(petData)], {
@@ -18,7 +18,7 @@ export async function createPet(petData, imageFile) {
 
   const response = await fetch(`${API_BASE_URL}/pets`, {
     method: "POST",
-    headers: authHeaders(),
+    headers: { ...authHeaders(), ...(requestKey ? { "Idempotency-Key": requestKey } : {}) },
     body: formData,
   });
 
@@ -83,4 +83,9 @@ export async function updatePetStatus(petId, status) {
   });
 
   return readApiResponse(response, "Failed to update pet status");
+}
+
+export async function deletePet(petId) {
+  const response = await fetch(`${API_BASE_URL}/pets/${petId}`, { method: "DELETE", headers: authHeaders() });
+  return readApiResponse(response, "Failed to remove pet");
 }

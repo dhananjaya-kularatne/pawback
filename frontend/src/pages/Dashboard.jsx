@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react";
-import { Plus, Pencil, MessageSquare, QrCode as QrCodeIcon } from "lucide-react";
+import { Plus, Pencil, MessageSquare, Trash2, QrCode as QrCodeIcon } from "lucide-react";
 import Navbar from "../components/Navbar";
-import { getMyPets, updatePet, createPet, updatePetStatus } from "../api/petApi";
+import { getMyPets, updatePet, createPet, updatePetStatus, deletePet } from "../api/petApi";
+import ConfirmDialog from "../components/ConfirmDialog";
 import EditPetModal from "../components/EditPetModal";
 import AddPetModal from "../components/AddPetModal";
 import QrCodeModal from "../components/QrCodeModal";
@@ -19,6 +20,9 @@ function Dashboard() {
   const statusRequests = useRef(new Set());
   const [pendingStatusIds, setPendingStatusIds] = useState(() => new Set());
   const [statusErrors, setStatusErrors] = useState({});
+  const [removingPet, setRemovingPet] = useState(null);
+  const [deletingId, setDeletingId] = useState(null);
+  const [deleteError, setDeleteError] = useState("");
 
   // Greeting name comes from the stored user, so the banner reflects whoever is
   // actually signed in rather than a hard-coded owner.
@@ -54,10 +58,22 @@ function Dashboard() {
   }
 
   // Adds a newly created pet straight into the local list — no reload needed
-  async function handleAddPet(petData, imageFile) {
-    const newPet = await createPet(petData, imageFile);
-    setPets((prev) => [...prev, newPet]);
+  async function handleAddPet(petData, imageFile, requestKey) {
+    const newPet = await createPet(petData, imageFile, requestKey);
+    setPets((prev) => prev.some((pet) => pet.id === newPet.id) ? prev : [...prev, newPet]);
     setAddModalOpen(false);
+  }
+
+  async function handleDeletePet(pet) {
+    if (deletingId != null) return;
+    setDeletingId(pet.id);
+    setDeleteError("");
+    try {
+      await deletePet(pet.id);
+      setPets((prev) => prev.filter((item) => item.id !== pet.id));
+      setRemovingPet(null);
+    } catch (err) { setDeleteError(err.message); }
+    finally { setDeletingId(null); }
   }
 
   // Toggles a pet's status between SAFE and LOST, updating in place
@@ -126,6 +142,7 @@ function Dashboard() {
 
         {loading && <p className="text-sm text-gray-600">Loading...</p>}
         {error && <p className="text-sm text-red-700">{error}</p>}
+        {deleteError && <p role="alert" className="text-sm text-red-700 mb-3">{deleteError}</p>}
 
         {!loading && !error && pets.length === 0 && (
           <div className="border border-dashed border-gray-400 rounded-xl p-10 text-center">
@@ -237,6 +254,12 @@ function Dashboard() {
                   >
                     <MessageSquare size={15} /> View reports
                   </button>
+                  <button type="button" onClick={() => setRemovingPet(pet)}
+                    disabled={pendingStatusIds.has(pet.id) || deletingId != null}
+                    aria-label={`Remove ${pet.name}`}
+                    className="mt-3 ml-3 inline-flex items-center gap-1 text-xs text-red-700 hover:underline disabled:opacity-50 cursor-pointer">
+                    <Trash2 size={13} /> Remove
+                  </button>
                 </div>
               </div>
             ))}
@@ -272,6 +295,10 @@ function Dashboard() {
           onClose={() => setViewingReportsPet(null)}
         />
       )}
+      {removingPet && <ConfirmDialog tone="danger" title={`Remove ${removingPet.name}?`}
+        message="This removes the pet and its report history from your account. Existing QR tags will stop working. This cannot be undone."
+        confirmLabel="Remove pet" busy={deletingId === removingPet.id}
+        onConfirm={() => handleDeletePet(removingPet)} onCancel={() => setRemovingPet(null)} />}
     </div>
   );
 }

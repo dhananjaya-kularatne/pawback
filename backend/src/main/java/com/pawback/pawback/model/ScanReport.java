@@ -23,6 +23,7 @@ public class ScanReport {
     private String message;
 
     private String photoUrl;
+    private String photoPublicId;
 
     private Double latitude;
     private Double longitude;

@@ -27,6 +27,9 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 @Service
 @RequiredArgsConstructor
@@ -38,32 +41,58 @@ public class PetService {
     private final QrCodeService qrCodeService;
     private final ScanReportRepository scanReportRepository; 
     private final EmailService emailService;
+    private final AssetCleanupService assetCleanup;
+    private final ImageValidationService imageValidation;
+    private final jakarta.persistence.EntityManager entityManager;
 
-    public PetResponse createPet(CreatePetRequest request, MultipartFile image) {
+    @Transactional
+    public PetResponse createPet(CreatePetRequest request, MultipartFile image, String idempotencyKey) {
 
         Long ownerId = getCurrentOwnerId();
 
         User owner = userRepository.findById(ownerId)
                 .orElseThrow(() -> new ResourceNotFoundException("Owner not found"));
 
-        String photoUrl = cloudinaryService.uploadPetImage(image);
+        imageValidation.validate(image);
+        String creationKey = idempotencyKey == null ? null : hash(ownerId + ":" + validateKey(idempotencyKey));
+        String requestHash = registrationHash(request, image);
+        if (creationKey != null) {
+            var previous = petRepository.findByCreationKey(creationKey);
+            if (previous.isPresent()) {
+                if (previous.get().getDeletedAt() != null || !requestHash.equals(previous.get().getRequestHash())) {
+                    throw new ConflictException("This registration was already completed. Refresh your pets before trying again.");
+                }
+                return mapToResponse(previous.get());
+            }
+        }
+        UploadedAsset photo = cloudinaryService.uploadPetImage(image);
 
         Pet pet = Pet.builder()
                 .name(request.getName())
                 .breed(request.getBreed())
                 .description(request.getDescription())
                 .ifFoundInstructions(request.getIfFoundInstructions())
-                .photoUrl(photoUrl)
+                .photoUrl(photo.url())
+                .photoPublicId(photo.publicId())
+                .creationKey(creationKey)
+                .requestHash(requestHash)
                 .status(PetStatus.SAFE)
                 .owner(owner)
                 .build();
 
-        Pet savedPet = petRepository.save(pet);
-
-        // Generate the QR code now that petUuid is confirmed, then attach and re-save
-        String qrCodeUrl = qrCodeService.generateAndUploadQrCode(savedPet.getPetUuid().toString());
-        savedPet.setQrCodeUrl(qrCodeUrl);
-        savedPet = petRepository.save(savedPet);
+        UploadedAsset qr = qrCodeService.generateAndUploadQrCode(pet.getPetUuid().toString());
+        pet.setQrCodeUrl(qr.url());
+        pet.setQrCodePublicId(qr.publicId());
+        Pet savedPet;
+        try { savedPet = petRepository.saveAndFlush(pet); }
+        catch (org.springframework.dao.DataIntegrityViolationException exception) {
+            if (creationKey != null && String.valueOf(exception.getMostSpecificCause().getMessage()).contains("creation_key")) {
+                throw new ConflictException("Registration was already submitted. Retry the same request to retrieve it.");
+            }
+            throw exception;
+        }
+        assetCleanup.attach(photo);
+        assetCleanup.attach(qr);
 
         return mapToResponse(savedPet);
     }
@@ -99,7 +128,7 @@ public class PetService {
 
         Long ownerId = getCurrentOwnerId();
 
-        List<Pet> pets = petRepository.findByOwnerId(ownerId);
+        List<Pet> pets = petRepository.findByOwnerIdAndDeletedAtIsNull(ownerId);
 
         return pets.stream()
                 .map(this::mapToResponse)
@@ -107,9 +136,10 @@ public class PetService {
     }
 
     // Updates an existing pet's details, including an optional new photo
+    @Transactional
     public PetResponse updatePet(Long petId, UpdatePetRequest request, MultipartFile image) {
 
-        Pet pet = getOwnedPet(petId);
+        Pet pet = lockOwnedPet(petId);
 
         pet.setName(request.getName());
         pet.setBreed(request.getBreed());
@@ -117,9 +147,12 @@ public class PetService {
         pet.setIfFoundInstructions(request.getIfFoundInstructions());
 
         // Only replace the photo if a new one was actually provided
-        if (image != null && !image.isEmpty()) {
-            String newPhotoUrl = cloudinaryService.uploadPetImage(image);
-            pet.setPhotoUrl(newPhotoUrl);
+        if (image != null) {
+            UploadedAsset photo = cloudinaryService.uploadPetImage(image);
+            cloudinaryService.retire(pet.getPhotoPublicId(), pet.getPhotoUrl());
+            pet.setPhotoUrl(photo.url());
+            pet.setPhotoPublicId(photo.publicId());
+            assetCleanup.attach(photo);
         }
 
         Pet updatedPet = petRepository.save(pet);
@@ -133,9 +166,10 @@ public class PetService {
     }
 
     // Updates a pet's status (Safe/Lost) — only the owning user may perform this
+    @Transactional
     public PetResponse updateStatus(Long petId, PetStatus newStatus) {
 
-        Pet pet = getOwnedPet(petId);
+        Pet pet = lockOwnedPet(petId);
 
         pet.setStatus(newStatus);
         Pet updatedPet = petRepository.save(pet);
@@ -161,31 +195,36 @@ public class PetService {
     // Creates a scan report for a pet, uploading an optional photo.
     // No ownership check — this is intentionally callable by anyone
     // (the finder), matching the "no login required" requirement.
+    @Transactional
     public ScanReportResponse createReport(String petUuid, CreateReportRequest request, MultipartFile photo) {
 
         Pet pet = getPublicPet(petUuid);
         // Check before any upload or save; the public page alone cannot enforce this.
+        entityManager.refresh(pet, jakarta.persistence.LockModeType.PESSIMISTIC_WRITE);
+        if (pet.getDeletedAt() != null) throw new ResourceNotFoundException("Pet not found");
         if (pet.getStatus() != PetStatus.LOST) {
             throw new ConflictException("This pet is no longer marked as lost. Reports are not being accepted.");
         }
 
-        String photoUrl = null;
-        if (photo != null && !photo.isEmpty()) {
-            photoUrl = cloudinaryService.uploadReportImage(photo);
-        }
+        UploadedAsset photoAsset = photo == null ? null : cloudinaryService.uploadReportImage(photo);
 
         ScanReport report = ScanReport.builder()
                 .message(request.getMessage())
-                .photoUrl(photoUrl)
+                .photoUrl(photoAsset == null ? null : photoAsset.url())
+                .photoPublicId(photoAsset == null ? null : photoAsset.publicId())
                 .latitude(request.getLatitude())
                 .longitude(request.getLongitude())
                 .pet(pet)
                 .build();
 
-        ScanReport savedReport = scanReportRepository.save(report);
+        ScanReport savedReport = scanReportRepository.saveAndFlush(report);
+        if (photoAsset != null) assetCleanup.attach(photoAsset);
 
         if (pet.getStatus() == PetStatus.LOST) {
-            emailService.sendReportNotification(pet.getOwner().getEmail(), savedReport);
+            String email = pet.getOwner().getEmail();
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override public void afterCommit() { emailService.sendReportNotification(email, savedReport); }
+            });
         }
 
         return ScanReportResponse.builder()
@@ -202,6 +241,7 @@ public class PetService {
         Long ownerId = getCurrentOwnerId();
         Pet pet = petRepository.findById(petId)
                 .orElseThrow(() -> new ResourceNotFoundException("Pet not found"));
+        if (pet.getDeletedAt() != null) throw new ResourceNotFoundException("Pet not found");
         if (!pet.getOwner().getId().equals(ownerId)) {
             throw new AccessDeniedException("You do not have permission to access this pet");
         }
@@ -219,9 +259,51 @@ public class PetService {
             throw new BadRequestException("Invalid pet QR code");
         }
         Pet pet = petRepository.findByPetUuid(uuid);
-        if (pet == null) {
+        if (pet == null || pet.getDeletedAt() != null) {
             throw new ResourceNotFoundException("Pet not found");
         }
         return pet;
+    }
+
+    @Transactional
+    public void deletePet(Long petId) {
+        Pet pet = lockOwnedPet(petId);
+        for (ScanReport report : scanReportRepository.findByPetId(petId)) {
+            cloudinaryService.retire(report.getPhotoPublicId(), report.getPhotoUrl());
+            scanReportRepository.delete(report);
+        }
+        cloudinaryService.retire(pet.getPhotoPublicId(), pet.getPhotoUrl());
+        cloudinaryService.retire(pet.getQrCodePublicId(), pet.getQrCodeUrl());
+        pet.setDeletedAt(java.time.Instant.now());
+        pet.setStatus(PetStatus.SAFE);
+        petRepository.save(pet);
+    }
+
+    private String validateKey(String key) {
+        try { return UUID.fromString(key).toString(); }
+        catch (IllegalArgumentException exception) { throw new BadRequestException("Invalid registration request key"); }
+    }
+    private Pet lockOwnedPet(Long id) {
+        Pet pet = getOwnedPet(id);
+        entityManager.refresh(pet, jakarta.persistence.LockModeType.PESSIMISTIC_WRITE);
+        if (pet.getDeletedAt() != null) throw new ResourceNotFoundException("Pet not found");
+        return pet;
+    }
+    private String hash(String value) {
+        try { return java.util.HexFormat.of().formatHex(java.security.MessageDigest.getInstance("SHA-256")
+                .digest(value.getBytes(java.nio.charset.StandardCharsets.UTF_8))); }
+        catch (java.security.NoSuchAlgorithmException exception) { throw new IllegalStateException(exception); }
+    }
+    private String registrationHash(CreatePetRequest request, MultipartFile image) {
+        try {
+            var digest = java.security.MessageDigest.getInstance("SHA-256");
+            for (String field : new String[]{request.getName(), request.getBreed(), request.getDescription(), request.getIfFoundInstructions()}) {
+                byte[] bytes = field == null ? new byte[0] : field.getBytes(java.nio.charset.StandardCharsets.UTF_8);
+                digest.update(java.nio.ByteBuffer.allocate(4).putInt(field == null ? -1 : bytes.length).array());
+                digest.update(bytes);
+            }
+            digest.update(image.getBytes());
+            return java.util.HexFormat.of().formatHex(digest.digest());
+        } catch (java.io.IOException | java.security.NoSuchAlgorithmException exception) { throw new IllegalStateException(exception); }
     }
 }

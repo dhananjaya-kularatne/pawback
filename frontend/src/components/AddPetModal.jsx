@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
+import { PHOTO_ACCEPT, validatePhoto } from "../utils/validatePhoto";
 import { X, Camera, Crop } from "lucide-react";
 import PhotoCropModal from "./PhotoCropModal";
 
@@ -19,14 +20,16 @@ function AddPetModal({ onClose, onSave }) {
   const [pendingPhoto, setPendingPhoto] = useState(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const requestKey = useRef(null);
 
-  function handleFileSelected(e) {
+  async function handleFileSelected(e) {
     const file = e.target.files[0];
     // Reset so picking the same file again still fires a change event, letting
     // the owner redo the crop on a re-selected file
     e.target.value = "";
     if (!file) return;
-
+    setError("");
+    try { await validatePhoto(file); } catch (err) { setError(err.message); return; }
     setPendingPhoto({ src: URL.createObjectURL(file), name: file.name });
   }
 
@@ -68,7 +71,8 @@ function AddPetModal({ onClose, onSave }) {
 
     setSaving(true);
     try {
-      await onSave({ name, breed, description, ifFoundInstructions }, image);
+      requestKey.current ??= crypto.randomUUID();
+      await onSave({ name, breed, description, ifFoundInstructions }, image, requestKey.current);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -135,7 +139,7 @@ function AddPetModal({ onClose, onSave }) {
               )}
               <input
                 type="file"
-                accept="image/*"
+                accept={PHOTO_ACCEPT}
                 className="hidden"
                 onChange={handleFileSelected}
               />
