@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Plus, Pencil, MessageSquare, QrCode as QrCodeIcon } from "lucide-react";
 import Navbar from "../components/Navbar";
 import { getMyPets, updatePet, createPet, updatePetStatus } from "../api/petApi";
@@ -16,6 +16,9 @@ function Dashboard() {
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [viewingQrPet, setViewingQrPet] = useState(null);
   const [viewingReportsPet, setViewingReportsPet] = useState(null);
+  const statusRequests = useRef(new Set());
+  const [pendingStatusIds, setPendingStatusIds] = useState(() => new Set());
+  const [statusErrors, setStatusErrors] = useState({});
 
   // Greeting name comes from the stored user, so the banner reflects whoever is
   // actually signed in rather than a hard-coded owner.
@@ -59,6 +62,10 @@ function Dashboard() {
 
   // Toggles a pet's status between SAFE and LOST, updating in place
   async function handleToggleStatus(pet) {
+    if (statusRequests.current.has(pet.id)) return;
+    statusRequests.current.add(pet.id);
+    setPendingStatusIds(new Set(statusRequests.current));
+    setStatusErrors((prev) => ({ ...prev, [pet.id]: "" }));
     const newStatus = pet.status === "SAFE" ? "LOST" : "SAFE";
     try {
       const updated = await updatePetStatus(pet.id, newStatus);
@@ -66,7 +73,13 @@ function Dashboard() {
         prev.map((p) => (p.id === updated.id ? updated : p))
       );
     } catch (err) {
-      console.error(err.message);
+      setStatusErrors((prev) => ({
+        ...prev,
+        [pet.id]: err.message || "Unable to update status. Please try again.",
+      }));
+    } finally {
+      statusRequests.current.delete(pet.id);
+      setPendingStatusIds(new Set(statusRequests.current));
     }
   }
 
@@ -150,15 +163,18 @@ function Dashboard() {
                   {/* Status badge, top-left, on the image — now a clickable toggle */}
                   <button
                     onClick={() => handleToggleStatus(pet)}
+                    disabled={pendingStatusIds.has(pet.id)}
+                    aria-label={`Mark ${pet.name} as ${pet.status === "SAFE" ? "lost" : "safe"}`}
+                    aria-busy={pendingStatusIds.has(pet.id)}
                     className={`absolute top-3 left-3 text-xs font-semibold px-2.5 py-1 rounded-full
-                               backdrop-blur-sm cursor-pointer transition-colors ${
+                               backdrop-blur-sm cursor-pointer transition-colors disabled:opacity-60 disabled:cursor-wait ${
                       pet.status === "SAFE"
                         ? "bg-green-500/90 hover:bg-green-600/90 text-white"
                         : "bg-red-500/90 hover:bg-red-600/90 text-white"
                     }`}
                     title={`Click to mark as ${pet.status === "SAFE" ? "Lost" : "Safe"}`}
                   >
-                    {pet.status === "SAFE" ? "Safe" : "Lost"}
+                    {pendingStatusIds.has(pet.id) ? "Updating..." : pet.status === "SAFE" ? "Safe" : "Lost"}
                   </button>
 
                   {/* View QR button, top-right (left of Edit), on the image */}
@@ -195,6 +211,11 @@ function Dashboard() {
                 </div>
 
                 <div className="p-4">
+                  {statusErrors[pet.id] && (
+                    <p role="alert" className="mb-2 text-xs text-red-700">
+                      {statusErrors[pet.id]} Click the status badge to try again.
+                    </p>
+                  )}
                   {pet.description && (
                     <p className="text-xs text-gray-600 mb-1 line-clamp-2">
                       {pet.description}
