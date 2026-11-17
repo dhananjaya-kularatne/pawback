@@ -36,34 +36,24 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
     }
 
     private OAuth2User processOAuth2User(OAuth2UserRequest oAuth2UserRequest, OAuth2User oAuth2User) {
-        String email = oAuth2User.getAttribute("email");
-        if (!StringUtils.hasText(email)) {
-            throw new OAuth2AuthenticationException("Email not found from OAuth2 provider");
-        }
-
-        String providerId = oAuth2User.getAttribute("sub"); // Google uses 'sub' as the unique ID
-        String name = oAuth2User.getAttribute("name");
-
-        Optional<User> userOptional = userRepository.findByEmail(email);
+        if (!"google".equals(oAuth2UserRequest.getClientRegistration().getRegistrationId())) throw new OAuth2AuthenticationException("unsupported_provider");
+        String email=oAuth2User.getAttribute("email");
+        String providerId=oAuth2User.getAttribute("sub");
+        if(!StringUtils.hasText(email) || !StringUtils.hasText(providerId) || !Boolean.TRUE.equals(oAuth2User.getAttribute("email_verified")))
+            throw new OAuth2AuthenticationException("verified_identity_required");
+        email=email.trim().toLowerCase(java.util.Locale.ROOT);
+        Optional<User> existing=userRepository.findByEmail(email);
         User user;
-        if (userOptional.isPresent()) {
-            user = userOptional.get();
-            // Account linking: update providerId and provider if they weren't set, or just ensure it's logged in
-            if (user.getProvider() == null || user.getProvider() == AuthProvider.LOCAL) {
-                user.setProvider(AuthProvider.GOOGLE);
-                user.setProviderId(providerId);
-                user = userRepository.save(user);
-            }
+        if(existing.isPresent()) {
+            user=existing.get();
+            if(!user.isEnabled()) throw new OAuth2AuthenticationException("account_disabled");
+            // Local accounts must keep their original sign-in method; implicit linking is forbidden.
+            if(user.getProvider()!=AuthProvider.GOOGLE || !providerId.equals(user.getProviderId()))
+                throw new OAuth2AuthenticationException("identity_conflict");
         } else {
-            // Register new user
-            user = User.builder()
-                    .email(email)
-                    .name(name)
-                    .provider(AuthProvider.GOOGLE)
-                    .providerId(providerId)
-                    .enabled(true)
-                    .build();
-            user = userRepository.save(user);
+            if(userRepository.existsByProviderAndProviderId(AuthProvider.GOOGLE,providerId)) throw new OAuth2AuthenticationException("identity_conflict");
+            user=userRepository.save(User.builder().email(email).name(oAuth2User.getAttribute("name"))
+                    .provider(AuthProvider.GOOGLE).providerId(providerId).enabled(true).build());
         }
 
         return new CustomOAuth2User(user, oAuth2User.getAttributes());

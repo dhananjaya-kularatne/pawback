@@ -23,6 +23,13 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthController {
 
     private final AuthService authService;
+    private final com.pawback.pawback.security.oauth2.OAuthExchangeService exchange;
+    public record ExchangeRequest(@jakarta.validation.constraints.Pattern(regexp="[A-Za-z0-9_-]{43}") @jakarta.validation.constraints.NotNull String code) {}
+    @PostMapping("/oauth/exchange")
+    public ResponseEntity<ApiResponse<AuthResponse>> exchange(@Valid @RequestBody ExchangeRequest body, jakarta.servlet.http.HttpServletRequest request) {
+        return ResponseEntity.ok().header("Cache-Control","no-store").body(ApiResponse.success("Google sign-in completed",exchange.exchange(request,body.code())));
+    }
+
     @org.springframework.web.bind.annotation.GetMapping("/me")
     public ResponseEntity<ApiResponse<com.pawback.pawback.dto.response.UserResponse>> currentUser(
             org.springframework.security.core.Authentication authentication) {

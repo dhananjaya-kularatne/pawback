@@ -1,50 +1,40 @@
 package com.pawback.pawback.security.oauth2;
 
 import com.pawback.pawback.util.CookieUtils;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.security.oauth2.client.web.AuthorizationRequestRepository;
+import jakarta.servlet.http.*;
+import org.springframework.security.oauth2.client.web.*;
 import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequest;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
 
+/** Authorization requests stay on the server; browser cookies never contain serialized objects. */
 @Component
 public class HttpCookieOAuth2AuthorizationRequestRepository implements AuthorizationRequestRepository<OAuth2AuthorizationRequest> {
-
-    public static final String OAUTH2_AUTHORIZATION_REQUEST_COOKIE_NAME = "oauth2_auth_request";
-    public static final String REDIRECT_URI_PARAM_COOKIE_NAME = "redirect_uri";
-    private static final int cookieExpireSeconds = 180;
-
-    @Override
+    private final HttpSessionOAuth2AuthorizationRequestRepository delegate = new HttpSessionOAuth2AuthorizationRequestRepository();
+    private static final String CREATED = HttpCookieOAuth2AuthorizationRequestRepository.class.getName()+".created";
     public OAuth2AuthorizationRequest loadAuthorizationRequest(HttpServletRequest request) {
-        return CookieUtils.getCookie(request, OAUTH2_AUTHORIZATION_REQUEST_COOKIE_NAME)
-                .map(cookie -> CookieUtils.deserialize(cookie, OAuth2AuthorizationRequest.class))
-                .orElse(null);
+        HttpSession session = request.getSession(false);
+        if (session == null || !(session.getAttribute(CREATED) instanceof Long created)
+                || System.currentTimeMillis()-created > 180_000) return null;
+        return delegate.loadAuthorizationRequest(request);
     }
-
-    @Override
-    public void saveAuthorizationRequest(OAuth2AuthorizationRequest authorizationRequest, HttpServletRequest request, HttpServletResponse response) {
-        if (authorizationRequest == null) {
-            CookieUtils.deleteCookie(request, response, OAUTH2_AUTHORIZATION_REQUEST_COOKIE_NAME);
-            CookieUtils.deleteCookie(request, response, REDIRECT_URI_PARAM_COOKIE_NAME);
-            return;
-        }
-
-        CookieUtils.addCookie(response, OAUTH2_AUTHORIZATION_REQUEST_COOKIE_NAME, CookieUtils.serialize(authorizationRequest), cookieExpireSeconds);
-        String redirectUriAfterLogin = request.getParameter(REDIRECT_URI_PARAM_COOKIE_NAME);
-        if (StringUtils.hasText(redirectUriAfterLogin)) {
-            CookieUtils.addCookie(response, REDIRECT_URI_PARAM_COOKIE_NAME, redirectUriAfterLogin, cookieExpireSeconds);
-        }
+    public void saveAuthorizationRequest(OAuth2AuthorizationRequest value, HttpServletRequest request, HttpServletResponse response) {
+        if (value == null) { removeAuthorizationRequestCookies(request,response); return; }
+        HttpSession session=request.getSession(true);
+        session.setMaxInactiveInterval(180);
+        session.setAttribute(CREATED,System.currentTimeMillis());
+        delegate.saveAuthorizationRequest(value,request,response);
+        CookieUtils.deleteCookie(request,response,"oauth2_auth_request");
+        CookieUtils.deleteCookie(request,response,"redirect_uri");
     }
-
-    @Override
-    public OAuth2AuthorizationRequest removeAuthorizationRequest(HttpServletRequest request, HttpServletResponse response) {
-        OAuth2AuthorizationRequest authRequest = loadAuthorizationRequest(request);
-        return authRequest;
+    public OAuth2AuthorizationRequest removeAuthorizationRequest(HttpServletRequest request,HttpServletResponse response) {
+        OAuth2AuthorizationRequest result=loadAuthorizationRequest(request);
+        if(result!=null) delegate.removeAuthorizationRequest(request,response);
+        return result;
     }
-
-    public void removeAuthorizationRequestCookies(HttpServletRequest request, HttpServletResponse response) {
-        CookieUtils.deleteCookie(request, response, OAUTH2_AUTHORIZATION_REQUEST_COOKIE_NAME);
-        CookieUtils.deleteCookie(request, response, REDIRECT_URI_PARAM_COOKIE_NAME);
+    public void removeAuthorizationRequestCookies(HttpServletRequest request,HttpServletResponse response) {
+        delegate.saveAuthorizationRequest(null,request,response);
+        if(request.getSession(false)!=null) request.getSession(false).removeAttribute(CREATED);
+        CookieUtils.deleteCookie(request,response,"oauth2_auth_request");
+        CookieUtils.deleteCookie(request,response,"redirect_uri");
     }
 }

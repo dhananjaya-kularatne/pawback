@@ -72,13 +72,14 @@ public class SecurityConfig {
                     response.setStatus(403); response.setContentType("application/json");
                     response.getWriter().write("{\"success\":false,\"status\":403,\"message\":\"You do not have permission to access this resource\",\"data\":null}");
                 }))
-            // Stateless — no HTTP sessions; every request must carry a JWT
+            // Stateless â€” no HTTP sessions; every request must carry a JWT
             .sessionManagement(session ->
                     session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(
                         "/api/auth/register",
                         "/api/auth/login",
+                        "/api/auth/oauth/exchange",
                         "/api/auth/forgot-password",
                         "/api/auth/verify-otp",
                         "/api/auth/reset-password",
@@ -117,6 +118,7 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowedOrigins(java.util.Arrays.stream(allowedOrigins.split(",")).map(String::trim).filter(s -> !s.isEmpty()).toList());
+        config.setAllowCredentials(true);
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
 

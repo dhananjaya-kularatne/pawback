@@ -70,3 +70,11 @@ export async function resetPassword(email, otp, newPassword) {
 
   return readApiResponse(response, "Failed to reset password");
 }
+
+export async function exchangeGoogleCode(code) {
+  const response = await fetch(`${API_BASE_URL}/auth/oauth/exchange`, {
+    method: "POST", credentials: "include", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ code }), cache: "no-store",
+  });
+  return readApiResponse(response, "Google sign-in could not be completed");
+}
