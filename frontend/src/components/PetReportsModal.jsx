@@ -12,8 +12,12 @@ export default function PetReportsModal({ pet, onClose }) {
 
   useEffect(() => {
     const dialog = dialogRef.current;
+    const opener = document.activeElement;
     dialog.showModal();
-    return () => dialog.close();
+    return () => {
+      dialog.close();
+      if (opener instanceof HTMLElement && opener.isConnected) opener.focus();
+    };
   }, []);
 
   useEffect(() => {
