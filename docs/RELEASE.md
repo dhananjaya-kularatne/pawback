@@ -1,6 +1,6 @@
-# Manual release checklist
+# Local verification checklist
 
-Backend unit tests and CI are excluded from the agreed scope. This checklist covers code completion and manual integration checks; it does not claim that a hosting account or provider configuration has already been verified.
+Backend unit tests and CI are excluded from the agreed scope. This checklist covers code completion and manual integration checks. Deployment preparation is deferred.
 
 ## Application checks
 
@@ -15,10 +15,8 @@ Backend unit tests and CI are excluded from the agreed scope. This checklist cov
 - Use keyboard-only navigation and short 320px screens for add/edit/crop/auth/report/QR/confirmation dialogs. Verify preview URLs are released on close.
 - Verify support/help/data links, browser title, unknown-route handling, deep-link refresh, and QR regeneration.
 
-## Live-environment gates
+## Remaining backend security work
 
-- Supply the real hosting origins, TLS, DB identities, provider credentials, verified sender, and support address. Run a physical phone scan and a real disposable upload/email check. Review the deployment-specific data/backup retention policy.
 - Existing backend authentication/email audit items remain separate release gates: OAuth cookie serialization/integrity, OAuth identity linking/disabled login/redirect validation, long-lived token transport, OTP attempt protection, password-reset token revocation, login limiter trust/expiry, email HTML escaping, and durable delivery behavior. The frontend callback integration is repaired; it does not resolve these backend concerns.
-- Review and merge the stacked PRs in dependency order. A pushed/open PR is not a deployed change.
 
-Record the actual deployment/provider results before public release. Never infer them from successful fixture-based checks.
+Live providers and physical phone scanning remain unverified. Deployment work will be planned separately.

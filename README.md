@@ -41,9 +41,9 @@ Schema changes now use Flyway, and Hibernate validates the result. A new empty d
 
 ## Provider setup
 
-- Google: configure authorized JavaScript origin `http://localhost:5173` and redirect URI `http://localhost:8080/login/oauth2/code/google` for local development. Use your real HTTPS backend callback in production.
+- Google: configure authorized JavaScript origin `http://localhost:5173` and redirect URI `http://localhost:8080/login/oauth2/code/google` for local development.
 - Cloudinary: supply the cloud name/API key/API secret. New uploads have tracked public IDs. Recovery jobs remove unused images and retry provider failures.
-- Email: set `BREVO_API_KEY`, `BREVO_SENDER_EMAIL`, and optionally `BREVO_SENDER_NAME`. The sender must be verified with the provider. Without a key, local email is simulated; this is not acceptable production configuration.
+- Email: set `BREVO_API_KEY`, `BREVO_SENDER_EMAIL`, and optionally `BREVO_SENDER_NAME`. The sender must be verified with the provider. Without a key, local email is simulated; live delivery has not been verified.
 
 ## Build and verify
 
@@ -59,7 +59,7 @@ cd backend
 .\mvnw.cmd package '-Dmaven.test.skip=true'
 ```
 
-Backend unit tests and CI are outside the agreed project scope. [The manual release checklist](docs/RELEASE.md) covers application checks. `GET /api/health` returns `{"status":"UP"}` when the application can query the database.
+Backend unit tests and CI are outside the agreed project scope. [The local verification checklist](docs/RELEASE.md) covers application checks.
 
 If the IDE rewrites `backend/target/classes` during a Maven build, stop its incremental builder or build in a separate checkout before verifying the artifact. Do not run a mixture of IDE-generated and Maven-generated classes.
 
@@ -72,4 +72,4 @@ If the IDE rewrites `backend/target/classes` during a Maven build, stop its incr
 - Owners can regenerate a QR image. If the public domain changes, old printed localhost/domain links cannot be repaired remotely: generate/download a new image and replace the physical tags.
 - Report history is available from each pet's **View reports** action. The unfinished notification bell has been removed.
 
-See [operations and deployment](docs/OPERATIONS.md), [release gates](docs/RELEASE.md), and the public `/help` and `/privacy` pages.
+See [local database and recovery guidance](docs/OPERATIONS.md), [application checks](docs/RELEASE.md), and the public `/help` and `/privacy` pages. Deployment preparation is deferred.
