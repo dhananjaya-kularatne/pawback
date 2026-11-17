@@ -97,6 +97,7 @@ export default function ForgotPasswordModal({ onClose, onSwitchToLogin }) {
 
   return (
     <AuthModalShell
+      busy={loading}
       onClose={onClose}
       title={TITLES[step]}
       subtitle={SUBTITLES[step]}

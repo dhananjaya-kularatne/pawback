@@ -1,31 +1,9 @@
-import { useEffect, useRef } from "react";
+import Modal from "../Modal";
 import { MapPin, X } from "lucide-react";
 
 export default function ReportDetailsModal({ report, onClose }) {
-  const dialogRef = useRef(null);
-
-  useEffect(() => {
-    const dialog = dialogRef.current;
-    const opener = document.activeElement;
-    dialog.showModal();
-    return () => {
-      dialog.close();
-      // The dialog unmounts on close, so native focus restoration alone is unreliable.
-      if (opener instanceof HTMLElement && opener.isConnected) opener.focus();
-    };
-  }, []);
-
-  function handleBackdropClick(event) {
-    if (event.target !== event.currentTarget) return;
-    const bounds = event.currentTarget.getBoundingClientRect();
-    if (event.clientX < bounds.left || event.clientX > bounds.right ||
-        event.clientY < bounds.top || event.clientY > bounds.bottom) onClose();
-  }
-
   return (
-    <dialog ref={dialogRef} onCancel={onClose} onClick={handleBackdropClick}
-      aria-labelledby="report-detail-title"
-      className="m-auto w-[calc(100%_-_2rem)] max-w-2xl max-h-[85dvh] overflow-y-auto rounded-2xl bg-white p-0 shadow-xl backdrop:bg-black/50">
+    <Modal onClose={onClose} titleId="report-detail-title" className="max-w-2xl">
       <div className="sticky top-0 z-10 flex items-start justify-between gap-3 border-b border-gray-200 bg-white px-5 py-4">
         <div className="min-w-0">
           <h2 id="report-detail-title" className="text-lg font-semibold text-gray-900 break-words">
@@ -60,6 +38,6 @@ export default function ReportDetailsModal({ report, onClose }) {
           </a>
         ) : <p className="text-xs text-gray-500">No location shared.</p>}
       </div>
-    </dialog>
+    </Modal>
   );
 }
