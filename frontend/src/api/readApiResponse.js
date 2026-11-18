@@ -14,7 +14,7 @@ export async function readApiResponse(response, fallbackMessage, authenticated =
   if (!response.ok) {
     if (authenticated && response.status === 401) {
       const requestToken = typeof authenticated === "string" ? authenticated : requestTokens.get(response);
-      if (requestToken === sessionStorage.getItem("token")) clearSession();
+      if (requestToken === sessionStorage.getItem("token")) clearSession(true);
       throw new Error("Your session has ended. Please sign in again.");
     }
     const fieldErrors = response.status === 400 && result?.data &&
