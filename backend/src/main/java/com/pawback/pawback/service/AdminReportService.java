@@ -67,6 +67,7 @@ public class AdminReportService {
         return AdminScanReportResponse.builder()
                 .id(report.getId())
                 .message(report.getMessage())
+                .finderPhone(report.getFinderPhone())
                 .photoUrl(report.getPhotoUrl())
                 .latitude(report.getLatitude())
                 .longitude(report.getLongitude())

@@ -1,7 +1,7 @@
 import Modal from "./Modal";
 import { AlertTriangle, X } from "lucide-react";
 
-// Small in-app confirmation modal — used instead of window.confirm so the
+// Small in-app confirmation modal , used instead of window.confirm so the
 // prompt matches the rest of the UI (and doesn't show the browser's
 // "localhost says" chrome). Rendered conditionally by the parent.
 //
@@ -45,7 +45,7 @@ function ConfirmDialog({
               <AlertTriangle size={18} className="text-red-600" />
             </div>
           )}
-          <div className="min-w-0">
+          <div className="min-w-0 pr-8">
             <h2 id="confirm-title" className="text-base font-semibold text-gray-900">{title}</h2>
             {message && (
               <p className="text-sm text-gray-600 mt-1 leading-relaxed">{message}</p>
