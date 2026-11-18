@@ -1,6 +1,5 @@
 package com.pawback.pawback.security.oauth2;
 
-import com.pawback.pawback.util.JwtUtil;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -17,7 +16,7 @@ import java.io.IOException;
 @RequiredArgsConstructor
 public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
 
-    private final JwtUtil jwtUtil;
+    private final OAuthExchangeService exchange;
     private final HttpCookieOAuth2AuthorizationRequestRepository httpCookieOAuth2AuthorizationRequestRepository;
 
     @Value("${app.oauth2.authorizedRedirectUris:http://localhost:5173/oauth2/redirect}")
@@ -31,16 +30,18 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
             return;
         }
 
+        response.setHeader("Cache-Control", "no-store");
         clearAuthenticationAttributes(request, response);
         getRedirectStrategy().sendRedirect(request, response, targetUrl);
     }
 
     protected String determineTargetUrl(HttpServletRequest request, HttpServletResponse response, Authentication authentication) {
         CustomOAuth2User user = (CustomOAuth2User) authentication.getPrincipal();
-        String token = jwtUtil.generateToken(user.getUser());
+        if (!user.getUser().isEnabled()) throw new org.springframework.security.authentication.DisabledException("account_disabled");
+        String code = exchange.issue(request, user.getUser());
 
         return UriComponentsBuilder.fromUriString(redirectUri)
-                .queryParam("token", token)
+                .queryParam("code", code)
                 .build().toUriString();
     }
 
