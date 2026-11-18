@@ -19,13 +19,18 @@ function RouteScrollReset() {
   return null;
 }
 
+function LandingRoute() {
+  const { key } = useLocation();
+  return <LandingPage key={key} />;
+}
+
 function App() {
   return (
     <BrowserRouter>
       <RouteScrollReset />
       <SessionMonitor />
       <Routes>
-        <Route path="/" element={<LandingPage />} />
+        <Route path="/" element={<LandingRoute />} />
         <Route path="/help" element={<InformationPage />} />
         <Route path="/privacy" element={<InformationPage />} />
         <Route path="*" element={<PageStatus title="Page not found" message="This page may have moved, or the link may be incomplete." />} />
