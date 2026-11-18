@@ -20,7 +20,13 @@ public class MailTransport {
         if(!configured())throw new IllegalStateException("Mail is not configured");
         HttpHeaders headers=new HttpHeaders();headers.set("api-key",key);headers.setContentType(MediaType.APPLICATION_JSON);
         Map<String,Object> body=Map.of("sender",Map.of("name",name,"email",sender),"to",List.of(Map.of("email",recipient)),
-                "subject",subject,"htmlContent",html,"headers",Map.of("idempotencyKey",deliveryKey));
-        http.exchange("https://api.brevo.com/v3/smtp/email",HttpMethod.POST,new HttpEntity<>(body,headers),String.class);
+                "subject",subject,"htmlContent",html,"headers",Map.of("IdempotencyKey",deliveryKey));
+        try { http.exchange("https://api.brevo.com/v3/smtp/email",HttpMethod.POST,new HttpEntity<>(body,headers),String.class); }
+        catch(org.springframework.web.client.HttpClientErrorException exception) {
+            String response=exception.getResponseBodyAsString();
+            // A repeated accepted request can return this provider-specific response.
+            if(response.contains("duplicate_parameter") && response.toLowerCase(java.util.Locale.ROOT).contains("idempotency")) return;
+            throw exception;
+        }
     }
 }

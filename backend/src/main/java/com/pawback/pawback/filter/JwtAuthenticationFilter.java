@@ -55,7 +55,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         // Valid token â€” load the user and set authentication in the SecurityContext
-        String email = jwtUtil.extractEmail(token);
+        String email;
+        try { email = jwtUtil.extractEmail(token); }
+        catch (io.jsonwebtoken.JwtException | IllegalArgumentException exception) {
+            SecurityContextHolder.clearContext(); filterChain.doFilter(request,response); return;
+        }
 
         if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             userRepository.findByEmail(email).ifPresent(user -> {

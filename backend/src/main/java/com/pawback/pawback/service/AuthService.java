@@ -78,7 +78,7 @@ public class AuthService {
         }
 
         // A user an admin has disabled can authenticate with the right password
-        // but must not be allowed a session â€” moderation is enforced here, not just in the UI.
+        // Moderation is enforced before issuing a session.
         if (!user.isEnabled()) {
             throw new DisabledAccountException("This account has been disabled. Please contact support.");
         }
@@ -117,6 +117,7 @@ public class AuthService {
         user.setPasswordHash(passwordEncoder.encode(request.getNewPassword()));
         user.setResetOtpHash(null);user.setResetOtpExpiry(null);user.setResetOtpAttempts(0);
         user.setTokenVersion(user.getTokenVersion()+1);
+        emailService.cancelPasswordReset(user.getEmail());
         userRepository.saveAndFlush(user);
     }
     private void verifyBudget(String email,String client){
@@ -126,11 +127,11 @@ public class AuthService {
         User user=userRepository.findForReset(normalize(email)).orElseThrow(this::invalidCode);
         if(!user.isEnabled() || user.getProvider()!=AuthProvider.LOCAL || user.getResetOtpHash()==null || user.getResetOtpExpiry()==null
                 || !user.getResetOtpExpiry().isAfter(LocalDateTime.now(java.time.ZoneOffset.UTC)) || user.getResetOtpAttempts()>=5){
-            user.setResetOtpHash(null);user.setResetOtpExpiry(null);userRepository.saveAndFlush(user);throw invalidCode();
+            user.setResetOtpHash(null);user.setResetOtpExpiry(null);emailService.cancelPasswordReset(user.getEmail());userRepository.saveAndFlush(user);throw invalidCode();
         }
         if(!passwordEncoder.matches(otp,user.getResetOtpHash())){
             user.setResetOtpAttempts(user.getResetOtpAttempts()+1);
-            if(user.getResetOtpAttempts()>=5){user.setResetOtpHash(null);user.setResetOtpExpiry(null);}
+            if(user.getResetOtpAttempts()>=5){user.setResetOtpHash(null);user.setResetOtpExpiry(null);emailService.cancelPasswordReset(user.getEmail());}
             userRepository.saveAndFlush(user);throw invalidCode();
         }
         return user;

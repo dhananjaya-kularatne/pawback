@@ -17,8 +17,13 @@ public class EmailService {
     private final NotificationFormattingService formatting;
     @Transactional(propagation=Propagation.MANDATORY)
     public void sendPasswordResetOtp(String recipient,String otp){
+        cancelPasswordReset(recipient);
         enqueue("otp:"+UUID.randomUUID(),recipient,"Your PawBack Password Reset Code",
                 "<html><body><h2>Password reset</h2><p>Your verification code is <strong>"+org.springframework.web.util.HtmlUtils.htmlEscape(otp)+"</strong>.</p><p>It expires in ten minutes. Ignore this email if you did not request it.</p></body></html>","OTP",null,600);
+    }
+    @Transactional(propagation=Propagation.MANDATORY)
+    public void cancelPasswordReset(String recipient){
+        jdbc.update("UPDATE mail_outbox SET status='DEAD',payload=NULL,last_error='Code invalidated' WHERE recipient=? AND kind='OTP' AND status IN ('PENDING','SENDING')",recipient);
     }
     @Transactional(propagation=Propagation.MANDATORY)
     public void sendReportNotification(String recipient,ScanReport report){
@@ -39,6 +44,7 @@ public class EmailService {
         for(Long id:ids) deliver(id);
     }
     public void deliver(Long id){
+        if(org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive()) throw new IllegalStateException("Mail delivery cannot run within a database transaction");
         String lease=UUID.randomUUID().toString();
         int claimed=jdbc.update("""
             UPDATE mail_outbox SET status='SENDING',lock_token=?,locked_until=TIMESTAMPADD(SECOND,60,UTC_TIMESTAMP(6)),attempts=attempts+1
