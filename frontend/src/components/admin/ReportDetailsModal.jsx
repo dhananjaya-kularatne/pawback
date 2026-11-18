@@ -23,6 +23,7 @@ export default function ReportDetailsModal({ report, onClose }) {
           </time>
         )}
         <p className="text-sm text-gray-800 whitespace-pre-wrap break-words">{report.message || "No message provided."}</p>
+        {report.finderPhone && <p className="mt-3 text-sm"><span className="font-semibold">Finder contact: </span><a className="text-blue-700 underline" href={`tel:${report.finderPhone.replace(/[^+0-9]/g, "")}`}>{report.finderPhone}</a></p>}
         {report.photoUrl ? (
           <a href={report.photoUrl} target="_blank" rel="noopener noreferrer" className="block"
             aria-label="Open finder photo in a new tab">

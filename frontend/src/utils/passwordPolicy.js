@@ -1,4 +1,4 @@
-export const PASSWORD_HINT = "At least 8 characters, including an uppercase letter, a number, and a special character (!@#$%^&*(),.?\":{}|<>). Maximum 72 UTF-8 bytes; some characters use more than one byte.";
+export const PASSWORD_HINT = "At least 8 characters, including an uppercase letter, a number, and a special character.";
 export function getPasswordError(value) {
   if (value.length > 72 || new TextEncoder().encode(value).length > 72) {
     return "Password must not exceed 72 UTF-8 bytes";
