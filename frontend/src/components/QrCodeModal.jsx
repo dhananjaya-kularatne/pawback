@@ -19,7 +19,7 @@ function QrCodeModal({ pet, onClose, onRegenerate }) {
     finally { regenerationLock.current = false; setRegenerating(false); }
   }
 
-  // Fetches the image as a blob first , a plain <a download> often fails for cross-origin URLs like Cloudinary, so this forces a real download
+  // Fetches the image as a blob first — a plain <a download> often fails for cross-origin URLs like Cloudinary, so this forces a real download
   async function handleDownload() {
     if (!pet.qrCodeUrl || downloadLock.current) return;
     downloadLock.current = true;
@@ -54,10 +54,9 @@ function QrCodeModal({ pet, onClose, onRegenerate }) {
   }
 
   return (
-    <Modal onClose={onClose} busy={downloading || regenerating} titleId="pet-qr-title" className="max-w-lg">
-      <div className="p-6 sm:p-8">
-        <div className="flex justify-between items-start gap-4 mb-6">
-          <h2 id="pet-qr-title" className="text-xl font-semibold text-gray-900 break-words min-w-0">
+    <Modal onClose={onClose} busy={downloading || regenerating} titleId="pet-qr-title" className="max-w-xs p-6 text-center">
+        <div className="flex justify-between items-center mb-4">
+          <h2 id="pet-qr-title" className="text-base font-medium text-gray-900 break-words">
             {pet.name}'s QR code
           </h2>
           <button
@@ -67,24 +66,24 @@ function QrCodeModal({ pet, onClose, onRegenerate }) {
             aria-label="Close QR code"
             autoFocus
             className="text-gray-500 hover:text-gray-700 hover:bg-gray-100
-                       p-2 -mr-2 -mt-1 shrink-0 rounded-md cursor-pointer transition-colors"
+                       p-1 rounded-md cursor-pointer transition-colors"
           >
-            <X size={20} />
+            <X size={18} />
           </button>
         </div>
 
-        <div className="border border-gray-200 rounded-lg p-5 sm:p-6 mb-5 bg-gray-50 flex justify-center">
+        <div className="border border-gray-200 rounded-lg p-4 mb-4 bg-gray-50">
           {pet.qrCodeUrl && !previewFailed ? <img
             src={pet.qrCodeUrl}
             alt={`QR code for ${pet.name}`}
-            className="w-full max-w-[280px] h-auto object-contain"
+            className="w-full h-auto"
             onError={() => setPreviewFailed(true)}
           /> : <p className="text-sm text-gray-600">
             {pet.qrCodeUrl ? "QR preview could not load. You can try downloading it below." : "A QR code is not available for this pet yet."}
           </p>}
         </div>
 
-        <p className="text-sm text-gray-600 text-center mb-6">
+        <p className="text-xs text-gray-500 mb-4">
           Attach this to {pet.name}'s collar so finders can scan it.
         </p>
 
@@ -95,20 +94,17 @@ function QrCodeModal({ pet, onClose, onRegenerate }) {
           disabled={downloading || regenerating || !pet.qrCodeUrl}
           aria-busy={downloading}
           className="w-full flex items-center justify-center gap-2 bg-blue-700
-                     hover:bg-blue-800 text-white text-base font-medium py-3 px-4
+                     hover:bg-blue-800 text-white text-sm font-medium py-2
                      rounded-lg cursor-pointer transition-colors shadow-sm hover:shadow disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          <Download size={18} />
+          <Download size={16} />
           {downloading ? "Downloading..." : "Download QR code"}
         </button>
-        {onRegenerate && <div className="mt-7 pt-5 border-t border-gray-200">
-          <button type="button" onClick={regenerate} disabled={downloading || regenerating}
-          className="text-sm font-medium text-blue-700 hover:text-blue-800 hover:underline disabled:opacity-50 cursor-pointer">
+        {onRegenerate && <button type="button" onClick={regenerate} disabled={downloading || regenerating}
+          className="mt-3 text-sm text-blue-700 underline disabled:opacity-50 cursor-pointer">
           {regenerating ? "Generating..." : pet.qrCodeUrl ? "Regenerate QR image" : "Generate QR image"}
-          </button>
-          <p className="mt-2 text-sm text-gray-500">If an old tag no longer opens your pet's page, generate a new image, download it, and replace the printed tag.</p>
-        </div>}
-      </div>
+        </button>}
+        <p className="mt-2 text-xs text-gray-500">If an old tag no longer opens your pet's page, generate a new image, download it, and replace the printed tag.</p>
     </Modal>
   );
 }

@@ -42,27 +42,27 @@ export default function AccountMenu({ onLoggedOut }) {
   }
 
   return (
-    <div className="relative min-w-0 max-w-full" ref={menuRef}>
+    <div className="relative" ref={menuRef}>
       <button
         onClick={() => setMenuOpen((open) => !open)}
         aria-haspopup="menu"
         aria-expanded={menuOpen}
-        className="flex max-w-full items-center gap-1.5 rounded text-sm font-medium text-blue-900
-                   hover:text-blue-700 cursor-pointer transition-colors
+        className="flex items-center gap-1.5 rounded text-sm font-medium text-white
+                   hover:text-blue-100 cursor-pointer transition-colors
                    focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
       >
-        <span className="min-w-0 max-w-xs whitespace-normal wrap-anywhere text-left">{displayName || "Account"}</span>
+        <span className="max-w-[6rem] sm:max-w-[10rem] truncate">{displayName || "Account"}</span>
         <ChevronDown
           size={15}
-          className={`shrink-0 text-blue-700 transition-transform ${menuOpen ? "rotate-180" : ""}`}
+          className={`text-blue-200 transition-transform ${menuOpen ? "rotate-180" : ""}`}
         />
       </button>
 
       {menuOpen && (
-        <div className="absolute right-0 mt-2 w-60 max-w-[calc(100vw-2.5rem)] bg-white border border-gray-200 rounded-lg shadow-lg py-1 z-20">
+        <div className="absolute right-0 mt-2 w-60 bg-white border border-gray-200 rounded-lg shadow-lg py-1 z-20">
           <div className="px-3 py-2.5">
             <p className="text-xs text-gray-500">Signed in as</p>
-            <p className="text-sm font-medium text-gray-900 wrap-anywhere">
+            <p className="text-sm font-medium text-gray-900 truncate">
               {email || displayName || "Account"}
             </p>
           </div>

@@ -2,7 +2,6 @@ import { useEffect, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { exchangeGoogleCode } from "../api/authApi";
 import { clearSession, isTokenValid, saveSession } from "../utils/auth";
-import PageStatus from "../components/PageStatus";
 
 const GOOGLE_AUTH_ERRORS = {
   account_disabled: "This account has been disabled. Please contact support.",
@@ -39,5 +38,5 @@ export default function OAuth2RedirectHandler() {
     complete();
     return () => { active = false; };
   }, [location.pathname, location.search, navigate]);
-  return <PageStatus title="Completing sign-in" message="Please wait while we securely sign you in." busy />;
+  return <p className="p-8 text-center text-gray-600">Completing sign-in...</p>;
 }

@@ -110,7 +110,6 @@ export default function ForgotPasswordModal({ onClose, onSwitchToLogin }) {
       onClose={onClose}
       title={TITLES[step]}
       subtitle={SUBTITLES[step]}
-      showRequiredNote={step !== 4}
       footer={
         step !== 4 && (
           <>

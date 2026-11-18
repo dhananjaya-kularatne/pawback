@@ -1,5 +1,3 @@
-import { Link } from "react-router-dom";
-import Footer from "../components/layout/Footer";
 import { useEffect, useRef, useState } from "react";
 import { Plus, Pencil, MessageSquare, Trash2, QrCode as QrCodeIcon } from "lucide-react";
 import Navbar from "../components/Navbar";
@@ -11,7 +9,7 @@ import AddPetModal from "../components/AddPetModal";
 import QrCodeModal from "../components/QrCodeModal";
 import PetReportsModal from "../components/PetReportsModal";
 
-// Owner's dashboard , lists all registered pets, with inline add/edit/QR view/status toggle
+// Owner's dashboard — lists all registered pets, with inline add/edit/QR view/status toggle
 function Dashboard() {
   const { user } = useSession();
   const [pets, setPets] = useState([]);
@@ -46,7 +44,7 @@ function Dashboard() {
     fetchPets();
   }, []);
 
-  // Saves an edited pet in place in the local list , no reload needed
+  // Saves an edited pet in place in the local list — no reload needed
   async function handleSave(updatedFields, imageFile) {
     const updated = await updatePet(editingPet.id, updatedFields, imageFile);
     setPets((prev) =>
@@ -55,7 +53,7 @@ function Dashboard() {
     setEditingPet(null);
   }
 
-  // Adds a newly created pet straight into the local list , no reload needed
+  // Adds a newly created pet straight into the local list — no reload needed
   async function handleAddPet(petData, imageFile, requestKey) {
     const newPet = await createPet(petData, imageFile, requestKey);
     setPets((prev) => prev.some((pet) => pet.id === newPet.id) ? prev : [...prev, newPet]);
@@ -107,19 +105,30 @@ function Dashboard() {
     <div className="min-h-screen bg-slate-50">
       <Navbar />
 
-      <div className="dashboard-welcome">
+      {/* Welcome banner — its own blue band beneath the shared header */}
+      <div className="bg-gradient-to-br from-blue-700 to-blue-900 relative overflow-hidden">
+        <div className="absolute inset-0 opacity-10">
+          <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <pattern id="paw-pattern" x="0" y="0" width="60" height="60" patternUnits="userSpaceOnUse">
+                <circle cx="30" cy="30" r="2" fill="white" />
+              </pattern>
+            </defs>
+            <rect width="100%" height="100%" fill="url(#paw-pattern)" />
+          </svg>
+        </div>
+
         <div className="relative w-full px-6 md:px-10 lg:px-16 py-8">
-          <h1 className="text-2xl font-semibold text-blue-950 mb-1">
+          <h1 className="text-2xl font-semibold text-white mb-1">
             {firstName ? `Welcome back, ${firstName}` : "Welcome back"}
           </h1>
-          <p className="text-blue-900 text-sm">
-            Keep your pet profiles up to date so they can always find their way home.
+          <p className="text-blue-100 text-sm">
+            Keep your pets' profiles up to date so they can always find their way home.
           </p>
         </div>
       </div>
 
-      <main id="main-content" className="content-width dashboard-content">
-        <div className="dashboard-tip"><span>New to QR tags? Get your pet ready in a few simple steps.</span><Link to="/help">Read the guide</Link></div>
+      <div className="w-full px-6 md:px-10 lg:px-16 py-6">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-lg font-medium text-gray-900">My pets</h2>
           <button
@@ -153,22 +162,24 @@ function Dashboard() {
         )}
 
         {!loading && !error && pets.length > 0 && (
-          <div className="pet-grid">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
             {pets.map((pet) => (
               <div
                 key={pet.id}
-                className="pet-card bg-white rounded-xl overflow-hidden border border-gray-200 shadow-sm"
+                className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-lg
+                          hover:-translate-y-1 transition-all duration-300 group"
               >
-                <div className="pet-photo-frame relative overflow-hidden">
+                <div className="relative aspect-[4/5] overflow-hidden">
                   <img
                     src={pet.photoUrl}
                     alt={pet.name}
-                    className="pet-photo"
+                    className="w-full h-full object-cover transition-transform
+                              duration-500 group-hover:scale-110"
                   />
                   {/* Gradient overlay for text readability */}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/0 to-transparent" />
 
-                  {/* Status badge, top-left, on the image , now a clickable toggle */}
+                  {/* Status badge, top-left, on the image — now a clickable toggle */}
                   <button
                     onClick={() => handleToggleStatus(pet)}
                     disabled={pendingStatusIds.has(pet.id)}
@@ -177,8 +188,8 @@ function Dashboard() {
                     className={`absolute top-3 left-3 text-xs font-semibold px-2.5 py-1 rounded-full
                                backdrop-blur-sm cursor-pointer transition-colors disabled:opacity-60 disabled:cursor-wait ${
                       pet.status === "SAFE"
-                        ? "bg-green-700 hover:bg-green-800 text-white"
-                        : "bg-red-700 hover:bg-red-800 text-white"
+                        ? "bg-green-500/90 hover:bg-green-600/90 text-white"
+                        : "bg-red-500/90 hover:bg-red-600/90 text-white"
                     }`}
                     title={`Click to mark as ${pet.status === "SAFE" ? "Lost" : "Safe"}`}
                   >
@@ -188,12 +199,12 @@ function Dashboard() {
                   {/* View QR button, top-right (left of Edit), on the image */}
                   <button
                     onClick={() => setViewingQrPet(pet)}
-                    className="absolute top-3 right-14 w-8 h-8 flex items-center justify-center
+                    className="absolute top-3 right-12 w-8 h-8 flex items-center justify-center
                               bg-white/90 hover:bg-white rounded-full cursor-pointer
                               transition-colors shadow-sm"
                     aria-label="View QR code"
                   >
-                    <QrCodeIcon size={16} className="text-gray-700" />
+                    <QrCodeIcon size={14} className="text-gray-700" />
                   </button>
 
                   {/* Edit button, top-right, on the image */}
@@ -204,7 +215,7 @@ function Dashboard() {
                               transition-colors shadow-sm"
                     aria-label="Edit pet"
                   >
-                    <Pencil size={16} className="text-gray-700" />
+                    <Pencil size={14} className="text-gray-700" />
                   </button>
 
                   {/* Name overlaid at the bottom of the image */}
@@ -256,8 +267,7 @@ function Dashboard() {
             ))}
           </div>
         )}
-      </main>
-      <Footer />
+      </div>
 
       {editingPet && (
         <EditPetModal

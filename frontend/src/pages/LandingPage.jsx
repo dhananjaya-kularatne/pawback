@@ -1,10 +1,8 @@
 import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useSession } from "../utils/useSession";
-import { PawPrint, QrCode, ArrowRight, ArrowUpRight, Camera, Heart, Check } from "lucide-react";
-import { Link } from "react-router-dom";
-import scanImg from "../assets/scan-collar.webp";
-import heroImg from "../assets/collar-dog.webp";
+import { Shield, QrCode, Bell, ArrowRight } from "lucide-react";
+import heroImg from "../assets/hero.jpg";
 import RegisterModal from "../components/auth/RegisterModal";
 import LoginModal from "../components/auth/LoginModal";
 import ForgotPasswordModal from "../components/auth/ForgotPasswordModal";
@@ -12,31 +10,26 @@ import AccountMenu from "../components/AccountMenu";
 import AppHeader from "../components/AppHeader";
 import Footer from "../components/layout/Footer";
 
-// Landing page , the register form opens as a modal overlay when a CTA is clicked
+// Landing page — the register form opens as a modal overlay when a CTA is clicked
 function LandingPage() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Auth state is derived from token presence , kept in state so signing in or
+  // Auth state is derived from token presence — kept in state so signing in or
   // out updates the page in place. The storage listener catches token changes
   // from other contexts in this tab session.
   const { token } = useSession();
   const isLoggedIn = Boolean(token);
 
   const [registerOpen, setRegisterOpen] = useState(false);
-  const [loginOpen, setLoginOpen] = useState(() => Boolean(location.state?.openLogin || location.state?.authError || location.state?.sessionExpired));
+  const [loginOpen, setLoginOpen] = useState(() => Boolean(location.state?.authError || location.state?.sessionExpired));
   const [forgotOpen, setForgotOpen] = useState(false);
 
-  // Called by both auth modals once a token has been stored , close the modal
+  // Called by both auth modals once a token has been stored — close the modal
   // and reflect the logged-in state without leaving the landing page.
   function handleAuthSuccess() {
     setLoginOpen(false);
     setRegisterOpen(false);
-  }
-
-  function closeLogin() {
-    setLoginOpen(false);
-    if (location.state) navigate("/", { replace: true, state: null });
   }
 
   function openLogin() {
@@ -57,34 +50,185 @@ function LandingPage() {
     setForgotOpen(true);
   }
 
-  return <div className="landing-page">
-    <AppHeader showNavLinks={isLoggedIn}>{isLoggedIn ? <AccountMenu /> : <><button className="header-link" onClick={openLogin}>Sign in</button><button className="button-primary button-small" onClick={openRegister}>Get started <ArrowUpRight size={16} /></button></>}</AppHeader>
-    <main id="main-content">
-      <section className="hero-section">
-        <div className="content-width hero-grid">
-          <div className="hero-copy"><span className="eyebrow"><PawPrint size={16} /> BIG LOVE. LITTLE TAG.</span>
-            <h1>More adventures.<br /><span>Always a way<br className="hidden lg:block" /> back home.</span></h1>
-            <p>A familiar face. A little blue collar. A QR tag that helps a kind stranger tell you where your best friend has been found.</p>
-            <div className="flex flex-wrap gap-3 mt-8"><button className="button-primary" onClick={isLoggedIn ? () => navigate("/dashboard") : openRegister}>{isLoggedIn ? "Meet your pets" : "Create your pet's profile"}<ArrowUpRight size={19} /></button><Link className="button-secondary" to="/help">See how it works</Link></div>
-            <div className="hero-note"><span className="mini-paw"><PawPrint size={20} /></span><span>One profile. One unique QR tag.<br /><strong>A little more peace of mind.</strong></span></div>
+  return (
+    <div className="bg-slate-50 font-sans">
+      {/* Navigation Header — shared AppHeader shell */}
+      <AppHeader showNavLinks={isLoggedIn}>
+        {isLoggedIn ? (
+          <>
+            <AccountMenu />
+          </>
+        ) : (
+          <>
+            <button
+              onClick={openLogin}
+              className="text-sm font-medium text-blue-100 hover:text-white transition-colors cursor-pointer"
+            >
+              Sign in
+            </button>
+            <button
+              onClick={openRegister}
+              className="bg-white text-blue-800 hover:bg-blue-50 text-sm font-semibold
+                         px-4 py-2 rounded-lg shadow-sm hover:shadow transition-all cursor-pointer"
+            >
+              Register
+            </button>
+          </>
+        )}
+      </AppHeader>
+
+      {/* Hero Section */}
+      <section className="bg-gradient-to-br from-blue-700 via-blue-800 to-blue-900 text-white relative overflow-hidden">
+        <div className="absolute inset-0 opacity-10 pointer-events-none">
+          <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <pattern id="hero-paw-pattern" x="0" y="0" width="60" height="60" patternUnits="userSpaceOnUse">
+                <circle cx="30" cy="30" r="2" fill="white" />
+              </pattern>
+            </defs>
+            <rect width="100%" height="100%" fill="url(#hero-paw-pattern)" />
+          </svg>
+        </div>
+
+        <div className="w-full px-6 md:px-10 lg:px-16 py-16 md:py-24 relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+          {/* Hero Copy */}
+          <div className="lg:col-span-7 space-y-6 text-center lg:text-left">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/20 text-xs font-medium text-blue-100">
+              <Shield size={14} />
+              The Smart Protection System for Your Pets
+            </div>
+
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight leading-tight drop-shadow-sm">
+              Keep your pets safe & always findable.
+            </h1>
+
+            <p className="text-lg text-blue-100 max-w-xl mx-auto lg:mx-0 font-normal leading-relaxed">
+              Create instant digital pet profiles, generate unique scannable QR tags, and reunite with your lost furry family members faster than ever.
+            </p>
+
+            <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 pt-2">
+              <button
+                onClick={isLoggedIn ? () => navigate("/dashboard") : openRegister}
+                className="w-full sm:w-auto bg-white text-blue-800 hover:bg-blue-50 text-base
+                           font-semibold px-7 py-3.5 rounded-xl shadow-lg hover:shadow-xl
+                           hover:-translate-y-0.5 transition-all cursor-pointer flex items-center justify-center gap-2"
+              >
+                {isLoggedIn ? "Go to Dashboard" : "Register your pet"}
+                <ArrowRight size={18} />
+              </button>
+            </div>
           </div>
-          <div className="hero-visual"><img src={heroImg} alt="Golden retriever wearing a blue collar with a QR identification tag" fetchPriority="high" width="1536" height="1024" /></div>
+
+          {/* Hero Image */}
+          <div className="lg:col-span-5 flex justify-center">
+            <div className="relative w-full max-w-xl">
+              <div className="absolute -inset-1 bg-gradient-to-r from-blue-400 to-indigo-400 rounded-3xl blur-lg opacity-30"></div>
+              <div className="relative bg-white/10 backdrop-blur-md border border-white/20 p-2.5 rounded-3xl shadow-2xl overflow-hidden">
+                <img
+                  src={heroImg}
+                  alt="Two friends laughing with their dogs outdoors"
+                  className="w-full aspect-[3/2] object-cover object-center rounded-2xl"
+                />
+              </div>
+            </div>
+          </div>
         </div>
       </section>
-      <div className="promise-strip"><div className="content-width"><span><Check size={17} /> No app needed to scan</span><span><Check size={17} /> A unique tag for every pet</span><span><Check size={17} /> Finder reports in your dashboard</span></div></div>
-      <section className="content-width story-section">
-        <div className="story-image"><img src={scanImg} alt="A finder scanning a QR tag attached to a beagle's blue collar" loading="lazy" width="1536" height="1024" /><span className="image-caption">A small act of kindness can lead them home.</span></div>
-        <div className="story-copy"><span className="eyebrow">FOR PETS. FOR THEIR PEOPLE.</span><h2>Happy tails.<br />Reassured humans.</h2><p>They turn everyday walks into adventures. Give your curious companion a simple way to be recognised if they wander a little too far.</p><p>PawBack connects a collar tag to your pet's profile. When your pet is marked Lost, a finder can leave a message, photo or location for you to follow up.</p><Link className="text-link" to="/help">A closer look at PawBack <ArrowRight size={18} /></Link></div>
+
+      {/* Feature Highlights */}
+      <section className="py-20 w-full px-6 md:px-10 lg:px-16">
+        <div className="text-center max-w-2xl mx-auto mb-16">
+          <h2 className="text-3xl font-bold text-gray-900 tracking-tight mb-3">
+            Why pet parents choose PawBack
+          </h2>
+          <p className="text-gray-600 text-base">
+            Simple, reliable, and built to give you peace of mind wherever your pets wander.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="bg-white p-8 rounded-2xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+            <div className="w-12 h-12 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center mb-6">
+              <QrCode size={24} />
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Instant QR Tags</h3>
+            <p className="text-sm text-gray-600 leading-relaxed">
+              Generate custom QR tags for collar attachment. Anyone with a smartphone can scan and contact you instantly.
+            </p>
+          </div>
+
+          <div className="bg-white p-8 rounded-2xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+            <div className="w-12 h-12 rounded-xl bg-green-100 text-green-700 flex items-center justify-center mb-6">
+              <Shield size={24} />
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Real-time Status Toggle</h3>
+            <p className="text-sm text-gray-600 leading-relaxed">
+              Switch your pet status between "Safe" and "Lost" at a tap. Control what details are shown to rescuers.
+            </p>
+          </div>
+
+          <div className="bg-white p-8 rounded-2xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+            <div className="w-12 h-12 rounded-xl bg-red-100 text-red-700 flex items-center justify-center mb-6">
+              <Bell size={24} />
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Instant Reunification</h3>
+            <p className="text-sm text-gray-600 leading-relaxed">
+              Provide specific "If Found" instructions and phone numbers so finders can reach you without delay.
+            </p>
+          </div>
+        </div>
       </section>
-      <section className="walkthrough-section"><div className="content-width"><div className="section-heading"><span className="eyebrow">A LITTLE PREPARATION GOES A LONG WAY</span><h2>Their way home starts with you.</h2><p>From a favourite photo to a tag on their collar. Here's how it comes together.</p></div>
-        <ol className="walkthrough-grid">{[{icon: Camera,title:"Make it theirs",text:"Add a photo, a name and helpful instructions to your pet's profile."},{icon: QrCode,title:"Tag along",text:"Download the unique QR image, print a clear tag and attach it securely to their collar."},{icon: Heart,title:"Stay connected",text:"Mark your pet Lost if they wander. Read finder reports and mark them Safe when they're home."}].map(({icon: Icon,title,text},i)=><li key={title}><span className="step-top"><span className="step-number">0{i+1}</span><Icon size={31} strokeWidth={1.5} /></span><h3>{title}</h3><p>{text}</p></li>)}</ol>
-        <div className="text-center mt-10"><Link to="/help" className="button-secondary">Your step-by-step guide <ArrowRight size={17} /></Link></div>
-      </div></section>
-      <section className="content-width home-cta"><div><span className="eyebrow">FOR ALL THE WALKS STILL TO COME</span><h2>Give their next adventure<br />a way back to you.</h2></div><button className="button-primary" onClick={isLoggedIn ? () => navigate("/dashboard") : openRegister}>{isLoggedIn ? "Open my pets" : "Let's get your pet ready"}<ArrowUpRight size={19} /></button></section>
-    </main><Footer />
-    {registerOpen && <RegisterModal onClose={() => setRegisterOpen(false)} onSuccess={handleAuthSuccess} onSwitchToLogin={openLogin} />}
-    {loginOpen && <LoginModal initialError={location.state?.authError || (location.state?.sessionExpired ? "Your session has ended. Please sign in again." : "")} onClose={closeLogin} onSuccess={handleAuthSuccess} onSwitchToRegister={openRegister} onForgotPassword={openForgot} />}
-    {forgotOpen && <ForgotPasswordModal onClose={() => setForgotOpen(false)} onSwitchToLogin={openLogin} />}
-  </div>;
+
+      {/* CTA Banner — conversion prompt, only relevant to signed-out visitors.
+          Brand-blue so it reads as its own section above the slate footer. */}
+      {!isLoggedIn && (
+        <section className="bg-gradient-to-br from-blue-700 via-blue-800 to-blue-900 text-white py-20 px-6">
+          <div className="max-w-3xl mx-auto text-center space-y-6">
+            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight">Ready to protect your pet?</h2>
+            <p className="text-blue-100 text-base max-w-xl mx-auto">
+              It takes less than 2 minutes to create an account and register your pet's first profile.
+            </p>
+            <button
+              onClick={openRegister}
+              className="bg-white text-blue-800 hover:bg-blue-50 font-semibold
+                         px-8 py-3.5 rounded-xl shadow-lg hover:shadow-xl
+                         hover:-translate-y-0.5 transition-all cursor-pointer"
+            >
+              Get Started for Free
+            </button>
+          </div>
+        </section>
+      )}
+
+      {/* Footer */}
+      <Footer />
+
+      {registerOpen && (
+        <RegisterModal
+          onClose={() => setRegisterOpen(false)}
+          onSuccess={handleAuthSuccess}
+          onSwitchToLogin={openLogin}
+        />
+      )}
+
+      {loginOpen && (
+        <LoginModal
+          initialError={location.state?.authError || (location.state?.sessionExpired ? "Your session has ended. Please sign in again." : "")}
+          onClose={() => setLoginOpen(false)}
+          onSuccess={handleAuthSuccess}
+          onSwitchToRegister={openRegister}
+          onForgotPassword={openForgot}
+        />
+      )}
+
+      {forgotOpen && (
+        <ForgotPasswordModal
+          onClose={() => setForgotOpen(false)}
+          onSwitchToLogin={openLogin}
+        />
+      )}
+    </div>
+  );
 }
+
 export default LandingPage;

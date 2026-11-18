@@ -169,8 +169,8 @@ function AdminReportsPage() {
         </div>
         <button
           type="submit"
-          className="text-sm font-medium px-4 py-1.5 rounded-lg bg-blue-700 text-white
-                     hover:bg-blue-800 transition-colors cursor-pointer"
+          className="text-sm font-medium px-4 py-1.5 rounded-lg bg-blue-600 text-white
+                     hover:bg-blue-700 transition-colors cursor-pointer"
         >
           Filter
         </button>
@@ -202,7 +202,7 @@ function AdminReportsPage() {
 
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="admin-data-table w-full text-sm">
+          <table className="w-full text-sm">
             <thead>
               <tr className="text-left text-xs font-semibold text-gray-600 uppercase tracking-wide bg-gray-50 border-b border-gray-200">
                 <th className="px-5 py-3">Pet</th>
@@ -237,17 +237,17 @@ function AdminReportsPage() {
                       key={report.id}
                       className="border-b border-gray-100 last:border-0 hover:bg-blue-50/40 transition-colors"
                     >
-                      <td data-label="Pet" className="px-5 py-3">
-                        <div className="font-medium text-gray-900">{report.petName || "-"}</div>
+                      <td className="px-5 py-3">
+                        <div className="font-medium text-gray-900">{report.petName || "—"}</div>
                         <div className="text-gray-500 text-xs">Pet ID {report.petId}</div>
                         <div className="text-gray-400 text-xs truncate max-w-[10rem]">
                           {report.petUuid}
                         </div>
                       </td>
-                      <td data-label="Message" className="px-5 py-3 text-gray-700 max-w-xs truncate" title={report.message}>
-                        {report.message || "-"}
+                      <td className="px-5 py-3 text-gray-700 max-w-xs truncate" title={report.message}>
+                        {report.message || "—"}
                       </td>
-                      <td data-label="Location" className="px-5 py-3 text-gray-600">
+                      <td className="px-5 py-3 text-gray-600">
                         {report.latitude != null && report.longitude != null ? (
                           <a className="inline-flex items-center gap-1 text-blue-700 hover:underline"
                             href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${report.latitude},${report.longitude}`)}`}
@@ -256,13 +256,13 @@ function AdminReportsPage() {
                             {report.latitude.toFixed(3)}, {report.longitude.toFixed(3)}
                           </a>
                         ) : (
-                          "-"
+                          "—"
                         )}
                       </td>
-                      <td data-label="Reported" className="px-5 py-3 text-gray-600">
-                        {report.createdAt ? new Date(report.createdAt).toLocaleString() : "-"}
+                      <td className="px-5 py-3 text-gray-600">
+                        {report.createdAt ? new Date(report.createdAt).toLocaleString() : "—"}
                       </td>
-                      <td data-label="Actions" className="px-5 py-3 text-right">
+                      <td className="px-5 py-3 text-right">
                         <button type="button" onClick={() => setViewingReport(report)}
                           className="inline-flex items-center gap-1 text-xs font-medium px-3 py-1.5 rounded-lg border border-blue-200 text-blue-700 hover:bg-blue-50 mr-2 cursor-pointer">
                           <Eye size={13} /> View

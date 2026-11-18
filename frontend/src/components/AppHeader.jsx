@@ -1,13 +1,28 @@
 import { Link } from "react-router-dom";
+import { PawPrint } from "lucide-react";
 import HeaderNavLinks from "./HeaderNavLinks";
-import BrandMark from "./BrandMark";
+
+// The one header bar shared by every page — same gradient, width, padding and
+// brand mark on the landing page and the authenticated app, so the views keep
+// the same shape when you move between them. The right-hand slot is passed in
+// as children (sign-in buttons, or the bell + account menu).
 export default function AppHeader({ showNavLinks = true, children }) {
-  return <header className="site-header">
-    <a href="#main-content" className="skip-link">Skip to content</a>
-    <div className="site-header-inner">
-      <Link to="/" className="brand"><BrandMark /><span>PawBack<span className="brand-caption">A little tag. A way home.</span></span></Link>
-      {showNavLinks ? <HeaderNavLinks /> : <nav aria-label="Main"><Link to="/" className="header-link">Home</Link><Link to="/help" className="header-link">How it works</Link></nav>}
-      <div className="header-actions">{children}</div>
-    </div>
-  </header>;
+  return (
+    <header className="bg-gradient-to-r from-blue-700 to-blue-900 border-b border-blue-800/40">
+      <div className="w-full px-4 sm:px-6 md:px-10 lg:px-16 py-4 flex flex-wrap items-center gap-3">
+        <Link to="/" className="flex-1 flex items-center gap-2 text-white group">
+          <div className="w-9 h-9 rounded-xl bg-white/10 flex items-center justify-center group-hover:bg-white/20 transition-colors">
+            <PawPrint size={22} className="text-white" />
+          </div>
+          <span className="font-bold text-xl tracking-tight">PawBack</span>
+        </Link>
+
+        <div className="order-3 w-full flex justify-center sm:order-none sm:w-auto">
+          {showNavLinks && <HeaderNavLinks />}
+        </div>
+
+        <div className="flex-1 flex justify-end items-center gap-3">{children}</div>
+      </div>
+    </header>
+  );
 }

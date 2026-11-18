@@ -72,7 +72,6 @@ export default function PetReportsModal({ pet, onClose }) {
                 {report.createdAt ? new Date(report.createdAt).toLocaleString() : "Time unavailable"}
               </time>
               <p className="mt-2 text-sm text-gray-800 whitespace-pre-wrap break-words">{report.message}</p>
-        {report.finderPhone && <p className="mt-3 text-sm"><span className="font-semibold">Finder contact: </span><a className="text-blue-700 underline" href={`tel:${report.finderPhone.replace(/[^+0-9]/g, "")}`}>{report.finderPhone}</a></p>}
               {report.photoUrl && (
                 <a href={report.photoUrl} target="_blank" rel="noopener noreferrer" className="block mt-3"
                   aria-label="Open finder photo in a new tab">

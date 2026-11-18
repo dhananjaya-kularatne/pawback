@@ -17,7 +17,6 @@ public class AdminScanReportResponse {
 
     private final Long id;
     private final String message;
-    private final String finderPhone;
     private final String photoUrl;
     private final Double latitude;
     private final Double longitude;

@@ -28,7 +28,7 @@ function StatTile({ label, value, icon: Icon, accent, bar }) {
         {label}
       </p>
       <p className="text-3xl font-bold text-gray-900 tabular-nums mt-0.5">
-        {value ?? "-"}
+        {value ?? "—"}
       </p>
     </div>
   );
@@ -36,7 +36,7 @@ function StatTile({ label, value, icon: Icon, accent, bar }) {
 
 // Admin console home. AdminRoute already gates the route on an ADMIN role, but we
 // also call the protected /admin endpoints on mount so a token that isn't really
-// an admin , or has gone stale , is caught server-side and bounced.
+// an admin — or has gone stale — is caught server-side and bounced.
 function AdminPage() {
   const navigate = useNavigate();
   const [stats, setStats] = useState(null);
@@ -129,7 +129,7 @@ function AdminPage() {
         </div>
         <button
           onClick={() => navigate("/admin/users")}
-          className="inline-flex items-center justify-center gap-1.5 bg-blue-700 hover:bg-blue-800
+          className="inline-flex items-center justify-center gap-1.5 bg-blue-600 hover:bg-blue-700
                      text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors cursor-pointer shrink-0"
         >
           Manage users

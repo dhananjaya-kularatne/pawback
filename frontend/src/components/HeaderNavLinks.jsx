@@ -7,8 +7,7 @@ import { useSession } from "../utils/useSession";
 // the active route is highlighted. The Admin link only appears for admins.
 const BASE_LINKS = [
   { to: "/", label: "Home", end: true },
-  { to: "/dashboard", label: "My pets" },
-  { to: "/help", label: "How it works" },
+  { to: "/dashboard", label: "Dashboard" },
 ];
 
 export default function HeaderNavLinks() {
@@ -18,13 +17,19 @@ export default function HeaderNavLinks() {
     : BASE_LINKS;
 
   return (
-    <nav aria-label="Main" className="flex items-center gap-1">
+    <nav className="flex items-center gap-1">
       {links.map(({ to, label, end }) => (
         <NavLink
           key={to}
           to={to}
           end={end}
-          className={({ isActive }) => `header-link ${isActive ? "header-link-active" : ""}`}
+          className={({ isActive }) =>
+            `text-sm font-medium px-3 py-1.5 rounded-lg transition-colors ${
+              isActive
+                ? "bg-white/15 text-white"
+                : "text-blue-100 hover:text-white hover:bg-white/10"
+            }`
+          }
         >
           {label}
         </NavLink>

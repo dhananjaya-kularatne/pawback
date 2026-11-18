@@ -22,9 +22,6 @@ public class ScanReport {
     @Column(nullable = false)
     private String message;
 
-    @Column(length = 32)
-    private String finderPhone;
-
     private String photoUrl;
     private String photoPublicId;
     @Column(unique = true, length = 64)

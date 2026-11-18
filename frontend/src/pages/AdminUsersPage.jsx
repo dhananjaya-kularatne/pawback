@@ -7,7 +7,7 @@ import { getCurrentUser } from "../utils/auth";
 
 const PAGE_SIZE = 20;
 
-// Admin moderation view , every registered user, paginated, with a per-row
+// Admin moderation view — every registered user, paginated, with a per-row
 // enable/disable toggle. The route is gated to admins by AdminRoute; every
 // request here also hits the ADMIN-only backend, and the self-disable rule is
 // enforced server-side regardless of what this page shows.
@@ -77,7 +77,7 @@ function AdminUsersPage() {
   const totalElements = pageData?.totalElements ?? 0;
   const isLast = pageData?.last ?? true;
 
-  // Client-side filter over the current page , quick lookup by name or email
+  // Client-side filter over the current page — quick lookup by name or email
   const users = useMemo(() => {
     const list = pageData?.content ?? [];
     const q = query.trim().toLowerCase();
@@ -125,7 +125,7 @@ function AdminUsersPage() {
 
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="admin-data-table w-full text-sm">
+          <table className="w-full text-sm">
             <thead>
               <tr className="text-left text-xs font-semibold text-gray-600 uppercase tracking-wide bg-gray-50 border-b border-gray-200">
                 <th className="px-5 py-3">User</th>
@@ -163,21 +163,21 @@ function AdminUsersPage() {
                         user.enabled ? "hover:bg-blue-50/40" : "bg-rose-50/40 hover:bg-rose-50/70"
                       }`}
                     >
-                      <td data-label="Account" className="px-5 py-3">
+                      <td className="px-5 py-3">
                         <div className="min-w-0">
-                          <div className="font-medium text-gray-900 wrap-anywhere">
-                            {user.name || "-"}
+                          <div className="font-medium text-gray-900 truncate">
+                            {user.name || "—"}
                             {isSelf && (
-                              <span className="ml-2 text-xs font-normal text-gray-400">
+                              <span className="ml-2 text-[11px] font-normal text-gray-400">
                                 you
                               </span>
                             )}
                           </div>
-                          <div className="text-gray-500 wrap-anywhere">{user.email}</div>
+                          <div className="text-gray-500 truncate">{user.email}</div>
                         </div>
                       </td>
-                      <td data-label="Phone" className="px-5 py-3 text-gray-600">{user.phone || "-"}</td>
-                      <td data-label="Role" className="px-5 py-3">
+                      <td className="px-5 py-3 text-gray-600">{user.phone || "—"}</td>
+                      <td className="px-5 py-3">
                         <span
                           className={`text-xs font-medium px-2 py-0.5 rounded ${
                             user.role === "ADMIN"
@@ -188,7 +188,7 @@ function AdminUsersPage() {
                           {user.role}
                         </span>
                       </td>
-                      <td data-label="Status" className="px-5 py-3">
+                      <td className="px-5 py-3">
                         <span
                           className={`inline-flex items-center gap-1.5 text-xs font-medium px-2 py-0.5 rounded-full ring-1 ${
                             user.enabled
@@ -204,7 +204,7 @@ function AdminUsersPage() {
                           {user.enabled ? "Active" : "Disabled"}
                         </span>
                       </td>
-                      <td data-label="Actions" className="px-5 py-3 text-right">
+                      <td className="px-5 py-3 text-right">
                         {user.enabled ? (
                           <button
                             onClick={() => setToDisable(user)}
@@ -224,8 +224,8 @@ function AdminUsersPage() {
                           <button
                             onClick={() => toggleEnabled(user, true)}
                             disabled={isPending}
-                            className="text-xs font-medium px-3 py-1.5 rounded-lg bg-emerald-700 text-white
-                                       hover:bg-emerald-800 transition-colors cursor-pointer
+                            className="text-xs font-medium px-3 py-1.5 rounded-lg bg-emerald-600 text-white
+                                       hover:bg-emerald-700 transition-colors cursor-pointer
                                        disabled:opacity-50 disabled:cursor-not-allowed"
                           >
                             {isPending ? "Enabling..." : "Enable"}

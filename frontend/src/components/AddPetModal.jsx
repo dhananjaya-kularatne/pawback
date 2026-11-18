@@ -117,7 +117,7 @@ function AddPetModal({ onClose, onSave }) {
                   <img
                     src={previewUrl}
                     alt="Selected pet"
-                    className="absolute inset-0 pet-photo"
+                    className="absolute inset-0 w-full h-full object-cover"
                   />
                   <button
                     type="button"

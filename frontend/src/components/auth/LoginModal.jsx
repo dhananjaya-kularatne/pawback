@@ -6,7 +6,7 @@ import AuthModalShell from "./AuthModalShell";
 import { saveSession } from "../../utils/auth";
 import { GOOGLE_LOGIN_URL } from "../../api/config";
 
-// Sign-in form rendered as a modal on the landing page , the counterpart to
+// Sign-in form rendered as a modal on the landing page — the counterpart to
 // RegisterModal. On success it persists the returned token/user and calls
 // onSuccess so the landing page decides what happens next.
 export default function LoginModal({ onClose, onSuccess, onSwitchToRegister, onForgotPassword, initialError = "" }) {

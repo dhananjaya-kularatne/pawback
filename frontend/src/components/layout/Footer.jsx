@@ -1,9 +1,16 @@
 import { Link } from "react-router-dom";
-import BrandMark from "../BrandMark";
+import { PawPrint } from "lucide-react";
 const supportEmail = import.meta.env.VITE_SUPPORT_EMAIL?.trim();
 export default function Footer() {
-  return <footer className="site-footer"><div className="content-width footer-row">
-    <div><Link to="/" className="brand"><BrandMark /><span>PawBack</span></Link><p className="mt-3 text-sm">For the ones who make a house a home.</p></div>
-    <nav aria-label="Information" className="flex flex-wrap gap-6 text-sm font-semibold"><Link to="/help">How it works</Link><Link to="/privacy">Data and privacy</Link>{supportEmail && <a href={`mailto:${supportEmail}`}>Contact support</a>}</nav>
-  </div><p className="content-width mt-8 text-xs">&copy; {new Date().getFullYear()} PawBack. Made for pets and their people.</p></footer>;
+  return <footer className="bg-slate-900 text-slate-300 px-5 md:px-10 py-9">
+    <div className="flex flex-wrap items-center justify-between gap-5">
+      <Link to="/" className="flex items-center gap-2 font-bold text-white"><PawPrint size={22} /> PawBack</Link>
+      <nav aria-label="Information" className="flex flex-wrap gap-5 text-sm">
+        <Link to="/help" className="hover:text-white">Help</Link>
+        <Link to="/privacy" className="hover:text-white">Data and privacy</Link>
+        {supportEmail && <a href={`mailto:${supportEmail}`} className="hover:text-white">Contact support</a>}
+      </nav>
+    </div>
+    <p className="mt-6 text-xs text-slate-400">? {new Date().getFullYear()} PawBack. All rights reserved.</p>
+  </footer>;
 }

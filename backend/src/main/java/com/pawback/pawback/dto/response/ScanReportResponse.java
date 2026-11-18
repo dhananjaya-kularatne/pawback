@@ -13,7 +13,6 @@ public class ScanReportResponse {
 
     private Long id;
     private String message;
-    private String finderPhone;
     private String photoUrl;
     private Double latitude;
     private Double longitude;

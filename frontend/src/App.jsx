@@ -11,17 +11,11 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import AdminRoute from "./components/AdminRoute";
 import SessionMonitor from "./components/SessionMonitor";
 import InformationPage from "./pages/InformationPage";
-import PageStatus from "./components/PageStatus";
 
 function RouteScrollReset() {
   const { pathname } = useLocation();
   useEffect(() => { window.scrollTo(0, 0); }, [pathname]);
   return null;
-}
-
-function LandingRoute() {
-  const { key } = useLocation();
-  return <LandingPage key={key} />;
 }
 
 function App() {
@@ -30,10 +24,10 @@ function App() {
       <RouteScrollReset />
       <SessionMonitor />
       <Routes>
-        <Route path="/" element={<LandingRoute />} />
+        <Route path="/" element={<LandingPage />} />
         <Route path="/help" element={<InformationPage />} />
         <Route path="/privacy" element={<InformationPage />} />
-        <Route path="*" element={<PageStatus title="Page not found" message="This page may have moved, or the link may be incomplete." />} />
+        <Route path="*" element={<div className="p-10 text-center"><h1 className="text-xl font-semibold">Page not found</h1><a className="text-blue-700 underline" href="/">Return to PawBack</a></div>} />
         <Route path="/scan/:petUuid" element={<ScanPage />} />
         <Route path="/oauth2/redirect" element={<OAuth2RedirectHandler />} />
         <Route
