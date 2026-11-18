@@ -4,7 +4,7 @@ import { useSession } from "../utils/useSession";
 
 // Route guard for the admin area. First the standard authenticated-token check
 // via ProtectedRoute (redirects to the landing page when the token is missing or
-// expired), then a role check — a signed-in non-admin is sent to their own
+// expired), then a role check , a signed-in non-admin is sent to their own
 // dashboard rather than the landing page.
 function AdminRoute({ children }) {
   const { user } = useSession();

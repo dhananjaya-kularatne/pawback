@@ -27,7 +27,7 @@ export default function RegisterModal({ onClose, onSuccess, onSwitchToLogin }) {
     setFieldErrors({});
     setPasswordError("");
 
-    // Client-side check — don't hit the API if passwords don't match
+    // Client-side check , don't hit the API if passwords don't match
     if (password !== confirmPassword) {
       setPasswordError("Passwords do not match");
       return;

@@ -114,7 +114,7 @@ function EditPetModal({ pet, onClose, onSave }) {
                   <img
                     src={previewUrl}
                     alt={pet.name}
-                    className="absolute inset-0 w-full h-full object-cover"
+                    className="absolute inset-0 pet-photo"
                   />
                   <button
                     type="button"
