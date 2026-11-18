@@ -210,14 +210,15 @@ public class PetService {
         String requestHash;
         try {
             requestHash = hashFields(photo == null ? new byte[0] : photo.getBytes(), request.getMessage(),
-                    String.valueOf(request.getLatitude()), String.valueOf(request.getLongitude()));
+                    String.valueOf(request.getLatitude()), String.valueOf(request.getLongitude()),
+                    normalizedPhone(request.getFinderPhone()));
         } catch (java.io.IOException exception) { throw new IllegalStateException(exception); }
         if (submissionKey != null) {
             var previous = scanReportRepository.findBySubmissionKey(submissionKey);
             if (previous.isPresent()) {
                 if (!requestHash.equals(previous.get().getRequestHash())) throw new ConflictException("This report was already submitted with different details.");
                 ScanReport existing = previous.get();
-                return ScanReportResponse.builder().id(existing.getId()).message(existing.getMessage()).photoUrl(existing.getPhotoUrl())
+                return ScanReportResponse.builder().id(existing.getId()).message(existing.getMessage()).finderPhone(existing.getFinderPhone()).photoUrl(existing.getPhotoUrl())
                         .latitude(existing.getLatitude()).longitude(existing.getLongitude()).createdAt(existing.getCreatedAt()).build();
             }
         }
@@ -229,6 +230,7 @@ public class PetService {
 
         ScanReport report = ScanReport.builder()
                 .message(request.getMessage())
+                .finderPhone(normalizedPhone(request.getFinderPhone()))
                 .photoUrl(photoAsset == null ? null : photoAsset.url())
                 .photoPublicId(photoAsset == null ? null : photoAsset.publicId())
                 .latitude(request.getLatitude())
@@ -249,6 +251,7 @@ public class PetService {
         return ScanReportResponse.builder()
                 .id(savedReport.getId())
                 .message(savedReport.getMessage())
+                .finderPhone(savedReport.getFinderPhone())
                 .photoUrl(savedReport.getPhotoUrl())
                 .latitude(savedReport.getLatitude())
                 .longitude(savedReport.getLongitude())
@@ -309,6 +312,10 @@ public class PetService {
         pet.setQrCodePublicId(qr.publicId()); pet.setQrCodeUrl(qr.url());
         assetCleanup.attach(qr);
         return mapToResponse(petRepository.saveAndFlush(pet));
+    }
+
+    private String normalizedPhone(String phone) {
+        return phone == null || phone.isBlank() ? null : phone.trim();
     }
 
     private String validateKey(String key) {
