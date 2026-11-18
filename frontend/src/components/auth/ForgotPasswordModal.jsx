@@ -1,3 +1,5 @@
+import AuthFieldError from "./AuthFieldError";
+import { PASSWORD_HINT, meetsPasswordPolicy } from "../../utils/passwordPolicy";
 import { useState } from "react";
 import { Mail, Lock, ShieldCheck, ArrowRight } from "lucide-react";
 import { forgotPassword, verifyOtp, resetPassword } from "../../api/authApi";
@@ -14,8 +16,8 @@ const TITLES = {
 };
 
 const SUBTITLES = {
-  1: "We'll email you a 6-digit code to confirm it's you.",
-  2: "Check your inbox for the code we just sent.",
+  1: "Request a 6-digit code to confirm it's you.",
+  2: "If the account is eligible, check your inbox for its reset code.",
   3: "Pick a strong password you haven't used before.",
   4: "",
 };
@@ -26,12 +28,14 @@ export default function ForgotPasswordModal({ onClose, onSwitchToLogin }) {
   const [otp, setOtp] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [fieldErrors, setFieldErrors] = useState({});
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [loading, setLoading] = useState(false);
 
   function reset() {
     setError("");
+    setFieldErrors({});
     setNotice("");
   }
 
@@ -44,6 +48,7 @@ export default function ForgotPasswordModal({ onClose, onSwitchToLogin }) {
       setNotice(`If ${email} is registered, a 6-digit code is on its way.`);
       setStep(2);
     } catch (err) {
+      setFieldErrors(err.fieldErrors || {});
       setError(err.message || "Couldn't send the reset code. Please try again.");
     } finally {
       setLoading(false);
@@ -62,6 +67,7 @@ export default function ForgotPasswordModal({ onClose, onSwitchToLogin }) {
       await verifyOtp(email, otp);
       setStep(3);
     } catch (err) {
+      setFieldErrors(err.fieldErrors || {});
       setError(err.message || "That code is invalid or has expired.");
     } finally {
       setLoading(false);
@@ -71,6 +77,7 @@ export default function ForgotPasswordModal({ onClose, onSwitchToLogin }) {
   async function handleReset(e) {
     e.preventDefault();
     reset();
+    if (!meetsPasswordPolicy(newPassword)) { setFieldErrors({ newPassword: PASSWORD_HINT }); return; }
     if (newPassword !== confirmPassword) {
       setError("Passwords do not match.");
       return;
@@ -80,6 +87,7 @@ export default function ForgotPasswordModal({ onClose, onSwitchToLogin }) {
       await resetPassword(email, otp, newPassword);
       setStep(4);
     } catch (err) {
+      setFieldErrors(err.fieldErrors || {});
       setError(err.message || "Couldn't reset your password. Please try again.");
     } finally {
       setLoading(false);
@@ -137,6 +145,8 @@ export default function ForgotPasswordModal({ onClose, onSwitchToLogin }) {
               </div>
               <input
                 id="fp-email"
+                aria-invalid={!!fieldErrors.email}
+                aria-describedby="fp-email-error"
                 type="email"
                 required
                 placeholder="jane@example.com"
@@ -145,6 +155,7 @@ export default function ForgotPasswordModal({ onClose, onSwitchToLogin }) {
                 className={inputClass}
               />
             </div>
+            <AuthFieldError id="fp-email-error" message={fieldErrors.email} />
           </div>
           <button type="submit" disabled={loading} className={submitClass}>
             {loading ? "Sending..." : (<>Send reset code <ArrowRight size={15} /></>)}
@@ -158,6 +169,8 @@ export default function ForgotPasswordModal({ onClose, onSwitchToLogin }) {
             <label htmlFor="fp-otp" className="block text-xs font-medium text-gray-700 mb-1">6-digit code</label>
             <input
               id="fp-otp"
+                aria-invalid={!!fieldErrors.otp}
+                aria-describedby="fp-otp-error"
               type="text"
               inputMode="numeric"
               maxLength={6}
@@ -168,7 +181,8 @@ export default function ForgotPasswordModal({ onClose, onSwitchToLogin }) {
               className="w-full px-3 py-2.5 text-center text-lg tracking-[0.4em] border border-gray-300 rounded-lg
                          focus:outline-none focus:ring-2 focus:ring-blue-700 transition-shadow text-gray-900"
             />
-          </div>
+
+            <AuthFieldError id="fp-otp-error" message={fieldErrors.otp} />          </div>
           <button type="submit" disabled={loading} className={submitClass}>
             {loading ? "Verifying..." : (<>Verify code <ArrowRight size={15} /></>)}
           </button>
@@ -192,6 +206,8 @@ export default function ForgotPasswordModal({ onClose, onSwitchToLogin }) {
               </div>
               <input
                 id="fp-new"
+                aria-invalid={!!fieldErrors.newPassword}
+                aria-describedby="fp-new-error fp-password-hint"
                 type="password"
                 required
                 minLength={8}
@@ -201,6 +217,8 @@ export default function ForgotPasswordModal({ onClose, onSwitchToLogin }) {
                 className={inputClass}
               />
             </div>
+            <AuthFieldError id="fp-new-error" message={fieldErrors.newPassword} />
+            <p id="fp-password-hint" className="mt-1 text-xs text-gray-500">{PASSWORD_HINT}</p>
           </div>
           <div>
             <label htmlFor="fp-confirm" className="block text-xs font-medium text-gray-700 mb-1">Confirm password</label>

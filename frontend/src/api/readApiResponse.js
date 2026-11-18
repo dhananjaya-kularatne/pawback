@@ -21,9 +21,11 @@ export async function readApiResponse(response, fallbackMessage, authenticated =
       typeof result.data === "object" && !Array.isArray(result.data)
       ? Object.values(result.data).filter((value) => typeof value === "string")
       : [];
-    throw new Error(fieldErrors.length
+    const error = new Error(fieldErrors.length
       ? [...new Set(fieldErrors)].join(". ")
       : result?.message || fallbackMessage);
+    error.fieldErrors = fieldErrors.length ? result.data : {};
+    throw error;
   }
   if (!result || typeof result !== "object" || !("data" in result)) {
     throw new Error(fallbackMessage);

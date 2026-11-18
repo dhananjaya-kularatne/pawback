@@ -1,3 +1,5 @@
+import AuthFieldError from "./AuthFieldError";
+import { PASSWORD_HINT, meetsPasswordPolicy } from "../../utils/passwordPolicy";
 import { useState } from "react";
 import { User, Mail, Lock, Phone, ArrowRight } from "lucide-react";
 import { registerUser } from "../../api/authApi";
@@ -14,6 +16,7 @@ export default function RegisterModal({ onClose, onSuccess, onSwitchToLogin }) {
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [fieldErrors, setFieldErrors] = useState({});
   const [error, setError] = useState("");
   const [passwordError, setPasswordError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -21,6 +24,7 @@ export default function RegisterModal({ onClose, onSuccess, onSwitchToLogin }) {
   async function handleSubmit(e) {
     e.preventDefault();
     setError("");
+    setFieldErrors({});
     setPasswordError("");
 
     // Client-side check — don't hit the API if passwords don't match
@@ -29,12 +33,14 @@ export default function RegisterModal({ onClose, onSuccess, onSwitchToLogin }) {
       return;
     }
 
+    if (!meetsPasswordPolicy(password)) { setFieldErrors({ password: PASSWORD_HINT }); return; }
     setLoading(true);
     try {
       const data = await registerUser({ name, email, phone, password });
       saveSession(data);
       onSuccess();
     } catch (err) {
+      setFieldErrors(err.fieldErrors || {});
       setError(err.message || "Registration failed. Please try again.");
     } finally {
       setLoading(false);
@@ -76,6 +82,8 @@ export default function RegisterModal({ onClose, onSuccess, onSwitchToLogin }) {
             </div>
             <input
               id="reg-name"
+              aria-invalid={!!fieldErrors.name}
+              aria-describedby="reg-name-error"
               type="text"
               required
               placeholder="Jane Doe"
@@ -85,6 +93,7 @@ export default function RegisterModal({ onClose, onSuccess, onSwitchToLogin }) {
                          focus:outline-none focus:ring-2 focus:ring-blue-700 transition-shadow text-gray-900"
             />
           </div>
+          <AuthFieldError id="reg-name-error" message={fieldErrors.name} />
         </div>
 
         {/* Email */}
@@ -96,6 +105,8 @@ export default function RegisterModal({ onClose, onSuccess, onSwitchToLogin }) {
             </div>
             <input
               id="reg-email"
+              aria-invalid={!!fieldErrors.email}
+              aria-describedby="reg-email-error"
               type="email"
               required
               placeholder="jane@example.com"
@@ -105,6 +116,7 @@ export default function RegisterModal({ onClose, onSuccess, onSwitchToLogin }) {
                          focus:outline-none focus:ring-2 focus:ring-blue-700 transition-shadow text-gray-900"
             />
           </div>
+          <AuthFieldError id="reg-email-error" message={fieldErrors.email} />
         </div>
 
         {/* Phone */}
@@ -118,6 +130,8 @@ export default function RegisterModal({ onClose, onSuccess, onSwitchToLogin }) {
             </div>
             <input
               id="reg-phone"
+              aria-invalid={!!fieldErrors.phone}
+              aria-describedby="reg-phone-error"
               type="tel"
               placeholder="+1 (555) 000-0000"
               value={phone}
@@ -126,6 +140,7 @@ export default function RegisterModal({ onClose, onSuccess, onSwitchToLogin }) {
                          focus:outline-none focus:ring-2 focus:ring-blue-700 transition-shadow text-gray-900"
             />
           </div>
+          <AuthFieldError id="reg-phone-error" message={fieldErrors.phone} />
         </div>
 
         {/* Password */}
@@ -137,6 +152,8 @@ export default function RegisterModal({ onClose, onSuccess, onSwitchToLogin }) {
             </div>
             <input
               id="reg-password"
+              aria-invalid={!!fieldErrors.password}
+              aria-describedby="reg-password-error reg-password-hint"
               type="password"
               required
               minLength={8}
@@ -147,8 +164,11 @@ export default function RegisterModal({ onClose, onSuccess, onSwitchToLogin }) {
                          focus:outline-none focus:ring-2 focus:ring-blue-700 transition-shadow text-gray-900"
             />
           </div>
+          <AuthFieldError id="reg-password-error" message={fieldErrors.password} />
         </div>
 
+
+        <p id="reg-password-hint" className="text-xs text-gray-500">{PASSWORD_HINT}</p>
         {/* Confirm Password */}
         <div>
           <label htmlFor="reg-confirm" className="block text-xs font-medium text-gray-700 mb-1">Confirm Password</label>
