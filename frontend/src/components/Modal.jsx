@@ -28,8 +28,8 @@ export default function Modal({ children, onClose, titleId, busy = false, classN
         const box = event.currentTarget.getBoundingClientRect();
         if (event.clientX < box.left || event.clientX > box.right || event.clientY < box.top || event.clientY > box.bottom) onClose();
       }}
-      className={`m-auto w-[calc(100%_-_2rem)] max-h-[90dvh] overflow-y-auto rounded-2xl bg-white p-0 shadow-2xl backdrop:bg-black/50 ${className}`}>
-      {children}
+      className={`m-auto w-[calc(100%_-_2rem)] max-h-[90dvh] overflow-hidden rounded-2xl bg-white p-0 shadow-2xl backdrop:bg-black/50 ${className}`}>
+      <div className="modal-scroll">{children}</div>
     </dialog>
   );
 }
