@@ -7,7 +7,7 @@ import java.time.Instant;
 
 // Represents a single report submitted by a finder after scanning a Lost pet's QR code
 @Entity
-@Table(name = "scan_reports")
+@Table(name = "scan_reports", indexes = @Index(name = "idx_report_history", columnList = "pet_id,created_at,id"))
 @Getter
 @Setter
 @NoArgsConstructor

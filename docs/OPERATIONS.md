@@ -1,17 +1,16 @@
 # Local database and recovery
 
-Deployment preparation is deferred. These instructions cover the database migrations and recovery behavior required by the application.
+Deployment preparation is deferred. These instructions cover Hibernate schema updates and recovery behavior.
 
 Default request threads/pool sizes remain 20/30 so asset staging transactions have spare DB connections. If tuning these, retain at least three pool connections beyond request threads and account for scheduled work.
 
-## Existing database upgrade
+## Database schema
 
-1. Stop application writes and take a verified backup. Confirm DB_URL points to the intended schema. Record user/pet/report counts and representative pet UUIDs.
-2. For a Hibernate-era schema without Flyway history, set `FLYWAY_BASELINE_ON_MIGRATE=true` for the first migrated start only. The baseline version is deliberately **0**, allowing V1's create-if-missing statements and the additive V2/V3 changes to run. Do not baseline an unrelated schema.
-3. Start the new backend. Flyway applies migrations, then Hibernate validates mapped columns. Confirm `flyway_schema_history` has successful migrations and compare the recorded counts/UUIDs.
-4. Unset the baseline flag. Subsequent starts use recorded history and checksum validation. Keep Hibernate schema validation enabled.
+The backend uses `spring.jpa.hibernate.ddl-auto=update`. JPA entities describe every application table, including counters, asset cleanup, and queued mail. Hibernate creates missing tables/columns when the application starts; there is no migration history or baseline command to configure.
 
-Migrations use Spring Boot's [Flyway integration](https://docs.spring.io/spring-boot/how-to/data-initialization.html), including MySQL support. MySQL DDL may not roll back as a transaction: if a migration fails, stop and inspect it against the backup; do not blindly repair history or drop tables. Revert application code only when it is compatible with the migrated schema, otherwise restore the tested backup.
+Back up existing data before starting changed mappings. Check the startup output for DDL failures, especially conflicting provider identity constraints. Do not delete account records or tables to make an update pass. Existing provider-identity conflicts require account review. Old reset codes from the earlier policy are rejected; request a new code.
+
+After removing the migration dependency, run `./mvnw.cmd clean spring-boot:run` once from `backend` to clear stale compiled files. Subsequent starts can use the normal `./mvnw.cmd spring-boot:run` command.
 
 ## Initial administrator
 
@@ -33,7 +32,7 @@ mysqldump --user=pawback_backup --password --single-transaction --routines --tri
 mysql --user=pawback_restore --password pawback_restore
 ```
 
-In the restore session, use `SOURCE /absolute/path/pawback-backup.sql;`. Restore into a **new isolated schema**, not over the only live copy. Point a disposable backend at it, allow Flyway to validate/apply pending migrations, then compare row counts, binary pet UUIDs, owner access, reports, and soft-deleted visibility. Keep provider credentials disabled/mocked during restore drills so queued jobs cannot remove real cloud assets or send mail. Only switch live traffic after these checks pass. Define and operate backup retention separately from app deletion.
+In the restore session, use `SOURCE /absolute/path/pawback-backup.sql;`. Restore into a **new isolated schema**, not over the only live copy. Point a disposable backend at it, allow Hibernate to update the schema, then compare row counts, binary pet UUIDs, owner access, reports, and soft-deleted visibility. Keep provider credentials disabled/mocked during restore drills so queued jobs cannot remove real cloud assets or send mail. Only switch live traffic after these checks pass. Define and operate backup retention separately from app deletion.
 
 ## Asset recovery and removal
 

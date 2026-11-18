@@ -5,7 +5,7 @@ Backend unit tests and CI are excluded from the agreed scope. This checklist cov
 ## Application checks
 
 - Build the backend with Java 21 and skipped tests; clean-install, lint, and build the frontend.
-- Verify fresh and legacy-schema migrations and an isolated backup/restore drill.
+- Verify Hibernate startup against fresh and existing schemas, and an isolated backup/restore drill.
 - Sign in/out, refresh a valid session, leave it open until expiry, disable a disposable account, and distinguish 401 from role/ownership 403 responses.
 - Register/edit a pet; reject empty, spoofed, oversized, and over-dimension images; validate text and coordinate limits.
 - Simulate photo/QR/provider/DB failures. Confirm no partial pet or duplicate successful retry, durable cleanup, retry after deletion failure, and protection of referenced assets.
