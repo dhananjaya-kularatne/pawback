@@ -19,4 +19,4 @@ Backend unit tests and CI are excluded from the agreed scope. This checklist cov
 
 The original backend authentication/email audit items are addressed by PAW-55 through PAW-59: server-side OAuth state, verified provider identities, safe failure redirects, browser-bound one-use exchange codes, shared request/verification limits, reset token-version revocation, escaped email content, and encrypted persistent delivery jobs. The frontend callback and field-feedback checks are complete. See [AUTHENTICATION.md](AUTHENTICATION.md) for behavior, local configuration, and limitations.
 
-Live Google consent, verified-sender delivery, and physical phone scanning remain unverified. Deployment work will be planned separately.
+A live Google sign-in with another eligible account reached the dashboard on 18 November 2026, confirmed during the guided check. Inbox delivery and physical phone scanning still require their own confirmation. Deployment work will be planned separately.

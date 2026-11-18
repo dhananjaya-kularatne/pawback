@@ -14,7 +14,7 @@ Use the same hostname consistently for local browser/API callbacks, such as loca
 
 ## Passwords and reset codes
 
-Registration and reset require eight or more characters, an uppercase letter, a number, and one of `!@#$%^&*(),.?":{}|<>`. Forms show the same policy and retain backend field errors next to inputs.
+Registration and reset require eight or more characters, an uppercase letter, a number, and one of `!@#$%^&*(),.?":{}|<>`. New passwords must also fit within 72 UTF-8 bytes; multibyte characters can use more than one byte. Both forms show the limit and reject oversized values without truncating the password. Registration name, email, and optional phone fields are limited to 255 characters to match storage. Forms retain backend field errors next to inputs.
 
 Login defaults to ten attempts per client and per account in fifteen minutes. Configurable login limits use the existing `LOGIN_RATE_LIMIT_MAX_ATTEMPTS` and `LOGIN_RATE_LIMIT_WINDOW_MINUTES` values. Password-reset requests allow five per client in fifteen minutes, three per account per hour, and one actual resend per minute. Unknown/ineligible accounts and account cooldowns use the same generic request response. Excessive client attempts return 429 with Retry-After.
 

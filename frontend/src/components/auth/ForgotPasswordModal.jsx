@@ -1,5 +1,5 @@
 import AuthFieldError from "./AuthFieldError";
-import { PASSWORD_HINT, meetsPasswordPolicy } from "../../utils/passwordPolicy";
+import { PASSWORD_HINT, getPasswordError } from "../../utils/passwordPolicy";
 import { useState } from "react";
 import { Mail, Lock, ShieldCheck, ArrowRight } from "lucide-react";
 import { forgotPassword, verifyOtp, resetPassword } from "../../api/authApi";
@@ -77,7 +77,8 @@ export default function ForgotPasswordModal({ onClose, onSwitchToLogin }) {
   async function handleReset(e) {
     e.preventDefault();
     reset();
-    if (!meetsPasswordPolicy(newPassword)) { setFieldErrors({ newPassword: PASSWORD_HINT }); return; }
+    const policyError = getPasswordError(newPassword);
+    if (policyError) { setFieldErrors({ newPassword: policyError }); return; }
     if (newPassword !== confirmPassword) {
       setError("Passwords do not match.");
       return;

@@ -5,6 +5,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
+import com.pawback.pawback.validation.Utf8ByteLength;
 
 @Data
 public class ResetPasswordRequest {
@@ -21,5 +22,6 @@ public class ResetPasswordRequest {
     @Size(min = 8, message = "Password must be at least 8 characters")
     @Pattern(regexp = "^(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*(),.?\":{}|<>]).{8,}$",
             message = "Password must contain at least one uppercase letter, one number, and one special character")
+    @Utf8ByteLength(max = 72, message = "Password must not exceed 72 UTF-8 bytes")
     private String newPassword;
 }
