@@ -26,7 +26,7 @@ Password reset increments the account token version. Previously issued JWTs stop
 
 ## Mail queue
 
-Set `BREVO_API_KEY`, `BREVO_SENDER_EMAIL`, and optionally `BREVO_SENDER_NAME` in the backend process environment. A configured API key requires a sender; `app.mail.required=true` also refuses startup without complete mail configuration. The sender still needs provider verification. With no key, jobs remain pending until configured or expired; emails are not simulated and OTPs are never logged.
+Set `PAWBACK_BREVO_API_KEY`, `PAWBACK_BREVO_SENDER_EMAIL`, and optionally `PAWBACK_BREVO_SENDER_NAME` in the backend process environment. A configured API key requires a sender; `app.mail.required=true` also refuses startup without complete mail configuration. These project-specific names leave another project's BREVO_API_KEY untouched. Save them as Windows User environment variables and reopen the IDE/terminal; the normal Maven command needs no extra loader. The sender still needs provider verification. With no key, jobs remain pending until configured or expired; emails are not simulated and OTPs are never logged.
 
 Reset/report transactions write an outbox row with an AES-GCM encrypted body. Provider calls happen outside those transactions after an atomic 60-second delivery lease. Worker failures are recorded and retried with bounded backoff, up to ten attempts. Crashed leases can be reclaimed. Report jobs expire after seven days; reset jobs expire after ten minutes. Sensitive bodies are erased after acceptance, expiry, invalidation, or terminal failure. Terminal metadata is removed after thirty days. Deleted reports and disabled owners do not receive pending report jobs.
 

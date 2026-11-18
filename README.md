@@ -6,7 +6,7 @@ Pet profiles, printable QR tags, finder reports, and an owner/admin dashboard.
 
 Use Java 21, Node 22.17 or newer, npm, and MySQL 8.0 or newer. The Maven wrapper is included. Dependencies require internet access on the first install.
 
-Set the backend process environment using the names in [backend/.env.example](backend/.env.example). **Spring does not automatically load that file.** Use your IDE's environment configuration or export the variables in the terminal that starts Java. Required local values are `DB_PASSWORD`, `JWT_SECRET`, the three `CLOUDINARY_*` values, and `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`. Use a private database account; `DB_URL` and `DB_USERNAME` override the local defaults. Do not commit real secrets.
+The backend settings are in [application.properties](backend/src/main/resources/application.properties). Save the values under Windows User environment variables, then fully reopen your IDE/terminal. Run the normal Maven command below; no dotenv loader or custom launcher is needed. Required local values are `DB_PASSWORD`, `JWT_SECRET`, the three `CLOUDINARY_*` values, and `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`. Use a private database account; `DB_URL` and `DB_USERNAME` override the local defaults. Do not commit real secrets.
 
 Generate a random JWT secret rather than using a memorable password. For example, in PowerShell:
 
@@ -43,7 +43,7 @@ Schema changes now use Flyway, and Hibernate validates the result. A new empty d
 
 - Google: configure authorized JavaScript origin `http://localhost:5173` and redirect URI `http://localhost:8080/login/oauth2/code/google` for local development.
 - Cloudinary: supply the cloud name/API key/API secret. New uploads have tracked public IDs. Recovery jobs remove unused images and retry provider failures.
-- Email: set `BREVO_API_KEY`, `BREVO_SENDER_EMAIL`, and optionally `BREVO_SENDER_NAME`. The sender must be verified with the provider. Without a key, encrypted email jobs remain pending until configured or expired; OTPs are never logged. Live delivery has not been verified.
+- Email: set `PAWBACK_BREVO_API_KEY`, `PAWBACK_BREVO_SENDER_EMAIL`, and optionally `PAWBACK_BREVO_SENDER_NAME`. The sender must be verified with the provider. Without a key, encrypted email jobs remain pending until configured or expired; OTPs are never logged. Live delivery has not been verified.
 
 ## Build and verify
 
