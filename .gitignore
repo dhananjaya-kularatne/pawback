@@ -1,6 +1,8 @@
 .browser-review/
 .verification/
 backups/
+/docs/
+/PROJECT_AUDIT.md
 **/.env
 **/.env.*
 !**/.env.example

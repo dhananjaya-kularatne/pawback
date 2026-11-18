@@ -49,6 +49,7 @@ public class OwnerReportService {
         return ScanReportResponse.builder()
                 .id(report.getId())
                 .message(report.getMessage())
+                .finderPhone(report.getFinderPhone())
                 .photoUrl(report.getPhotoUrl())
                 .latitude(report.getLatitude())
                 .longitude(report.getLongitude())

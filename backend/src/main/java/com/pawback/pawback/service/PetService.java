@@ -16,7 +16,6 @@ import com.pawback.pawback.model.ScanReport;
 import com.pawback.pawback.model.User;
 import com.pawback.pawback.repository.PetRepository;
 import com.pawback.pawback.repository.ScanReportRepository;
-import com.pawback.pawback.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 
 
@@ -34,7 +33,6 @@ import org.springframework.transaction.annotation.Transactional;
 public class PetService {
 
     private final PetRepository petRepository;
-    private final UserRepository userRepository;
     private final CloudinaryService cloudinaryService;
     private final QrCodeService qrCodeService;
     private final ScanReportRepository scanReportRepository; 
@@ -49,8 +47,11 @@ public class PetService {
 
         Long ownerId = getCurrentOwnerId();
 
-        User owner = userRepository.findById(ownerId)
-                .orElseThrow(() -> new ResourceNotFoundException("Owner not found"));
+        // A locking read before the first snapshot read serializes this owner's
+        // registrations. A concurrent retry then sees the committed creation key
+        // before starting any cloud uploads, including under MySQL REPEATABLE READ.
+        User owner = entityManager.find(User.class, ownerId, jakarta.persistence.LockModeType.PESSIMISTIC_WRITE);
+        if (owner == null) throw new ResourceNotFoundException("Owner not found");
 
         imageValidation.validate(image);
         String creationKey = idempotencyKey == null ? null : hash(ownerId + ":" + validateKey(idempotencyKey));
@@ -82,14 +83,7 @@ public class PetService {
         UploadedAsset qr = qrCodeService.generateAndUploadQrCode(pet.getPetUuid().toString());
         pet.setQrCodeUrl(qr.url());
         pet.setQrCodePublicId(qr.publicId());
-        Pet savedPet;
-        try { savedPet = petRepository.saveAndFlush(pet); }
-        catch (org.springframework.dao.DataIntegrityViolationException exception) {
-            if (creationKey != null && String.valueOf(exception.getMostSpecificCause().getMessage()).contains("creation_key")) {
-                throw new ConflictException("Registration was already submitted. Retry the same request to retrieve it.");
-            }
-            throw exception;
-        }
+        Pet savedPet = petRepository.saveAndFlush(pet);
         assetCleanup.attach(photo);
         assetCleanup.attach(qr);
 
@@ -210,14 +204,15 @@ public class PetService {
         String requestHash;
         try {
             requestHash = hashFields(photo == null ? new byte[0] : photo.getBytes(), request.getMessage(),
-                    String.valueOf(request.getLatitude()), String.valueOf(request.getLongitude()));
+                    String.valueOf(request.getLatitude()), String.valueOf(request.getLongitude()),
+                    normalizedPhone(request.getFinderPhone()));
         } catch (java.io.IOException exception) { throw new IllegalStateException(exception); }
         if (submissionKey != null) {
             var previous = scanReportRepository.findBySubmissionKey(submissionKey);
             if (previous.isPresent()) {
                 if (!requestHash.equals(previous.get().getRequestHash())) throw new ConflictException("This report was already submitted with different details.");
                 ScanReport existing = previous.get();
-                return ScanReportResponse.builder().id(existing.getId()).message(existing.getMessage()).photoUrl(existing.getPhotoUrl())
+                return ScanReportResponse.builder().id(existing.getId()).message(existing.getMessage()).finderPhone(existing.getFinderPhone()).photoUrl(existing.getPhotoUrl())
                         .latitude(existing.getLatitude()).longitude(existing.getLongitude()).createdAt(existing.getCreatedAt()).build();
             }
         }
@@ -229,6 +224,7 @@ public class PetService {
 
         ScanReport report = ScanReport.builder()
                 .message(request.getMessage())
+                .finderPhone(normalizedPhone(request.getFinderPhone()))
                 .photoUrl(photoAsset == null ? null : photoAsset.url())
                 .photoPublicId(photoAsset == null ? null : photoAsset.publicId())
                 .latitude(request.getLatitude())
@@ -249,6 +245,7 @@ public class PetService {
         return ScanReportResponse.builder()
                 .id(savedReport.getId())
                 .message(savedReport.getMessage())
+                .finderPhone(savedReport.getFinderPhone())
                 .photoUrl(savedReport.getPhotoUrl())
                 .latitude(savedReport.getLatitude())
                 .longitude(savedReport.getLongitude())
@@ -309,6 +306,10 @@ public class PetService {
         pet.setQrCodePublicId(qr.publicId()); pet.setQrCodeUrl(qr.url());
         assetCleanup.attach(qr);
         return mapToResponse(petRepository.saveAndFlush(pet));
+    }
+
+    private String normalizedPhone(String phone) {
+        return phone == null || phone.isBlank() ? null : phone.trim();
     }
 
     private String validateKey(String key) {

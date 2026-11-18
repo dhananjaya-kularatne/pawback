@@ -54,10 +54,18 @@ public class EmailService {
         var row=jdbc.queryForMap("SELECT * FROM mail_outbox WHERE id=? AND lock_token=?",id,lease);
         int attempts=((Number)row.get("attempts")).intValue();
         try{
-            if("REPORT".equals(row.get("kind")) && jdbc.queryForObject("SELECT COUNT(*) FROM scan_reports r JOIN pets p ON p.id=r.pet_id JOIN users u ON u.id=p.owner_id WHERE r.id=? AND p.deleted_at IS NULL AND u.enabled=1",Integer.class,row.get("report_id"))==0){
-                jdbc.update("UPDATE mail_outbox SET status='DEAD',payload=NULL,last_error='Report unavailable' WHERE id=? AND lock_token=?",id,lease);return;
+            String html;
+            if("REPORT".equals(row.get("kind"))){
+                var names=jdbc.queryForList("SELECT p.name FROM scan_reports r JOIN pets p ON p.id=r.pet_id JOIN users u ON u.id=p.owner_id WHERE r.id=? AND p.deleted_at IS NULL AND u.enabled=1",String.class,row.get("report_id"));
+                if(names.isEmpty()){
+                    jdbc.update("UPDATE mail_outbox SET status='DEAD',payload=NULL,last_error='Report unavailable' WHERE id=? AND lock_token=?",id,lease);return;
+                }
+                // Rebuild queued report notices so older payloads cannot send finder details.
+                html=formatting.buildReportNotificationHtml(names.getFirst());
+            }else{
+                html=cipher.decrypt((String)row.get("payload"));
             }
-            transport.send((String)row.get("recipient"),(String)row.get("subject"),cipher.decrypt((String)row.get("payload")),"pawback-"+id);
+            transport.send((String)row.get("recipient"),(String)row.get("subject"),html,"pawback-"+id);
             jdbc.update("UPDATE mail_outbox SET status='DELIVERED',payload=NULL,locked_until=NULL,lock_token=NULL,last_error=NULL WHERE id=? AND lock_token=?",id,lease);
         }catch(Exception exception){
             int delay=Math.min(21600,30*(1<<Math.min(attempts,10)));
