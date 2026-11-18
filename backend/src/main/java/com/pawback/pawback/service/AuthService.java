@@ -98,7 +98,7 @@ public class AuthService {
         if(!limiter.tryConsume("reset-request-account",email,3,60) || !limiter.tryConsume("reset-cooldown",email,1,1)) return;
         userRepository.findForReset(email).filter(u->u.isEnabled() && u.getProvider()==AuthProvider.LOCAL).ifPresent(user->{
             String otp=String.format("%06d",secureRandom.nextInt(1000000));
-            user.setResetOtpHash(passwordEncoder.encode(otp));
+            user.setResetOtpHash("v1:"+passwordEncoder.encode(otp));
             user.setResetOtpExpiry(LocalDateTime.now(java.time.ZoneOffset.UTC).plusMinutes(10));
             user.setResetOtpAttempts(0);
             userRepository.save(user);
@@ -125,11 +125,11 @@ public class AuthService {
     }
     private User verifyCode(String email,String otp){
         User user=userRepository.findForReset(normalize(email)).orElseThrow(this::invalidCode);
-        if(!user.isEnabled() || user.getProvider()!=AuthProvider.LOCAL || user.getResetOtpHash()==null || user.getResetOtpExpiry()==null
+        if(!user.isEnabled() || user.getProvider()!=AuthProvider.LOCAL || user.getResetOtpHash()==null || !user.getResetOtpHash().startsWith("v1:") || user.getResetOtpExpiry()==null
                 || !user.getResetOtpExpiry().isAfter(LocalDateTime.now(java.time.ZoneOffset.UTC)) || user.getResetOtpAttempts()>=5){
             user.setResetOtpHash(null);user.setResetOtpExpiry(null);emailService.cancelPasswordReset(user.getEmail());userRepository.saveAndFlush(user);throw invalidCode();
         }
-        if(!passwordEncoder.matches(otp,user.getResetOtpHash())){
+        if(!passwordEncoder.matches(otp,user.getResetOtpHash().substring(3))){
             user.setResetOtpAttempts(user.getResetOtpAttempts()+1);
             if(user.getResetOtpAttempts()>=5){user.setResetOtpHash(null);user.setResetOtpExpiry(null);emailService.cancelPasswordReset(user.getEmail());}
             userRepository.saveAndFlush(user);throw invalidCode();

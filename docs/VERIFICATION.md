@@ -1,5 +1,7 @@
 # Completion verification
 
+Historical migration checks below describe earlier snapshots. PAW-61 removes Flyway and restores Hibernate schema updates; they are not startup instructions for the current code.
+
 Executed locally on 17 November 2026 against the completed PAW-49 through PAW-53 branch chain.
 
 | Check | Result |
@@ -26,3 +28,7 @@ Executed locally on 17 November 2026:
 - 24 headless Chrome checks passed against the actual frontend with fixture API responses: owner/admin callback completion, single exchange under React effects, immediate query removal, disabled/invalid/expired callback recovery, complete password policy, inline field feedback, narrow layouts, and absence of runtime errors. A 320px registration screenshot was visually reviewed.
 
 The temporary schema was removed. No live Google/Cloudinary/mail-provider calls were made. Temporary tooling, scripts, fixtures, screenshots, and logs are excluded from commits. New commit author and committer identities were verified as OnelDJ <oneldesilva868@gmail.com>; GitHub publishing uses the matching connector. Backend unit tests, CI, and deployment setup remain excluded.
+
+## Hibernate schema follow-up - PAW-61
+
+Flyway dependencies, settings, and all migration source files were removed. Hibernate uses `ddl-auto=update` and has entity mappings for counters and the mail outbox as well as the existing business tables. Backend packaging passed with tests skipped. Thirty-five temporary manual runtime checks passed against a fresh MySQL schema and a disposable legacy-schema fixture, including a repeated startup. Checks confirmed all required tables/defaults/indexes, preserved accounts/pet UUIDs/reports, no Flyway history or runtime library, working client/report budget SQL, mail outbox inserts, web/security startup, old-code rejection, new-code verification, and reset JWT revocation. Both disposable schemas were removed; the actual PawBack database was not changed and no external provider calls were made.

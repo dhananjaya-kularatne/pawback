@@ -41,12 +41,12 @@ FROM mail_outbox ORDER BY id DESC LIMIT 50;
 
 Keep the JWT secret stable while queued mail exists: it also derives the outbox encryption key. A key change invalidates JWTs and prevents decryption of earlier queued bodies. Do not log or copy decrypted OTPs during troubleshooting. Report text and pet names are HTML-escaped, and photo URLs are escaped HTTPS attributes.
 
-## Database transition
+## Database schema
 
-V4 adds reset attempt counts and JWT versions; V5 adds the mail outbox. V6 invalidates earlier reset codes and adds provider-identity uniqueness. Existing accounts, pets, and reports remain. If old Google records have duplicate provider identities, V6 intentionally refuses the conflicting data; review those accounts rather than deleting or silently linking them. Never edit an already applied migration.
+Hibernate updates mapped tables and columns during startup. Account versions and reset attempt counts have zero defaults for existing accounts; the mail queue and shared counters also have JPA schema mappings. Provider identities have a unique constraint. Existing account, pet, and report data is retained. Codes from the earlier reset policy are rejected on verification without a bulk data rewrite; request a new code.
 
 ## Verification boundary
 
-The disposable manual integration run covers database migrations, OAuth state/code handling, account identity policies, concurrent budgets/resets, JWT revocation, escaped/encrypted mail, outbox rollback, failure/retry, lease recovery, and expiry. Browser checks use fixture API responses for owner/admin callbacks, safe error paths, password policy, field feedback, and narrow screens. Actual Google consent and live mail delivery still require provider credentials and a verified sender. Backend unit tests, CI, and deployment configuration were not added.
+The disposable manual integration run covers database schema updates, OAuth state/code handling, account identity policies, concurrent budgets/resets, JWT revocation, escaped/encrypted mail, outbox rollback, failure/retry, lease recovery, and expiry. Browser checks use fixture API responses for owner/admin callbacks, safe error paths, password policy, field feedback, and narrow screens. Actual Google consent and live mail delivery still require provider credentials and a verified sender. Backend unit tests, CI, and deployment configuration were not added.
 
 Implementation references: [Spring authorization request storage](https://docs.spring.io/spring-security/reference/servlet/oauth2/client/authorization-grants.html) and [Brevo transactional email API](https://developers.brevo.com/reference/send-transac-email).

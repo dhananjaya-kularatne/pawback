@@ -35,9 +35,11 @@ npm run dev
 
 Open `http://localhost:5173`. The API defaults to `http://localhost:8080/api`. `VITE_API_BASE_URL` is a **build-time** frontend setting; rebuild after changing it. The development and build commands use Vite's native config loader.
 
-## Existing databases
+## Database setup
 
-Schema changes now use Flyway, and Hibernate validates the result. A new empty database is migrated automatically. A pre-existing Hibernate-era database intentionally refuses an implicit baseline: back it up, check the target URL/schema, and follow [the upgrade instructions](docs/OPERATIONS.md#existing-database-upgrade) before setting `FLYWAY_BASELINE_ON_MIGRATE=true` for its first migrated start. Do not edit an already-applied migration.
+The project uses Hibernate schema updates through `spring.jpa.hibernate.ddl-auto=update` in `application.properties`. Start MySQL, set the database environment variables, and run the normal Maven command. Hibernate creates missing mapped tables/columns, including the report counters and mail queue. Existing account fields receive zero defaults where needed.
+
+Back up an existing database before running changed entity mappings. If startup reports a schema-update error, inspect that error rather than deleting the database. Database recovery guidance is in [OPERATIONS.md](docs/OPERATIONS.md).
 
 ## Provider setup
 
