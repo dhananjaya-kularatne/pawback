@@ -1,109 +1,63 @@
 package com.pawback.pawback.service;
-
 import com.pawback.pawback.model.ScanReport;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.transaction.annotation.*;
+import java.util.*;
 
-import java.util.List;
-import java.util.Map;
-
-@Service
-@Slf4j
+/** Outbox writes join the business transaction. Provider calls happen only after an atomic committed lease. */
+@Service @RequiredArgsConstructor @Slf4j
 public class EmailService {
-
-    private final String brevoApiKey;
-    private final String senderEmail;
-    private final String senderName;
-    private final RestTemplate restTemplate;
-    private final NotificationFormattingService notificationFormattingService;
-
-    public EmailService(
-            @Value("${brevo.api.key:}") String brevoApiKey,
-            @Value("${brevo.sender.email:support@pawback.com}") String senderEmail,
-            @Value("${brevo.sender.name:PawBack Support}") String senderName,
-            NotificationFormattingService notificationFormattingService) {
-        this.brevoApiKey = brevoApiKey;
-        this.senderEmail = senderEmail;
-        this.senderName = senderName;
-        this.restTemplate = new RestTemplate();
-        this.notificationFormattingService = notificationFormattingService;
+    private final JdbcTemplate jdbc;
+    private final MailPayloadCipher cipher;
+    private final MailTransport transport;
+    private final NotificationFormattingService formatting;
+    @Transactional(propagation=Propagation.MANDATORY)
+    public void sendPasswordResetOtp(String recipient,String otp){
+        enqueue("otp:"+UUID.randomUUID(),recipient,"Your PawBack Password Reset Code",
+                "<html><body><h2>Password reset</h2><p>Your verification code is <strong>"+org.springframework.web.util.HtmlUtils.htmlEscape(otp)+"</strong>.</p><p>It expires in ten minutes. Ignore this email if you did not request it.</p></body></html>","OTP",null,600);
     }
-
-    public void sendPasswordResetOtp(String toEmail, String otp) {
-        if (brevoApiKey == null || brevoApiKey.isBlank()) {
-            log.warn("BREVO_API_KEY is not set. Simulating email sending. OTP for {}: {}", toEmail, otp);
-            return;
-        }
-
-        String url = "https://api.brevo.com/v3/smtp/email";
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.set("api-key", brevoApiKey);
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.setAccept(List.of(MediaType.APPLICATION_JSON));
-
-        // Constructing the payload
-        Map<String, Object> body = Map.of(
-                "sender", Map.of("name", senderName, "email", senderEmail),
-                "to", List.of(Map.of("email", toEmail)),
-                "subject", "Your PawBack Password Reset Code",
-                "htmlContent", "<html><body>" +
-                        "<h2>Password Reset Request</h2>" +
-                        "<p>Your 6-digit verification code is: <strong style='font-size: 1.5em;'>" + otp + "</strong></p>" +
-                        "<p>This code will expire in 10 minutes. If you did not request a password reset, please ignore this email.</p>" +
-                        "</body></html>"
-        );
-
-        HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
-
-        try {
-            restTemplate.exchange(url, HttpMethod.POST, request, String.class);
-            log.info("Password reset OTP sent successfully to {}", toEmail);
-        } catch (Exception e) {
-            log.error("Failed to send password reset OTP to {}", toEmail, e);
-            // We log the error but don't necessarily want to leak it to the client
-            // as it could break the generic "If this email is registered, we sent an OTP" response.
-        }
+    @Transactional(propagation=Propagation.MANDATORY)
+    public void sendReportNotification(String recipient,ScanReport report){
+        enqueue("report:"+report.getId(),recipient,formatting.buildReportNotificationSubject(report.getPet().getName()),formatting.buildReportNotificationHtml(report),"REPORT",report.getId(),604800);
     }
-
-    @org.springframework.scheduling.annotation.Async
-    public void sendReportNotification(String toEmail, ScanReport report) {
-        String petName = report.getPet().getName();
-
-        if (brevoApiKey == null || brevoApiKey.isBlank()) {
-            log.warn("BREVO_API_KEY is not set. Simulating email sending. Report notification for {}'s owner: {}", petName, toEmail);
-            return;
-        }
-
-        String url = "https://api.brevo.com/v3/smtp/email";
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.set("api-key", brevoApiKey);
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.setAccept(List.of(MediaType.APPLICATION_JSON));
-
-        // Constructing the payload
-        Map<String, Object> body = Map.of(
-                "sender", Map.of("name", senderName, "email", senderEmail),
-                "to", List.of(Map.of("email", toEmail)),
-                "subject", notificationFormattingService.buildReportNotificationSubject(petName),
-                "htmlContent", notificationFormattingService.buildReportNotificationHtml(report)
-        );
-
-        HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
-
-        try {
-            restTemplate.exchange(url, HttpMethod.POST, request, String.class);
-            log.info("Report notification email sent successfully to {}", toEmail);
-        } catch (Exception e) {
-            // Catch all exceptions so the async thread doesn't crash and the caller isn't affected
-            log.error("Failed to send report notification email to {}", toEmail, e);
+    private void enqueue(String event,String recipient,String subject,String html,String kind,Long reportId,int ttl){
+        jdbc.update("""
+            INSERT IGNORE INTO mail_outbox(event_key,recipient,subject,payload,kind,report_id,status,next_attempt_at,expires_at,created_at)
+            VALUES(?,?,?,?,?,?,'PENDING',UTC_TIMESTAMP(6),TIMESTAMPADD(SECOND,?,UTC_TIMESTAMP(6)),UTC_TIMESTAMP(6))
+            """,event,recipient,subject,cipher.encrypt(html),kind,reportId,ttl);
+    }
+    @Scheduled(fixedDelayString="${app.mail.interval-ms:30000}")
+    public void deliverDue(){
+        jdbc.update("UPDATE mail_outbox SET status='DEAD',payload=NULL,last_error='Expired' WHERE status IN ('PENDING','SENDING') AND expires_at<=UTC_TIMESTAMP(6)");
+        jdbc.update("DELETE FROM mail_outbox WHERE status IN ('DELIVERED','DEAD') AND created_at<TIMESTAMPADD(DAY,-30,UTC_TIMESTAMP(6))");
+        if(!transport.configured()) return;
+        var ids=jdbc.queryForList("SELECT id FROM mail_outbox WHERE (status='PENDING' AND next_attempt_at<=UTC_TIMESTAMP(6)) OR (status='SENDING' AND locked_until<UTC_TIMESTAMP(6)) ORDER BY id LIMIT 20",Long.class);
+        for(Long id:ids) deliver(id);
+    }
+    public void deliver(Long id){
+        String lease=UUID.randomUUID().toString();
+        int claimed=jdbc.update("""
+            UPDATE mail_outbox SET status='SENDING',lock_token=?,locked_until=TIMESTAMPADD(SECOND,60,UTC_TIMESTAMP(6)),attempts=attempts+1
+            WHERE id=? AND expires_at>UTC_TIMESTAMP(6) AND ((status='PENDING' AND next_attempt_at<=UTC_TIMESTAMP(6)) OR (status='SENDING' AND locked_until<UTC_TIMESTAMP(6)))
+            """,lease,id);
+        if(claimed==0)return;
+        var row=jdbc.queryForMap("SELECT * FROM mail_outbox WHERE id=? AND lock_token=?",id,lease);
+        int attempts=((Number)row.get("attempts")).intValue();
+        try{
+            if("REPORT".equals(row.get("kind")) && jdbc.queryForObject("SELECT COUNT(*) FROM scan_reports r JOIN pets p ON p.id=r.pet_id JOIN users u ON u.id=p.owner_id WHERE r.id=? AND p.deleted_at IS NULL AND u.enabled=1",Integer.class,row.get("report_id"))==0){
+                jdbc.update("UPDATE mail_outbox SET status='DEAD',payload=NULL,last_error='Report unavailable' WHERE id=? AND lock_token=?",id,lease);return;
+            }
+            transport.send((String)row.get("recipient"),(String)row.get("subject"),cipher.decrypt((String)row.get("payload")),"pawback-"+id);
+            jdbc.update("UPDATE mail_outbox SET status='DELIVERED',payload=NULL,locked_until=NULL,lock_token=NULL,last_error=NULL WHERE id=? AND lock_token=?",id,lease);
+        }catch(Exception exception){
+            int delay=Math.min(21600,30*(1<<Math.min(attempts,10)));
+            jdbc.update("UPDATE mail_outbox SET status=?,payload=IF(? >=10,NULL,payload),next_attempt_at=TIMESTAMPADD(SECOND,?,UTC_TIMESTAMP(6)),locked_until=NULL,lock_token=NULL,last_error=? WHERE id=? AND lock_token=?",
+                    attempts>=10?"DEAD":"PENDING",attempts,delay,exception.getClass().getSimpleName(),id,lease);
+            log.warn("Email delivery {} failed on attempt {}; status recorded for retry",id,attempts);
         }
     }
 }
