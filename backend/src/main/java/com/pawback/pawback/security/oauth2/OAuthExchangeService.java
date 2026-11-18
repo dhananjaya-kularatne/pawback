@@ -18,11 +18,11 @@ public class OAuthExchangeService {
     private final UserRepository users;
     private final JwtUtil jwt;
     private final SecureRandom random=new SecureRandom();
-    private record Grant(String code,Long userId,long expires) {}
+    private record Grant(String code,Long userId,long version,long expires) {}
     public String issue(HttpServletRequest request, User user) {
         byte[] bytes=new byte[32]; random.nextBytes(bytes);
         String code=Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
-        request.getSession(true).setAttribute(KEY,new Grant(code,user.getId(),System.currentTimeMillis()+60_000));
+        request.getSession(true).setAttribute(KEY,new Grant(code,user.getId(),user.getTokenVersion(),System.currentTimeMillis()+60_000));
         return code;
     }
     public AuthResponse exchange(HttpServletRequest request,String code) {
@@ -35,7 +35,7 @@ public class OAuthExchangeService {
                     || !MessageDigest.isEqual(g.code().getBytes(StandardCharsets.US_ASCII),code.getBytes(StandardCharsets.US_ASCII))) throw invalid();
             grant=g; session.removeAttribute(KEY);
         }
-        User user=users.findById(grant.userId()).filter(User::isEnabled).orElseThrow(this::invalid);
+        User user=users.findById(grant.userId()).filter(u -> u.isEnabled() && u.getTokenVersion()==grant.version()).orElseThrow(this::invalid);
         return AuthResponse.builder().token(jwt.generateToken(user)).user(UserResponse.fromUser(user)).build();
     }
     private InvalidCredentialsException invalid(){return new InvalidCredentialsException("Google sign-in expired or invalid. Please try again.");}

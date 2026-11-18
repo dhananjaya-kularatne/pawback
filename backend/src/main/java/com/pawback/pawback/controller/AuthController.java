@@ -23,6 +23,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthController {
 
     private final AuthService authService;
+    private final com.pawback.pawback.security.ClientAddressResolver addresses;
     private final com.pawback.pawback.security.oauth2.OAuthExchangeService exchange;
     public record ExchangeRequest(@jakarta.validation.constraints.Pattern(regexp="[A-Za-z0-9_-]{43}") @jakarta.validation.constraints.NotNull String code) {}
     @PostMapping("/oauth/exchange")
@@ -47,30 +48,30 @@ public class AuthController {
 
     // Authenticates a user with email and password, returning JWT token
     @PostMapping("/login")
-    public ResponseEntity<ApiResponse<AuthResponse>> login(@Valid @RequestBody LoginRequest request) {
-        AuthResponse response = authService.login(request);
+    public ResponseEntity<ApiResponse<AuthResponse>> login(@Valid @RequestBody LoginRequest request, jakarta.servlet.http.HttpServletRequest httpRequest) {
+        AuthResponse response = authService.login(request, addresses.resolve(httpRequest));
         return ResponseEntity.ok(ApiResponse.success("Login successful", response));
     }
 
     // Requests a password reset OTP to be sent to the given email
     @PostMapping("/forgot-password")
-    public ResponseEntity<ApiResponse<Void>> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
-        authService.forgotPassword(request);
+    public ResponseEntity<ApiResponse<Void>> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request, jakarta.servlet.http.HttpServletRequest httpRequest) {
+        authService.forgotPassword(request, addresses.resolve(httpRequest));
         // We always return the same success message to prevent email enumeration
-        return ResponseEntity.ok(ApiResponse.success("If this email is registered, a password reset code has been sent.", null));
+        return ResponseEntity.ok(ApiResponse.success("If this account is eligible, a password reset code will be sent.", null));
     }
 
     // Verifies the 6-digit OTP sent to the user's email
     @PostMapping("/verify-otp")
-    public ResponseEntity<ApiResponse<Void>> verifyOtp(@Valid @RequestBody VerifyOtpRequest request) {
-        authService.verifyOtp(request);
+    public ResponseEntity<ApiResponse<Void>> verifyOtp(@Valid @RequestBody VerifyOtpRequest request, jakarta.servlet.http.HttpServletRequest httpRequest) {
+        authService.verifyOtp(request, addresses.resolve(httpRequest));
         return ResponseEntity.ok(ApiResponse.success("OTP verified successfully. You may now reset your password.", null));
     }
 
     // Sets a new password using the verified OTP
     @PostMapping("/reset-password")
-    public ResponseEntity<ApiResponse<Void>> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
-        authService.resetPassword(request);
+    public ResponseEntity<ApiResponse<Void>> resetPassword(@Valid @RequestBody ResetPasswordRequest request, jakarta.servlet.http.HttpServletRequest httpRequest) {
+        authService.resetPassword(request, addresses.resolve(httpRequest));
         return ResponseEntity.ok(ApiResponse.success("Password has been reset successfully.", null));
     }
 }

@@ -24,6 +24,10 @@ import java.util.Map;
 @RestControllerAdvice
 public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
+    @ExceptionHandler(AuthenticationLimitException.class)
+    public ResponseEntity<ApiResponse<Void>> handleAuthenticationLimit(AuthenticationLimitException exception) {
+        return ResponseEntity.status(429).header("Retry-After",String.valueOf(exception.getRetryAfterSeconds())).body(ApiResponse.error(429,exception.getMessage()));
+    }
     @ExceptionHandler(TooManyReportsException.class)
     public ResponseEntity<ApiResponse<Void>> handleReportLimit(TooManyReportsException exception) {
         return ResponseEntity.status(429).header("Retry-After", String.valueOf(exception.getRetryAfterSeconds()))
