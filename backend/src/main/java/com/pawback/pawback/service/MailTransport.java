@@ -9,8 +9,8 @@ import java.util.*;
 public class MailTransport {
     private final String key,sender,name;
     private final RestTemplate http;
-    public MailTransport(@Value("${brevo.api.key:}") String key,@Value("${brevo.sender.email:}") String sender,
-            @Value("${brevo.sender.name:PawBack}") String name,@Value("${app.mail.required:false}") boolean required){
+    public MailTransport(@Value("${app.mail.api-key:}") String key,@Value("${app.mail.sender-email:}") String sender,
+            @Value("${app.mail.sender-name:PawBack}") String name,@Value("${app.mail.required:false}") boolean required){
         this.key=key;this.sender=sender;this.name=name;
         if((required || !key.isBlank()) && (key.isBlank() || sender.isBlank() || name.isBlank())) throw new IllegalStateException("Mail requires an API key and verified sender configuration");
         SimpleClientHttpRequestFactory factory=new SimpleClientHttpRequestFactory();factory.setConnectTimeout(5000);factory.setReadTimeout(10000);http=new RestTemplate(factory);
