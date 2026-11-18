@@ -1,5 +1,5 @@
 import AuthFieldError from "./AuthFieldError";
-import { PASSWORD_HINT, meetsPasswordPolicy } from "../../utils/passwordPolicy";
+import { PASSWORD_HINT, getPasswordError } from "../../utils/passwordPolicy";
 import { useState } from "react";
 import { User, Mail, Lock, Phone, ArrowRight } from "lucide-react";
 import { registerUser } from "../../api/authApi";
@@ -33,7 +33,8 @@ export default function RegisterModal({ onClose, onSuccess, onSwitchToLogin }) {
       return;
     }
 
-    if (!meetsPasswordPolicy(password)) { setFieldErrors({ password: PASSWORD_HINT }); return; }
+    const policyError = getPasswordError(password);
+    if (policyError) { setFieldErrors({ password: policyError }); return; }
     setLoading(true);
     try {
       const data = await registerUser({ name, email, phone, password });
@@ -82,6 +83,7 @@ export default function RegisterModal({ onClose, onSuccess, onSwitchToLogin }) {
             </div>
             <input
               id="reg-name"
+              maxLength={255}
               aria-invalid={!!fieldErrors.name}
               aria-describedby="reg-name-error"
               type="text"
@@ -105,6 +107,7 @@ export default function RegisterModal({ onClose, onSuccess, onSwitchToLogin }) {
             </div>
             <input
               id="reg-email"
+              maxLength={255}
               aria-invalid={!!fieldErrors.email}
               aria-describedby="reg-email-error"
               type="email"
@@ -130,6 +133,7 @@ export default function RegisterModal({ onClose, onSuccess, onSwitchToLogin }) {
             </div>
             <input
               id="reg-phone"
+              maxLength={255}
               aria-invalid={!!fieldErrors.phone}
               aria-describedby="reg-phone-error"
               type="tel"
