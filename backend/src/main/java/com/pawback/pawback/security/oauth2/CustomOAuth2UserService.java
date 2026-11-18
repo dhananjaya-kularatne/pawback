@@ -48,6 +48,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
             user=existing.get();
             if(!user.isEnabled()) throw new OAuth2AuthenticationException("account_disabled");
             // Local accounts must keep their original sign-in method; implicit linking is forbidden.
+            if(user.getProvider()==AuthProvider.LOCAL) throw new OAuth2AuthenticationException("password_account");
             if(user.getProvider()!=AuthProvider.GOOGLE || !providerId.equals(user.getProviderId()))
                 throw new OAuth2AuthenticationException("identity_conflict");
         } else {

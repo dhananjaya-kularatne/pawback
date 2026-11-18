@@ -3,6 +3,13 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { exchangeGoogleCode } from "../api/authApi";
 import { clearSession, isTokenValid, saveSession } from "../utils/auth";
 
+const GOOGLE_AUTH_ERRORS = {
+  account_disabled: "This account has been disabled. Please contact support.",
+  password_account: "This email already has a password account. Please sign in with your email and password.",
+  identity_conflict: "This Google account does not match the identity saved for this email. Please contact support.",
+  verified_identity_required: "Google could not verify your email address. Please use a verified Google account.",
+};
+
 export default function OAuth2RedirectHandler() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -25,7 +32,7 @@ export default function OAuth2RedirectHandler() {
       } catch {
         if (!active) return;
         clearSession();
-        navigate("/", { replace: true, state: { authError: params.get("error") === "account_disabled" ? "This account has been disabled. Please contact support." : "Google sign-in could not be completed. Please try again." } });
+        navigate("/", { replace: true, state: { authError: (Object.hasOwn(GOOGLE_AUTH_ERRORS, params.get("error")) ? GOOGLE_AUTH_ERRORS[params.get("error")] : null) || "Google sign-in could not be completed. Please try again." } });
       }
     }
     complete();
