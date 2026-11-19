@@ -11,6 +11,28 @@ import AddPetModal from "../components/AddPetModal";
 import QrCodeModal from "../components/QrCodeModal";
 import PetReportsModal from "../components/PetReportsModal";
 
+function PetCardOverview({ pet }) {
+  const [portrait, setPortrait] = useState(false);
+  const lost = pet.status === "LOST";
+
+  return (
+    <div className={`pet-card-overview${portrait ? " pet-card-portrait" : ""}`}>
+      <div className="pet-photo-frame">
+        <img src={pet.photoUrl} alt={pet.name} className="pet-photo" onLoad={({ currentTarget }) => {
+          setPortrait(currentTarget.naturalHeight > currentTarget.naturalWidth);
+        }} />
+      </div>
+      <div className="pet-card-heading">
+        <h2>{pet.name}</h2>
+        <span role="status" className={`pet-state ${lost ? "pet-state-lost" : "pet-state-safe"}`}>
+          <span aria-hidden="true" /> {lost ? "Lost" : "Safe"}
+        </span>
+        {pet.breed && <p className="pet-card-breed text-sm text-gray-600">{pet.breed}</p>}
+      </div>
+    </div>
+  );
+}
+
 // Owner's dashboard , lists all registered pets, with inline add/edit/QR view/status toggle
 function Dashboard() {
   const { user } = useSession();
@@ -142,31 +164,22 @@ function Dashboard() {
               const updating = pendingStatusIds.has(pet.id);
               return (
                 <article key={pet.id} className="surface pet-card">
-                  <div className="pet-photo-frame">
-                    <img src={pet.photoUrl} alt={pet.name} className="pet-photo" />
-                  </div>
+                  <PetCardOverview key={pet.photoUrl} pet={pet} />
                   <div className="pet-card-body">
-                    <div className="pet-card-heading">
-                      <h2>{pet.name}</h2>
-                      <span role="status" className={`pet-state ${isLost ? "pet-state-lost" : "pet-state-safe"}`}>
-                        <span aria-hidden="true" /> {isLost ? "Lost" : "Safe"}
-                      </span>
-                    </div>
-                    {pet.breed && <p className="text-sm text-gray-600">{pet.breed}</p>}
-                    {pet.description && <p className="text-sm text-gray-600 mt-2 line-clamp-2">{pet.description}</p>}
-                    {pet.ifFoundInstructions && <p className="text-sm text-gray-600 mt-2">If found: {pet.ifFoundInstructions}</p>}
+                    {pet.description && <p className="text-sm text-gray-600 mb-3 line-clamp-2">{pet.description}</p>}
+                    {pet.ifFoundInstructions && <p className="text-sm text-gray-600 mb-3"><strong>If found</strong> {pet.ifFoundInstructions}</p>}
                     {statusErrors[pet.id] && <p role="alert" className="notice-error text-sm mt-3">{statusErrors[pet.id]}</p>}
                     <div className="pet-card-tools">
                       <button type="button" className="button-secondary button-small" onClick={() => setViewingQrPet(pet)} aria-label="View QR code">
-                        <QrCodeIcon size={16} /> QR code
+                        <QrCodeIcon size={16} /> QR
                       </button>
                       <button type="button" className="button-secondary button-small" onClick={() => setEditingPet(pet)} aria-label="Edit pet">
-                        <Pencil size={16} /> Edit pet
+                        <Pencil size={16} /> Edit
+                      </button>
+                      <button type="button" className="button-secondary button-small" onClick={() => setViewingReportsPet(pet)} aria-label={`View reports for ${pet.name}`}>
+                        <MessageSquare size={16} /> Reports
                       </button>
                     </div>
-                    <button type="button" className="button-secondary w-full" onClick={() => setViewingReportsPet(pet)} aria-label={`View reports for ${pet.name}`}>
-                      <MessageSquare size={17} /> View reports
-                    </button>
                     <div className="pet-card-status">
                       <button
                         type="button"

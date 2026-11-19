@@ -1,42 +1,31 @@
-// Canvas-based helper that turns a source image plus a crop selection into a
-// File ready for upload. Cropping happens entirely client-side, so the backend
-// never sees (or needs to know about) the original, uncropped photo.
-
-// Loads a URL (including an object URL from a <input type="file">) into an
-// HTMLImageElement so its pixels can be drawn onto a canvas.
 function loadImage(src) {
   return new Promise((resolve, reject) => {
     const image = new Image();
     image.addEventListener("load", () => resolve(image));
-    image.addEventListener("error", (err) => reject(err));
+    image.addEventListener("error", () => reject(new Error("Could not open this photo for cropping.")));
     image.crossOrigin = "anonymous";
     image.src = src;
   });
 }
 
-// Draws only the selected `croppedAreaPixels` region of `imageSrc` onto a
-// same-sized canvas and resolves a File containing that region, encoded as a
-// JPEG. `croppedAreaPixels` is the shape react-easy-crop reports from its
-// onCropComplete callback: { x, y, width, height } in source pixel units.
-export async function getCroppedImageFile(imageSrc, croppedAreaPixels, fileName = "pet-photo.jpg") {
+// Convert the percentage selection against the original photo dimensions even
+// when the editor is resized between selecting the area and saving it.
+export async function getCroppedImageFile(imageSrc, crop, fileName = "pet-photo.jpg") {
   const image = await loadImage(imageSrc);
+  const x = Math.min(image.naturalWidth - 1, Math.max(0, Math.round(crop.x * image.naturalWidth / 100)));
+  const y = Math.min(image.naturalHeight - 1, Math.max(0, Math.round(crop.y * image.naturalHeight / 100)));
+  const right = Math.min(image.naturalWidth, Math.round((crop.x + crop.width) * image.naturalWidth / 100));
+  const bottom = Math.min(image.naturalHeight, Math.round((crop.y + crop.height) * image.naturalHeight / 100));
 
   const canvas = document.createElement("canvas");
-  canvas.width = croppedAreaPixels.width;
-  canvas.height = croppedAreaPixels.height;
+  canvas.width = Math.max(1, right - x);
+  canvas.height = Math.max(1, bottom - y);
 
   const context = canvas.getContext("2d");
-  context.drawImage(
-    image,
-    croppedAreaPixels.x,
-    croppedAreaPixels.y,
-    croppedAreaPixels.width,
-    croppedAreaPixels.height,
-    0,
-    0,
-    croppedAreaPixels.width,
-    croppedAreaPixels.height
-  );
+  if (!context) throw new Error("Could not prepare the photo crop.");
+  context.fillStyle = "#ffffff";
+  context.fillRect(0, 0, canvas.width, canvas.height);
+  context.drawImage(image, x, y, canvas.width, canvas.height, 0, 0, canvas.width, canvas.height);
 
   const blob = await new Promise((resolve, reject) => {
     canvas.toBlob(
@@ -46,5 +35,6 @@ export async function getCroppedImageFile(imageSrc, croppedAreaPixels, fileName 
     );
   });
 
-  return new File([blob], fileName, { type: "image/jpeg" });
+  const name = fileName.replace(/\.[^.]+$/, "");
+  return new File([blob], `${name}.jpg`, { type: "image/jpeg" });
 }

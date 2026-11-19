@@ -18,9 +18,6 @@ function EditPetModal({ pet, onClose, onSave }) {
   // Defaults to the pet's current photo; becomes an object URL once a new
   // photo is cropped, so the frame always shows what will actually be saved
   const [previewUrl, setPreviewUrl] = useState(pet.photoUrl || null);
-  // Name to reuse if the currently shown photo (new or original) is re-cropped
-  // without picking a different file
-  const [photoFileName, setPhotoFileName] = useState();
   // The photo staged for cropping: either a just-picked file, or the photo
   // already shown, reopened via "Adjust crop"
   const [pendingPhoto, setPendingPhoto] = useState(null);
@@ -36,11 +33,11 @@ function EditPetModal({ pet, onClose, onSave }) {
     setError("");
     try { await validatePhoto(file); } catch (err) { setError(err.message); return; }
     const src = createObjectUrl(file);
-    if (src) setPendingPhoto({ src, name: file.name });
+    if (src) setPendingPhoto({ src, file });
   }
 
   function handleAdjustCrop() {
-    setPendingPhoto({ src: previewUrl, name: photoFileName });
+    setPendingPhoto({ src: previewUrl });
   }
 
   function handleCropCancel() {
@@ -60,7 +57,6 @@ function EditPetModal({ pet, onClose, onSave }) {
     setPendingPhoto(null);
     setImage(croppedFile);
     setPreviewUrl(createObjectUrl(croppedFile));
-    setPhotoFileName(pendingPhoto.name);
   }
 
   async function handleSubmit(e) {
@@ -175,7 +171,8 @@ function EditPetModal({ pet, onClose, onSave }) {
       {pendingPhoto && (
         <PhotoCropModal
           imageSrc={pendingPhoto.src}
-          fileName={pendingPhoto.name}
+          originalFile={pendingPhoto.file}
+          fileName={pendingPhoto.file?.name ?? image?.name}
           onCancel={handleCropCancel}
           onConfirm={handleCropConfirm}
         />
