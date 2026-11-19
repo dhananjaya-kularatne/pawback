@@ -23,7 +23,7 @@ function LandingPage() {
   const { token } = useSession();
   const isLoggedIn = Boolean(token);
 
-  const [registerOpen, setRegisterOpen] = useState(false);
+  const [registerOpen, setRegisterOpen] = useState(() => !isLoggedIn && Boolean(location.state?.openRegister));
   const [loginOpen, setLoginOpen] = useState(() => Boolean(location.state?.openLogin || location.state?.authError || location.state?.sessionExpired));
   const [forgotOpen, setForgotOpen] = useState(false);
 
@@ -58,7 +58,7 @@ function LandingPage() {
   }
 
   return <div className="landing-page">
-    <AppHeader showNavLinks={isLoggedIn}>{isLoggedIn ? <AccountMenu /> : <><button className="header-link" onClick={openLogin}>Sign in</button><button className="button-primary button-small" onClick={openRegister}>Get started</button></>}</AppHeader>
+    <AppHeader>{isLoggedIn ? <AccountMenu /> : <><button className="header-link" onClick={openLogin}>Sign in</button><button className="button-primary button-small" onClick={openRegister}>Get started</button></>}</AppHeader>
     <main id="main-content" tabIndex={-1}>
       <section className="hero-section">
         <div className="content-width hero-grid">

@@ -126,7 +126,7 @@ export default function RegisterModal({ onClose, onSuccess, onSwitchToLogin }) {
         {/* Phone */}
         <div>
           <label htmlFor="reg-phone" className="block text-xs font-medium text-gray-700 mb-1">
-            Phone <span className="text-gray-400 font-normal">(Optional)</span>
+            Phone number <span className="field-optional">Optional</span>
           </label>
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
@@ -138,7 +138,8 @@ export default function RegisterModal({ onClose, onSuccess, onSwitchToLogin }) {
               aria-invalid={!!fieldErrors.phone}
               aria-describedby="reg-phone-error"
               type="tel"
-              placeholder="+1 (555) 000-0000"
+              autoComplete="tel"
+              placeholder="+94 77 123 4567"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               className="w-full pl-9 pr-3 py-2 text-sm border border-gray-300 rounded-lg

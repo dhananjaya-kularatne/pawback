@@ -8,8 +8,8 @@ import { useSession } from "../utils/useSession";
 export default function PageStatus({ title, message, busy = false }) {
   const { token } = useSession();
   return <div className="min-h-screen flex flex-col">
-    <AppHeader showNavLinks={!!token}>
-      {token ? <AccountMenu /> : <Link to="/" state={{ openLogin: true }} className="header-link">Sign in</Link>}
+    <AppHeader>
+      {token ? <AccountMenu /> : <Link to="/" state={{ openLogin: true }} className="button-primary button-small">Sign in</Link>}
     </AppHeader>
     <main id="main-content" tabIndex={-1} className="content-width flex-1 py-10">
       <div className="surface max-w-xl mx-auto p-6 sm:p-10" role={busy ? "status" : undefined} aria-busy={busy}>
