@@ -93,12 +93,10 @@ function AdminUsersPage() {
     <AdminLayout title="Users">
       <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 mb-5">
         <div>
-          <h2 className="text-lg font-semibold text-gray-900">All users</h2>
-          <p className="text-sm text-gray-500 mt-0.5">
-            {totalElements === 1
+          <p className="text-gray-600" role="status">
+            {loading ? "Loading users..." : totalElements === 1
               ? "1 registered account"
               : `${totalElements} registered accounts`}
-            . Disabling an account blocks sign-in until it is re-enabled.
           </p>
         </div>
         <div className="relative w-full sm:w-72">
@@ -111,6 +109,7 @@ function AdminUsersPage() {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search this page"
+            aria-label="Search users on this page"
             className="w-full text-sm border border-gray-300 rounded-lg pl-8 pr-3 py-2 bg-white
                        focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent"
           />
@@ -123,7 +122,7 @@ function AdminUsersPage() {
         </p>
       )}
 
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+      <div className="surface overflow-hidden">
         <div className="overflow-x-auto">
           <table className="admin-data-table w-full text-sm">
             <thead>
@@ -190,17 +189,9 @@ function AdminUsersPage() {
                       </td>
                       <td data-label="Status" className="px-5 py-3">
                         <span
-                          className={`inline-flex items-center gap-1.5 text-xs font-medium px-2 py-0.5 rounded-full ring-1 ${
-                            user.enabled
-                              ? "bg-emerald-50 text-emerald-700 ring-emerald-600/20"
-                              : "bg-rose-50 text-rose-700 ring-rose-600/20"
-                          }`}
+                          className={`pet-state ${user.enabled ? "pet-state-safe" : "pet-state-lost"}`}
                         >
-                          <span
-                            className={`w-1.5 h-1.5 rounded-full ${
-                              user.enabled ? "bg-emerald-500" : "bg-rose-500"
-                            }`}
-                          />
+                          <span aria-hidden="true" />
                           {user.enabled ? "Active" : "Disabled"}
                         </span>
                       </td>
@@ -209,9 +200,7 @@ function AdminUsersPage() {
                           <button
                             onClick={() => setToDisable(user)}
                             disabled={isSelf || isPending}
-                            className="text-xs font-medium px-3 py-1.5 rounded-lg border border-rose-200
-                                       text-rose-700 bg-white hover:bg-rose-50 transition-colors cursor-pointer
-                                       disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white"
+                            className="button-danger button-small"
                             title={
                               isSelf
                                 ? "You cannot disable your own account"
@@ -224,9 +213,7 @@ function AdminUsersPage() {
                           <button
                             onClick={() => toggleEnabled(user, true)}
                             disabled={isPending}
-                            className="text-xs font-medium px-3 py-1.5 rounded-lg bg-emerald-700 text-white
-                                       hover:bg-emerald-800 transition-colors cursor-pointer
-                                       disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="button-secondary button-small"
                           >
                             {isPending ? "Enabling..." : "Enable"}
                           </button>
@@ -240,7 +227,7 @@ function AdminUsersPage() {
         </div>
 
         {/* Pagination footer */}
-        <div className="flex items-center justify-between px-5 py-3 border-t border-gray-200 bg-gray-50/60">
+        <div className="table-footer">
           <span className="text-xs text-gray-500">
             Page {page + 1} of {Math.max(totalPages, 1)}
           </span>
@@ -248,9 +235,7 @@ function AdminUsersPage() {
             <button
               onClick={() => goToPage(Math.max(page - 1, 0))}
               disabled={page === 0 || loading}
-              className="inline-flex items-center gap-1 text-xs font-medium px-2.5 py-1.5 rounded-lg
-                         border border-gray-300 bg-white hover:bg-gray-50 transition-colors cursor-pointer
-                         disabled:opacity-40 disabled:cursor-not-allowed"
+              className="button-secondary button-small"
             >
               <ChevronLeft size={14} />
               Previous
@@ -258,9 +243,7 @@ function AdminUsersPage() {
             <button
               onClick={() => goToPage(page + 1)}
               disabled={isLast || loading}
-              className="inline-flex items-center gap-1 text-xs font-medium px-2.5 py-1.5 rounded-lg
-                         border border-gray-300 bg-white hover:bg-gray-50 transition-colors cursor-pointer
-                         disabled:opacity-40 disabled:cursor-not-allowed"
+              className="button-secondary button-small"
             >
               Next
               <ChevronRight size={14} />

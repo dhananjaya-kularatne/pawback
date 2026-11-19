@@ -119,18 +119,15 @@ function AdminReportsPage() {
   return (
     <AdminLayout title="Reports">
       <div className="mb-5">
-        <h2 className="text-lg font-semibold text-gray-900">All scan reports</h2>
-        <p className="text-sm text-gray-500 mt-0.5">
-          {totalElements === 1 ? "1 report" : `${totalElements} reports`} across every
-          pet. Deleting a report removes it permanently, it cannot be undone.
+        <p className="text-gray-600" role="status">
+          {loading ? "Loading reports..." : totalElements === 1 ? "1 finder report" : `${totalElements} finder reports`}
         </p>
       </div>
 
       {/* Filters */}
       <form
         onSubmit={applyFilters}
-        className="bg-white rounded-xl border border-gray-200 shadow-sm p-4 mb-5
-                   flex flex-wrap items-end gap-3"
+        className="surface mb-5 flex flex-wrap items-end"
       >
         <div>
           <label htmlFor="report-filter-pet" className="block text-xs font-medium text-gray-500 mb-1">Pet ID</label>
@@ -169,8 +166,7 @@ function AdminReportsPage() {
         </div>
         <button
           type="submit"
-          className="text-sm font-medium px-4 py-1.5 rounded-lg bg-blue-700 text-white
-                     hover:bg-blue-800 transition-colors cursor-pointer"
+          className="button-primary button-small"
         >
           Filter
         </button>
@@ -178,8 +174,7 @@ function AdminReportsPage() {
           <button
             type="button"
             onClick={clearFilters}
-            className="inline-flex items-center gap-1 text-sm font-medium px-3 py-1.5 rounded-lg
-                       border border-gray-300 bg-white hover:bg-gray-50 transition-colors cursor-pointer"
+            className="button-secondary button-small"
           >
             <X size={14} />
             Clear
@@ -200,7 +195,7 @@ function AdminReportsPage() {
         </p>
       )}
 
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+      <div className="surface overflow-hidden">
         <div className="overflow-x-auto">
           <table className="admin-data-table w-full text-sm">
             <thead>
@@ -240,9 +235,6 @@ function AdminReportsPage() {
                       <td data-label="Pet" className="px-5 py-3">
                         <div className="font-medium text-gray-900">{report.petName || "-"}</div>
                         <div className="text-gray-500 text-xs">Pet ID {report.petId}</div>
-                        <div className="text-gray-400 text-xs truncate max-w-[10rem]">
-                          {report.petUuid}
-                        </div>
                       </td>
                       <td data-label="Message" className="px-5 py-3 text-gray-700 max-w-xs truncate" title={report.message}>
                         {report.message || "-"}
@@ -264,15 +256,13 @@ function AdminReportsPage() {
                       </td>
                       <td data-label="Actions" className="px-5 py-3 text-right">
                         <button type="button" onClick={() => setViewingReport(report)}
-                          className="inline-flex items-center gap-1 text-xs font-medium px-3 py-1.5 rounded-lg border border-blue-200 text-blue-700 hover:bg-blue-50 mr-2 cursor-pointer">
+                          className="button-secondary button-small mr-2">
                           <Eye size={13} /> View
                         </button>
                         <button
                           onClick={() => setToDelete(report)}
                           disabled={isPending}
-                          className="inline-flex items-center gap-1 text-xs font-medium px-3 py-1.5 rounded-lg
-                                     border border-rose-200 text-rose-700 bg-white hover:bg-rose-50
-                                     transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                          className="button-danger button-small"
                         >
                           <Trash2 size={13} />
                           Delete
@@ -286,7 +276,7 @@ function AdminReportsPage() {
         </div>
 
         {/* Pagination footer */}
-        <div className="flex items-center justify-between px-5 py-3 border-t border-gray-200 bg-gray-50/60">
+        <div className="table-footer">
           <span className="text-xs text-gray-500">
             Page {page + 1} of {Math.max(totalPages, 1)}
           </span>
@@ -294,9 +284,7 @@ function AdminReportsPage() {
             <button
               onClick={() => goToPage(Math.max(page - 1, 0))}
               disabled={page === 0 || loading}
-              className="inline-flex items-center gap-1 text-xs font-medium px-2.5 py-1.5 rounded-lg
-                         border border-gray-300 bg-white hover:bg-gray-50 transition-colors cursor-pointer
-                         disabled:opacity-40 disabled:cursor-not-allowed"
+              className="button-secondary button-small"
             >
               <ChevronLeft size={14} />
               Previous
@@ -304,9 +292,7 @@ function AdminReportsPage() {
             <button
               onClick={() => goToPage(page + 1)}
               disabled={isLast || loading}
-              className="inline-flex items-center gap-1 text-xs font-medium px-2.5 py-1.5 rounded-lg
-                         border border-gray-300 bg-white hover:bg-gray-50 transition-colors cursor-pointer
-                         disabled:opacity-40 disabled:cursor-not-allowed"
+              className="button-secondary button-small"
             >
               Next
               <ChevronRight size={14} />

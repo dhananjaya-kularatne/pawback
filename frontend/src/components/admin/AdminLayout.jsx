@@ -1,9 +1,10 @@
 import { NavLink } from "react-router-dom";
 import { LayoutDashboard, Users, FileWarning } from "lucide-react";
 import Navbar from "../Navbar";
+import Footer from "../layout/Footer";
 
 const NAV = [
-  { to: "/admin", label: "Console", icon: LayoutDashboard, end: true },
+  { to: "/admin", label: "Overview", icon: LayoutDashboard, end: true },
   { to: "/admin/users", label: "Users", icon: Users },
   { to: "/admin/reports", label: "Reports", icon: FileWarning },
 ];
@@ -23,5 +24,6 @@ export default function AdminLayout({ title, children }) {
       <h1 className="page-title">{title}</h1>
       {children}
     </main>
+    <Footer />
   </div>;
 }

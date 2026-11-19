@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import Footer from "../components/layout/Footer";
 import { useEffect, useRef, useState } from "react";
-import { Plus, Pencil, MessageSquare, Trash2, QrCode as QrCodeIcon } from "lucide-react";
+import { ArrowRight, BookOpen, CheckCircle2, LoaderCircle, MapPin, PawPrint, Plus, Pencil, MessageSquare, Trash2, QrCode as QrCodeIcon } from "lucide-react";
 import Navbar from "../components/Navbar";
 import { getMyPets, updatePet, createPet, updatePetStatus, deletePet, regeneratePetQr } from "../api/petApi";
 import ConfirmDialog from "../components/ConfirmDialog";
@@ -27,6 +27,7 @@ function Dashboard() {
   const [removingPet, setRemovingPet] = useState(null);
   const [deletingId, setDeletingId] = useState(null);
   const [deleteError, setDeleteError] = useState("");
+  const [feedback, setFeedback] = useState("");
 
   // Greeting name comes from the stored user, so the banner reflects whoever is
   // actually signed in rather than a hard-coded owner.
@@ -53,6 +54,7 @@ function Dashboard() {
       prev.map((pet) => (pet.id === updated.id ? updated : pet))
     );
     setEditingPet(null);
+    setFeedback(`${updated.name}’s profile was updated.`);
   }
 
   // Adds a newly created pet straight into the local list , no reload needed
@@ -60,6 +62,7 @@ function Dashboard() {
     const newPet = await createPet(petData, imageFile, requestKey);
     setPets((prev) => prev.some((pet) => pet.id === newPet.id) ? prev : [...prev, newPet]);
     setAddModalOpen(false);
+    setFeedback(`${newPet.name} was added to My pets.`);
   }
 
   async function handleDeletePet(pet) {
@@ -70,6 +73,7 @@ function Dashboard() {
       await deletePet(pet.id);
       setPets((prev) => prev.filter((item) => item.id !== pet.id));
       setRemovingPet(null);
+      setFeedback(`${pet.name} was removed.`);
     } catch (err) { setDeleteError(err.message); setRemovingPet(null); }
     finally { setDeletingId(null); }
   }
@@ -107,155 +111,95 @@ function Dashboard() {
     <div className="min-h-screen bg-slate-50">
       <Navbar />
 
-      <div className="dashboard-welcome">
-        <div className="relative w-full px-6 md:px-10 lg:px-16 py-8">
-          <h1 className="text-2xl font-semibold text-blue-950 mb-1">
-            {firstName ? `Welcome back, ${firstName}` : "Welcome back"}
-          </h1>
-          <p className="text-blue-900 text-sm">
-            Keep your pet profiles up to date so they can always find their way home.
-          </p>
-        </div>
-      </div>
-
       <main id="main-content" className="content-width dashboard-content">
-        <div className="dashboard-tip"><span>New to QR tags? Get your pet ready in a few simple steps.</span><Link to="/help">Read the guide</Link></div>
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-lg font-medium text-gray-900">My pets</h2>
-          <button
-            onClick={() => setAddModalOpen(true)}
-            className="flex items-center gap-1.5 bg-blue-700 hover:bg-blue-800
-                       text-white text-sm font-medium px-4 py-2 rounded-lg
-                       shadow-sm hover:shadow transition-all cursor-pointer"
-          >
-            <Plus size={16} />
-            Add pet
+        <div className="dashboard-welcome">
+          <div>
+            <h1>My pets</h1>
+            <p>{firstName ? `Hi, ${firstName}. Manage your pet profiles, tags and finder reports here.` : "Manage your pet profiles, tags and finder reports here."}</p>
+          </div>
+          <button type="button" className="button-primary" onClick={() => setAddModalOpen(true)}>
+            <Plus size={19} /> Add pet
           </button>
         </div>
 
-        {loading && <p className="text-sm text-gray-600">Loading...</p>}
-        {error && <p className="text-sm text-red-700">{error}</p>}
-        {deleteError && <p role="alert" className="text-sm text-red-700 mb-3">{deleteError}</p>}
+        {loading && <p role="status" className="flex items-center gap-2 text-gray-600"><LoaderCircle size={18} className="motion-safe:animate-spin" /> Loading pets...</p>}
+        {error && <p role="alert" className="notice-error">{error}</p>}
+        {deleteError && <p role="alert" className="notice-error mb-4">{deleteError}</p>}
+        {feedback && <p className="dashboard-feedback" role="status"><CheckCircle2 size={18} /> {feedback}</p>}
 
         {!loading && !error && pets.length === 0 && (
-          <div className="border border-dashed border-gray-400 rounded-xl p-10 text-center">
-            <p className="text-sm text-gray-600 mb-3">
-              You haven't registered any pets yet.
-            </p>
-            <button
-              onClick={() => setAddModalOpen(true)}
-              className="inline-block bg-blue-700 hover:bg-blue-800 text-white text-sm
-                         font-medium px-4 py-2 rounded-lg transition-colors cursor-pointer"
-            >
-              Register pet
-            </button>
-          </div>
+          <section className="surface pet-empty">
+            <div className="status-icon"><PawPrint size={24} /></div>
+            <h2>Add your first pet</h2>
+            <p>Create a profile to download a QR code for their collar.</p>
+          </section>
         )}
 
         {!loading && !error && pets.length > 0 && (
           <div className="pet-grid">
-            {pets.map((pet) => (
-              <div
-                key={pet.id}
-                className="pet-card bg-white rounded-xl overflow-hidden border border-gray-200 shadow-sm"
-              >
-                <div className="pet-photo-frame relative overflow-hidden">
-                  <img
-                    src={pet.photoUrl}
-                    alt={pet.name}
-                    className="pet-photo"
-                  />
-                  {/* Gradient overlay for text readability */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/0 to-transparent" />
-
-                  {/* Status badge, top-left, on the image , now a clickable toggle */}
-                  <button
-                    onClick={() => handleToggleStatus(pet)}
-                    disabled={pendingStatusIds.has(pet.id)}
-                    aria-label={`Mark ${pet.name} as ${pet.status === "SAFE" ? "lost" : "safe"}`}
-                    aria-busy={pendingStatusIds.has(pet.id)}
-                    className={`absolute top-3 left-3 text-xs font-semibold px-2.5 py-1 rounded-full
-                               backdrop-blur-sm cursor-pointer transition-colors disabled:opacity-60 disabled:cursor-wait ${
-                      pet.status === "SAFE"
-                        ? "bg-green-700 hover:bg-green-800 text-white"
-                        : "bg-red-700 hover:bg-red-800 text-white"
-                    }`}
-                    title={`Click to mark as ${pet.status === "SAFE" ? "Lost" : "Safe"}`}
-                  >
-                    {pendingStatusIds.has(pet.id) ? "Updating..." : pet.status === "SAFE" ? "Safe" : "Lost"}
-                  </button>
-
-                  {/* View QR button, top-right (left of Edit), on the image */}
-                  <button
-                    onClick={() => setViewingQrPet(pet)}
-                    className="absolute top-3 right-14 w-8 h-8 flex items-center justify-center
-                              bg-white/90 hover:bg-white rounded-full cursor-pointer
-                              transition-colors shadow-sm"
-                    aria-label="View QR code"
-                  >
-                    <QrCodeIcon size={16} className="text-gray-700" />
-                  </button>
-
-                  {/* Edit button, top-right, on the image */}
-                  <button
-                    onClick={() => setEditingPet(pet)}
-                    className="absolute top-3 right-3 w-8 h-8 flex items-center justify-center
-                              bg-white/90 hover:bg-white rounded-full cursor-pointer
-                              transition-colors shadow-sm"
-                    aria-label="Edit pet"
-                  >
-                    <Pencil size={16} className="text-gray-700" />
-                  </button>
-
-                  {/* Name overlaid at the bottom of the image */}
-                  <div className="absolute bottom-0 left-0 right-0 p-3">
-                    <p className="text-white font-semibold text-lg drop-shadow-sm">
-                      {pet.name}
-                    </p>
-                    {pet.breed && (
-                      <p className="text-white/90 text-xs">{pet.breed}</p>
-                    )}
+            {pets.map((pet) => {
+              const isLost = pet.status === "LOST";
+              const updating = pendingStatusIds.has(pet.id);
+              return (
+                <article key={pet.id} className="surface pet-card">
+                  <div className="pet-photo-frame">
+                    <img src={pet.photoUrl} alt={pet.name} className="pet-photo" />
                   </div>
-                </div>
-
-                <div className="p-4">
-                  {statusErrors[pet.id] && (
-                    <p role="alert" className="mb-2 text-xs text-red-700">
-                      {statusErrors[pet.id]} Click the status badge to try again.
-                    </p>
-                  )}
-                  {pet.description && (
-                    <p className="text-xs text-gray-600 mb-1 line-clamp-2">
-                      {pet.description}
-                    </p>
-                  )}
-                  {pet.ifFoundInstructions && (
-                    <p className="text-xs text-gray-500 italic">
-                      If found: {pet.ifFoundInstructions}
-                    </p>
-                  )}
-                  {!pet.description && !pet.ifFoundInstructions && (
-                    <p className="text-xs text-gray-400">No additional details</p>
-                  )}
-                  <button
-                    type="button"
-                    onClick={() => setViewingReportsPet(pet)}
-                    className="mt-3 inline-flex items-center gap-1.5 text-sm font-medium text-blue-700 hover:text-blue-900 cursor-pointer"
-                    aria-label={`View reports for ${pet.name}`}
-                  >
-                    <MessageSquare size={15} /> View reports
-                  </button>
-                  <button type="button" onClick={() => setRemovingPet(pet)}
-                    disabled={pendingStatusIds.has(pet.id) || deletingId != null}
-                    aria-label={`Remove ${pet.name}`}
-                    className="mt-3 ml-3 inline-flex items-center gap-1 text-xs text-red-700 hover:underline disabled:opacity-50 cursor-pointer">
-                    <Trash2 size={13} /> Remove
-                  </button>
-                </div>
-              </div>
-            ))}
+                  <div className="pet-card-body">
+                    <div className="pet-card-heading">
+                      <h2>{pet.name}</h2>
+                      <span role="status" className={`pet-state ${isLost ? "pet-state-lost" : "pet-state-safe"}`}>
+                        <span aria-hidden="true" /> {isLost ? "Lost" : "Safe"}
+                      </span>
+                    </div>
+                    {pet.breed && <p className="text-sm text-gray-600">{pet.breed}</p>}
+                    {pet.description && <p className="text-sm text-gray-600 mt-2 line-clamp-2">{pet.description}</p>}
+                    {pet.ifFoundInstructions && <p className="text-sm text-gray-600 mt-2">If found: {pet.ifFoundInstructions}</p>}
+                    {statusErrors[pet.id] && <p role="alert" className="notice-error text-sm mt-3">{statusErrors[pet.id]}</p>}
+                    <div className="pet-card-tools">
+                      <button type="button" className="button-secondary button-small" onClick={() => setViewingQrPet(pet)} aria-label="View QR code">
+                        <QrCodeIcon size={16} /> QR code
+                      </button>
+                      <button type="button" className="button-secondary button-small" onClick={() => setEditingPet(pet)} aria-label="Edit pet">
+                        <Pencil size={16} /> Edit pet
+                      </button>
+                    </div>
+                    <button type="button" className="button-secondary w-full" onClick={() => setViewingReportsPet(pet)} aria-label={`View reports for ${pet.name}`}>
+                      <MessageSquare size={17} /> View reports
+                    </button>
+                    <div className="pet-card-status">
+                      <button
+                        type="button"
+                        className="button-quiet button-small"
+                        onClick={() => handleToggleStatus(pet)}
+                        disabled={updating || deletingId === pet.id}
+                        aria-busy={updating}
+                        aria-label={`Mark ${pet.name} as ${isLost ? "safe" : "lost"}`}
+                      >
+                        {updating ? <LoaderCircle size={16} className="motion-safe:animate-spin" /> : <MapPin size={16} />}
+                        {updating ? "Updating..." : isLost ? "Mark safe" : "Mark lost"}
+                      </button>
+                      <button
+                        type="button"
+                        className="button-quiet button-small pet-remove"
+                        onClick={() => setRemovingPet(pet)}
+                        disabled={updating || deletingId != null}
+                        aria-label={`Remove ${pet.name}`}
+                      >
+                        <Trash2 size={16} /> Remove
+                      </button>
+                    </div>
+                  </div>
+                </article>
+              );
+            })}
           </div>
         )}
+
+        <aside className="dashboard-tip">
+          <div><BookOpen size={20} /><span>Need help printing or attaching a tag?</span></div>
+          <Link to="/help#tag" className="button-quiet button-small">Read the guide <ArrowRight size={16} /></Link>
+        </aside>
       </main>
       <Footer />
 

@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useId, useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ChevronDown, LogOut } from "lucide-react";
 import { clearSession } from "../utils/auth";
@@ -12,6 +12,8 @@ import { useSession } from "../utils/useSession";
 export default function AccountMenu({ onLoggedOut }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef(null);
+  const triggerRef = useRef(null);
+  const panelId = useId();
   const navigate = useNavigate();
   const { user } = useSession();
 
@@ -42,14 +44,19 @@ export default function AccountMenu({ onLoggedOut }) {
   }
 
   return (
-    <div className="relative min-w-0 max-w-full" ref={menuRef}>
+    <div className="account-control" ref={menuRef} onKeyDown={(event) => {
+      if (event.key === "Escape" && menuOpen) {
+        setMenuOpen(false);
+        triggerRef.current?.focus();
+      }
+    }}>
       <button
+        type="button"
+        ref={triggerRef}
         onClick={() => setMenuOpen((open) => !open)}
-        aria-haspopup="menu"
+        aria-controls={menuOpen ? panelId : undefined}
         aria-expanded={menuOpen}
-        className="flex max-w-full items-center gap-1.5 rounded text-sm font-medium text-blue-900
-                   hover:text-blue-700 cursor-pointer transition-colors
-                   focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
+        className="button-secondary button-small account-trigger"
       >
         <span className="min-w-0 max-w-xs whitespace-normal wrap-anywhere text-left">{displayName || "Account"}</span>
         <ChevronDown
@@ -59,7 +66,7 @@ export default function AccountMenu({ onLoggedOut }) {
       </button>
 
       {menuOpen && (
-        <div className="absolute right-0 mt-2 w-60 max-w-[calc(100vw-2.5rem)] bg-white border border-gray-200 rounded-lg shadow-lg py-1 z-20">
+        <div id={panelId} className="surface account-panel">
           <div className="px-3 py-2.5">
             <p className="text-xs text-gray-500">Signed in as</p>
             <p className="text-sm font-medium text-gray-900 wrap-anywhere">
@@ -71,8 +78,7 @@ export default function AccountMenu({ onLoggedOut }) {
 
           <button
             onClick={handleLogout}
-            className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-gray-700
-                       hover:bg-gray-50 cursor-pointer transition-colors"
+            className="button-quiet button-small w-full !justify-start"
           >
             <LogOut size={14} />
             Log out
