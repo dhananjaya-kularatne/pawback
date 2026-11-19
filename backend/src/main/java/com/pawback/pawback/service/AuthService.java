@@ -136,7 +136,7 @@ public class AuthService {
         }
         return user;
     }
-    private InvalidCredentialsException invalidCode(){return new InvalidCredentialsException("Invalid OTP or expired");}
+    private InvalidCredentialsException invalidCode(){return new InvalidCredentialsException("This reset code is incorrect or has expired.");}
     private com.pawback.pawback.exception.AuthenticationLimitException limited(int minutes){return new com.pawback.pawback.exception.AuthenticationLimitException(minutes*60);}
     private String normalize(String email){return email.trim().toLowerCase(java.util.Locale.ROOT);}
 }

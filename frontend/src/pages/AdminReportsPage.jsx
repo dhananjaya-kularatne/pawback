@@ -119,18 +119,15 @@ function AdminReportsPage() {
   return (
     <AdminLayout title="Reports">
       <div className="mb-5">
-        <h2 className="text-lg font-semibold text-gray-900">All scan reports</h2>
-        <p className="text-sm text-gray-500 mt-0.5">
-          {totalElements === 1 ? "1 report" : `${totalElements} reports`} across every
-          pet. Deleting a report removes it permanently, it cannot be undone.
+        <p className="text-gray-600" role="status">
+          {loading ? "Loading reports..." : pageData ? `${totalElements} finder report${totalElements === 1 ? "" : "s"}` : "Reports unavailable"}
         </p>
       </div>
 
       {/* Filters */}
       <form
         onSubmit={applyFilters}
-        className="bg-white rounded-xl border border-gray-200 shadow-sm p-4 mb-5
-                   flex flex-wrap items-end gap-3"
+        className="surface mb-5 flex flex-wrap items-end"
       >
         <div>
           <label htmlFor="report-filter-pet" className="block text-xs font-medium text-gray-500 mb-1">Pet ID</label>
@@ -169,8 +166,7 @@ function AdminReportsPage() {
         </div>
         <button
           type="submit"
-          className="text-sm font-medium px-4 py-1.5 rounded-lg bg-blue-700 text-white
-                     hover:bg-blue-800 transition-colors cursor-pointer"
+          className="button-primary button-small"
         >
           Filter
         </button>
@@ -178,8 +174,7 @@ function AdminReportsPage() {
           <button
             type="button"
             onClick={clearFilters}
-            className="inline-flex items-center gap-1 text-sm font-medium px-3 py-1.5 rounded-lg
-                       border border-gray-300 bg-white hover:bg-gray-50 transition-colors cursor-pointer"
+            className="button-secondary button-small"
           >
             <X size={14} />
             Clear
@@ -187,20 +182,20 @@ function AdminReportsPage() {
         )}
       </form>
 
-      {filterError && <p role="alert" className="text-sm text-red-700 mb-4">{filterError}</p>}
+      {filterError && <p role="alert" className="notice-error text-sm mb-4">{filterError}</p>}
       <p className="text-xs text-gray-500 mb-4">Date filters include whole days in UTC. Report times are displayed in your local time.</p>
 
       {error && (
-        <p className="text-sm text-red-700 mb-4 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
-          {error}{" "}
+        <div className="notice-error text-sm mb-4 flex flex-wrap items-center justify-between gap-2">
+          <p role="alert">{error}</p>
           <button type="button" onClick={refetch} disabled={loading}
-            className="inline-flex items-center gap-1 underline disabled:opacity-40 cursor-pointer">
-            <RefreshCw size={12} /> Retry
+            className="button-secondary button-small">
+            <RefreshCw size={16} /> Retry
           </button>
-        </p>
+        </div>
       )}
 
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+      <div className="surface overflow-hidden">
         <div className="overflow-x-auto">
           <table className="admin-data-table w-full text-sm">
             <thead>
@@ -238,11 +233,8 @@ function AdminReportsPage() {
                       className="border-b border-gray-100 last:border-0 hover:bg-blue-50/40 transition-colors"
                     >
                       <td data-label="Pet" className="px-5 py-3">
-                        <div className="font-medium text-gray-900">{report.petName || "-"}</div>
+                        <div className="font-medium text-gray-900 wrap-anywhere">{report.petName || "-"}</div>
                         <div className="text-gray-500 text-xs">Pet ID {report.petId}</div>
-                        <div className="text-gray-400 text-xs truncate max-w-[10rem]">
-                          {report.petUuid}
-                        </div>
                       </td>
                       <td data-label="Message" className="px-5 py-3 text-gray-700 max-w-xs truncate" title={report.message}>
                         {report.message || "-"}
@@ -264,15 +256,13 @@ function AdminReportsPage() {
                       </td>
                       <td data-label="Actions" className="px-5 py-3 text-right">
                         <button type="button" onClick={() => setViewingReport(report)}
-                          className="inline-flex items-center gap-1 text-xs font-medium px-3 py-1.5 rounded-lg border border-blue-200 text-blue-700 hover:bg-blue-50 mr-2 cursor-pointer">
+                          className="button-secondary button-small mr-2">
                           <Eye size={13} /> View
                         </button>
                         <button
                           onClick={() => setToDelete(report)}
                           disabled={isPending}
-                          className="inline-flex items-center gap-1 text-xs font-medium px-3 py-1.5 rounded-lg
-                                     border border-rose-200 text-rose-700 bg-white hover:bg-rose-50
-                                     transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                          className="button-danger button-small"
                         >
                           <Trash2 size={13} />
                           Delete
@@ -286,7 +276,7 @@ function AdminReportsPage() {
         </div>
 
         {/* Pagination footer */}
-        <div className="flex items-center justify-between px-5 py-3 border-t border-gray-200 bg-gray-50/60">
+        <div className="table-footer">
           <span className="text-xs text-gray-500">
             Page {page + 1} of {Math.max(totalPages, 1)}
           </span>
@@ -294,9 +284,7 @@ function AdminReportsPage() {
             <button
               onClick={() => goToPage(Math.max(page - 1, 0))}
               disabled={page === 0 || loading}
-              className="inline-flex items-center gap-1 text-xs font-medium px-2.5 py-1.5 rounded-lg
-                         border border-gray-300 bg-white hover:bg-gray-50 transition-colors cursor-pointer
-                         disabled:opacity-40 disabled:cursor-not-allowed"
+              className="button-secondary button-small"
             >
               <ChevronLeft size={14} />
               Previous
@@ -304,9 +292,7 @@ function AdminReportsPage() {
             <button
               onClick={() => goToPage(page + 1)}
               disabled={isLast || loading}
-              className="inline-flex items-center gap-1 text-xs font-medium px-2.5 py-1.5 rounded-lg
-                         border border-gray-300 bg-white hover:bg-gray-50 transition-colors cursor-pointer
-                         disabled:opacity-40 disabled:cursor-not-allowed"
+              className="button-secondary button-small"
             >
               Next
               <ChevronRight size={14} />

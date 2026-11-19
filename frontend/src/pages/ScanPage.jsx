@@ -1,10 +1,11 @@
 import BrandMark from "../components/BrandMark";
-import { useEffect, useRef, useState } from "react";
-import { useParams } from "react-router-dom";
-import { Heart, Camera, MapPin } from "lucide-react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
+import { Link, useParams } from "react-router-dom";
+import { ArrowRight, Camera, Check, CheckCircle2, ChevronRight, Heart, LoaderCircle, MapPin, Send } from "lucide-react";
 import { getPetByUuid, submitReport } from "../api/scanApi";
 import { PHOTO_ACCEPT, validatePhoto } from "../utils/validatePhoto";
 import PageStatus from "../components/PageStatus";
+const LocationPickerModal = lazy(() => import("../components/LocationPickerModal"));
 
 // Public page a finder lands on after scanning a pet's QR code.
 // No login required. Branches on the pet's status: Safe shows a calm message, Lost shows the pet's details (conditional fields) plus a
@@ -22,6 +23,7 @@ function ScanPetPage({ petUuid }) {
   const [error, setError] = useState("");
 
   const [location, setLocation] = useState(null);
+  const [locationPickerOpen, setLocationPickerOpen] = useState(false);
   const [locating, setLocating] = useState(false);
   const [locationError, setLocationError] = useState("");
   const locationRequest = useRef(null);
@@ -69,6 +71,7 @@ function ScanPetPage({ petUuid }) {
           latitude: position.coords.latitude,
           longitude: position.coords.longitude,
           accuracy: position.coords.accuracy,
+          source: "device",
         });
       },
       (error) => {
@@ -92,10 +95,22 @@ function ScanPetPage({ petUuid }) {
     setLocationError("");
   }
 
+  function openLocationPicker() {
+    setLocationPickerOpen(true);
+  }
+
+  function confirmLocation(point) {
+    locationRequest.current = null;
+    setLocating(false);
+    setLocation({ latitude: point.latitude, longitude: point.longitude, source: "map" });
+    setLocationError("");
+    setLocationPickerOpen(false);
+  }
+
   async function handleSubmitReport() {
 
   // Guard against duplicate submissions , blocks the request even if the form somehow becomes visible again after a successful submit
-    if (submitted || submitting || locationRequest.current) return;
+    if (submitted || submitting || locationRequest.current || locationPickerOpen) return;
     
     setFormError("");
 
@@ -140,163 +155,156 @@ function ScanPetPage({ petUuid }) {
   }
 
   const isLost = pet.status === "LOST";
+  let locationStatus = locationError;
+  if (!locationStatus && locating) locationStatus = "Allow location access if your browser asks.";
+  if (!locationStatus && location) {
+    if (location.source === "map") locationStatus = "Corrected pin saved to this report.";
+    else if (location.accuracy > 1000) locationStatus = "Your device estimated a broad area. Open the map to check the pin.";
+    else locationStatus = "Location added. Open the map to check or adjust the pin.";
+  }
 
   return (
-    <div id="main-content" className="scan-page min-h-screen flex items-center justify-center bg-slate-50 px-4 py-8">
-      <div className="w-full max-w-sm">
-        <div className="flex justify-center mb-4">
-          <div className="w-10 h-10 rounded-xl bg-blue-700 flex items-center justify-center text-white">
-            <BrandMark />
-          </div>
+    <div className="scan-page min-h-screen">
+      <header className="finder-header">
+        <a href="#main-content" className="skip-link">Skip to content</a>
+        <div className="content-width">
+          <Link to="/" className="brand"><BrandMark /> PawBack</Link>
+          <Link className="header-link" to="/help#found">Finder help <ChevronRight size={16} /></Link>
         </div>
-
-        <div className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
+      </header>
+      <main id="main-content" tabIndex={-1} className={`content-width finder-layout ${isLost ? "finder-layout-lost" : ""}`}>
+        <article className="surface finder-profile">
           <div className="pet-profile-photo">
             <img src={pet.photoUrl} alt={pet.name} className="pet-photo" />
           </div>
-
-          <div className="p-6">
-            {isLost && (
-              <span className="inline-block bg-red-100 text-red-700 text-xs font-semibold px-2.5 py-1 rounded-full mb-3">
-                This pet is lost
-              </span>
-            )}
-
-            <p className="text-lg font-semibold text-gray-900 mb-1">
-              {pet.name}
-            </p>
-
-            {pet.breed && (
-              <p className="text-sm text-gray-500 mb-1">{pet.breed}</p>
-            )}
-
-            {pet.description && (
-              <p className="text-sm text-gray-600 mb-1">{pet.description}</p>
-            )}
-
+          <div className="finder-profile-body">
+            <span className={`pet-state ${isLost ? "pet-state-lost" : "pet-state-safe"}`}>
+              <span aria-hidden="true" /> {isLost ? "Reported lost" : "Safe"}
+            </span>
+            <h1>{pet.name}</h1>
+            {pet.breed && <p className="text-gray-600">{pet.breed}</p>}
+            {pet.description && <p className="mt-3 text-gray-600">{pet.description}</p>}
             {pet.ifFoundInstructions && (
-              <p className="text-xs text-gray-500 italic mb-3">
-                If found: {pet.ifFoundInstructions}
-              </p>
+              <div className="finder-instructions">
+                <h2>If you find {pet.name}</h2>
+                <p>{pet.ifFoundInstructions}</p>
+              </div>
             )}
-
             {!isLost && (
-              <div className="flex flex-col items-center gap-2 py-4">
-                <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center">
-                  <Heart size={22} className="text-green-600" />
-                </div>
-                <p className="text-sm font-medium text-gray-900">
-                  {pet.name} is not currently reported lost
-                </p>
-                <p className="text-xs text-gray-500">Thanks for checking in!</p>
-              </div>
-            )}
-
-            {isLost && !submitted && (
-              <div className="mt-4 pt-4 border-t border-gray-200 space-y-3">
-                <div>
-                  <label htmlFor="finder-message" className="text-sm text-gray-600">
-                    Message <span className="text-red-700">*</span>
-                  </label>
-                  <textarea
-                    id="finder-message"
-                    value={message}
-                    maxLength={255}
-                    aria-describedby="finder-message-count"
-                    onChange={(e) => setMessage(e.target.value)}
-                    rows={3}
-                    placeholder="Where did you see this pet?"
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm mt-1
-                               focus:outline-none focus:ring-2 focus:ring-red-500 transition-shadow"
-                  />
-                  <p id="finder-message-count" className="mt-1 text-xs text-gray-500">{message.length}/255 characters</p>
-                </div>
-
-                <div><label htmlFor="finder-phone" className="text-sm text-gray-600">Your phone number (optional)</label><input id="finder-phone" type="tel" autoComplete="tel" value={finderPhone} maxLength={32} onChange={(event) => setFinderPhone(event.target.value)} aria-describedby="finder-phone-help" placeholder="e.g. +94 77 123 4567" className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm mt-1" /><p id="finder-phone-help" className="mt-1 text-xs text-gray-500">Shared with the pet's owner so they can contact you about this report. Administrators can also view it for moderation. It is not shown on the public pet profile.</p></div>
-
-                <label
-                  className="flex items-center justify-center gap-2 border border-gray-300
-                             rounded-lg px-3 py-2 text-sm text-gray-600 cursor-pointer
-                             hover:bg-gray-50 transition-colors"
-                >
-                  <Camera size={16} />
-                  {photo ? photo.name : "Add a photo (optional)"}
-                  <input
-                    type="file"
-                    accept={PHOTO_ACCEPT}
-                    className="hidden"
-                    onChange={async (e) => {
-                      const file = e.target.files[0];
-                      e.target.value = "";
-                      if (!file) return;
-                      try { await validatePhoto(file); setPhoto(file); setFormError(""); }
-                      catch (err) { setFormError(err.message); }
-                    }}
-                  />
-                </label>
-
-                <button
-                  type="button"
-                  onClick={handleShareLocation}
-                  disabled={locating || submitting}
-                  aria-busy={locating}
-                  aria-describedby="finder-location-status"
-                  className={`w-full flex items-center justify-center gap-2 border rounded-lg px-3 py-2 text-sm
-                             cursor-pointer transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
-                    location
-                      ? "border-green-500 bg-green-50 text-green-700"
-                      : "border-gray-300 text-gray-600 hover:bg-gray-50"
-                  }`}
-                >
-                  <MapPin size={16} />
-                  {locating ? "Finding your location..." : location ? "Update my location" : "Share my location (optional)"}
-                </button>
-                <p id="finder-location-status" role="status" className={`text-xs ${locationError ? "text-red-700" : "text-gray-500"}`}>
-                  {locationError || (location
-                    ? `Location added to this report.${Number.isFinite(location.accuracy) ? ` Estimated accuracy: within ${Math.ceil(location.accuracy)} metres.` : ""} This is your current location, not the pet's live location.`
-                    : locating ? "Waiting for your device. Allow location access if your browser asks."
-                    : "Adds your current location when you send the report. If you saw the pet somewhere else, describe that place in your message.")}
-                </p>
-                {location && <div className="space-y-2">
-                  <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${location.latitude},${location.longitude}`)}`}
-                    target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-sm text-blue-700 underline">
-                    <MapPin size={14} /> Check location on map
-                  </a>
-                  {location.accuracy > 1000 && <p className="text-xs text-amber-800">Your device returned a broad area. Check the map before sending. If the pin is wrong, remove the location and describe the exact place in your message. A phone with location services enabled may give a more accurate result.</p>}
-                </div>}
-                {(location || locating) && <button type="button" onClick={clearLocation} disabled={submitting}
-                  className="text-xs text-blue-700 underline cursor-pointer disabled:opacity-50">
-                  {locating ? "Cancel location request" : "Remove location"}
-                </button>}
-
-                {formError && (
-                  <p role="alert" className="text-xs text-red-600">{formError}</p>
-                )}
-
-                <button
-                  type="button"
-                  onClick={handleSubmitReport}
-                  disabled={submitting || locating}
-                  className="w-full bg-blue-700 hover:bg-blue-800 text-white text-sm font-medium
-                             py-2.5 rounded-lg cursor-pointer transition-colors shadow-sm hover:shadow
-                             disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {submitting ? "Sending..." : "Send report"}
-                </button>
-              </div>
-            )}
-
-            {isLost && submitted && (
-              <div className="mt-4 pt-4 border-t border-gray-200 text-center py-4">
-                <p className="text-sm font-medium text-gray-900">Thank you!</p>
-                <p className="text-xs text-gray-500 mt-1">
-                  Your report has been received. The owner can view it in their dashboard.
-                </p>
-              </div>
+              <p className="finder-safe"><Heart size={19} /> {pet.name} is currently marked safe.</p>
             )}
           </div>
-        </div>
-      </div>
+        </article>
+
+        {isLost && (
+          <section className="surface finder-report" aria-labelledby="finder-report-title">
+            {submitted ? (
+              <div className="finder-success" role="status">
+                <div className="status-icon"><CheckCircle2 size={24} /></div>
+                <h2 id="finder-report-title">Report sent</h2>
+                <p>Your report has been received. The owner can view it in their dashboard.</p>
+                <Link to="/" className="button-secondary mt-5">Back to PawBack <ArrowRight size={17} /></Link>
+              </div>
+            ) : (
+              <>
+                <h2 id="finder-report-title">Report a sighting</h2>
+                <p className="finder-intro">Tell {pet.name}'s owner where and when you saw them.</p>
+                <form className="finder-form" onSubmit={(event) => { event.preventDefault(); void handleSubmitReport(); }}>
+                  <div>
+                    <label htmlFor="finder-message">Message <span className="text-red-700">*</span></label>
+                    <textarea
+                      id="finder-message"
+                      value={message}
+                      maxLength={255}
+                      aria-describedby="finder-message-count"
+                      onChange={(event) => setMessage(event.target.value)}
+                      required
+                      rows={3}
+                      placeholder="For example, near the park entrance at 4 pm."
+                      className="finder-input"
+                    />
+                    <p id="finder-message-count" className="finder-count">{message.length}/255</p>
+                  </div>
+                  <div>
+                    <label htmlFor="finder-phone">Phone number <span className="field-optional">Optional</span></label>
+                    <input
+                      id="finder-phone"
+                      type="tel"
+                      autoComplete="tel"
+                      value={finderPhone}
+                      maxLength={32}
+                      onChange={(event) => setFinderPhone(event.target.value)}
+                      aria-describedby="finder-phone-help"
+                      placeholder="e.g. +94 77 123 4567"
+                      className="finder-input"
+                    />
+                    <p id="finder-phone-help" className="field-help">Shared with the owner and PawBack moderators.</p>
+                  </div>
+                  <div className="finder-attachments">
+                    <div className="finder-attachment">
+                      <label className="button-secondary finder-photo">
+                        {photo ? <Check size={19} /> : <Camera size={19} />}
+                        <span>{photo ? "Change photo" : "Add a photo (optional)"}</span>
+                        <input
+                          type="file"
+                          accept={PHOTO_ACCEPT}
+                          className="sr-only"
+                          disabled={submitting}
+                          onChange={async (event) => {
+                            const file = event.target.files[0];
+                            event.target.value = "";
+                            if (!file) return;
+                            try { await validatePhoto(file); setPhoto(file); setFormError(""); }
+                            catch (err) { setFormError(err.message); }
+                          }}
+                        />
+                      </label>
+                      {photo && (
+                        <>
+                          <p className="field-help break-all" role="status">Photo added: {photo.name}</p>
+                          <button type="button" className="button-quiet button-small mt-1"
+                            disabled={submitting} onClick={() => setPhoto(null)}>Remove photo</button>
+                        </>
+                      )}
+                    </div>
+                    <div className="finder-attachment">
+                      <button
+                        type="button"
+                        onClick={location ? openLocationPicker : handleShareLocation}
+                        disabled={locating || submitting}
+                        aria-busy={locating}
+                        aria-describedby={locationStatus ? "finder-location-status" : undefined}
+                        className="button-secondary finder-location"
+                      >
+                        {locating ? <LoaderCircle size={19} className="motion-safe:animate-spin" /> : <MapPin size={19} />}
+                        <span>{locating ? "Finding location..." : location ? "Open location" : "Share my location (optional)"}</span>
+                        {location && <ChevronRight size={16} className="ml-auto" />}
+                      </button>
+                      {locationStatus && <p id="finder-location-status" role="status" className={`field-help ${locationError ? "text-red-700" : ""}`}>{locationStatus}</p>}
+                      {(location || locating) && (
+                        <button type="button" onClick={clearLocation} disabled={submitting} className="button-quiet button-small mt-1">
+                          {locating ? "Cancel location request" : "Remove location"}
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  {formError && <p role="alert" className="notice-error text-sm">{formError}</p>}
+                  <button type="submit" disabled={submitting || locating || locationPickerOpen} className="button-primary w-full">
+                    {submitting ? <LoaderCircle size={18} className="motion-safe:animate-spin" /> : <Send size={18} />}
+                    {submitting ? "Sending report..." : "Send report"}
+                  </button>
+                </form>
+              </>
+            )}
+          </section>
+        )}
+      </main>
+      {locationPickerOpen && (
+        <Suspense fallback={<p className="map-loading" role="status">Opening location map...</p>}>
+          <LocationPickerModal location={location} onConfirm={confirmLocation} onClose={() => setLocationPickerOpen(false)} />
+        </Suspense>
+      )}
     </div>
   );
 }

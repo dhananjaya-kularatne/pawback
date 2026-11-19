@@ -1,9 +1,10 @@
 import Modal from "./Modal";
 import { useObjectUrls } from "../utils/useObjectUrls";
 import { useState } from "react";
-import { X, Camera, Crop } from "lucide-react";
+import { X } from "lucide-react";
 import PhotoCropModal from "./PhotoCropModal";
-import { PHOTO_ACCEPT, validatePhoto } from "../utils/validatePhoto";
+import PetPhotoField from "./PetPhotoField";
+import { validatePhoto } from "../utils/validatePhoto";
 
 function EditPetModal({ pet, onClose, onSave }) {
   const { createObjectUrl, revokeObjectUrl } = useObjectUrls();
@@ -17,9 +18,6 @@ function EditPetModal({ pet, onClose, onSave }) {
   // Defaults to the pet's current photo; becomes an object URL once a new
   // photo is cropped, so the frame always shows what will actually be saved
   const [previewUrl, setPreviewUrl] = useState(pet.photoUrl || null);
-  // Name to reuse if the currently shown photo (new or original) is re-cropped
-  // without picking a different file
-  const [photoFileName, setPhotoFileName] = useState();
   // The photo staged for cropping: either a just-picked file, or the photo
   // already shown, reopened via "Adjust crop"
   const [pendingPhoto, setPendingPhoto] = useState(null);
@@ -35,13 +33,11 @@ function EditPetModal({ pet, onClose, onSave }) {
     setError("");
     try { await validatePhoto(file); } catch (err) { setError(err.message); return; }
     const src = createObjectUrl(file);
-    if (src) setPendingPhoto({ src, name: file.name });
+    if (src) setPendingPhoto({ src, file });
   }
 
-  function handleAdjustCrop(e) {
-    e.preventDefault();
-    e.stopPropagation();
-    setPendingPhoto({ src: previewUrl, name: photoFileName });
+  function handleAdjustCrop() {
+    setPendingPhoto({ src: previewUrl });
   }
 
   function handleCropCancel() {
@@ -61,7 +57,6 @@ function EditPetModal({ pet, onClose, onSave }) {
     setPendingPhoto(null);
     setImage(croppedFile);
     setPreviewUrl(createObjectUrl(croppedFile));
-    setPhotoFileName(pendingPhoto.name);
   }
 
   async function handleSubmit(e) {
@@ -85,147 +80,99 @@ function EditPetModal({ pet, onClose, onSave }) {
 
   return (
     <Modal onClose={onClose} busy={saving || Boolean(pendingPhoto)} titleId="edit-pet-title" className="max-w-2xl">
-      <div className="bg-white rounded-xl p-6 w-full max-w-2xl shadow-lg">
-        <div className="flex justify-between items-center mb-4">
-          <h2 id="edit-pet-title" className="text-base font-medium text-gray-900">Edit pet</h2>
-          <button
-            onClick={onClose}
-            disabled={saving}
-            aria-label="Close pet form"
-            className="text-gray-500 hover:text-gray-700 hover:bg-gray-100
-                       p-1 rounded-md cursor-pointer transition-colors"
-          >
-            <X size={18} />
-          </button>
+      <div className="dialog-header">
+        <h2 id="edit-pet-title" className="text-base font-medium text-gray-900">Edit pet</h2>
+        <button
+          onClick={onClose}
+          disabled={saving}
+          aria-label="Close pet form"
+          className="icon-button disabled:opacity-50"
+        >
+          <X size={18} />
+        </button>
+      </div>
+
+      <form onSubmit={handleSubmit} className="grid grid-cols-1 sm:grid-cols-[200px_1fr] gap-5 p-5 sm:p-7">
+        <PetPhotoField
+          previewUrl={previewUrl} alt={pet.name} disabled={saving || Boolean(pendingPhoto)}
+          onChange={handleFileSelected} onCrop={handleAdjustCrop}
+        />
+
+        {/* Right: details */}
+        <div className="space-y-3">
+          <div>
+            <label htmlFor="edit-pet-name" className="text-sm text-gray-600">Name <span className="text-red-700">*</span></label>
+            <input
+              type="text"
+              id="edit-pet-name"
+              value={name}
+              required
+              maxLength={100}
+              onChange={(e) => setName(e.target.value)}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm mt-1
+                         focus:outline-none focus:ring-2 focus:ring-blue-700 focus:border-transparent
+                         transition-shadow"
+            />
+          </div>
+          <div>
+            <label htmlFor="edit-pet-breed" className="text-sm text-gray-600">Breed <span className="field-optional">Optional</span></label>
+            <input
+              type="text"
+              id="edit-pet-breed"
+              value={breed}
+              maxLength={100}
+              onChange={(e) => setBreed(e.target.value)}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm mt-1
+                         focus:outline-none focus:ring-2 focus:ring-blue-700 focus:border-transparent
+                         transition-shadow"
+            />
+          </div>
+          <div>
+            <label htmlFor="edit-pet-description" className="text-sm text-gray-600">Description <span className="field-optional">Optional</span></label>
+            <textarea
+              id="edit-pet-description"
+              value={description}
+              maxLength={255}
+              onChange={(e) => setDescription(e.target.value)}
+              rows={2}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm mt-1
+                         focus:outline-none focus:ring-2 focus:ring-blue-700 focus:border-transparent
+                         transition-shadow"
+            />
+          </div>
+          <div>
+            <label htmlFor="edit-pet-ifFoundInstructions" className="text-sm text-gray-600">If found instructions <span className="field-optional">Optional</span></label>
+            <textarea
+              id="edit-pet-ifFoundInstructions"
+              value={ifFoundInstructions}
+              maxLength={255}
+              onChange={(e) => setIfFoundInstructions(e.target.value)}
+              rows={2}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm mt-1
+                         focus:outline-none focus:ring-2 focus:ring-blue-700 focus:border-transparent
+                         transition-shadow"
+            />
+          </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="grid grid-cols-1 sm:grid-cols-[200px_1fr] gap-5">
-          {/* Left: photo */}
-          <div>
-            <label className="text-sm text-gray-600">Photo</label>
-            <label
-              className="relative mt-1 flex flex-col items-center justify-center gap-1.5
-                         aspect-[4/5] w-full max-w-[200px] mx-auto sm:max-w-none rounded-lg border
-                         border-gray-300 border-dashed text-gray-500 cursor-pointer overflow-hidden
-                         hover:bg-gray-50 hover:border-gray-400 transition-colors"
-            >
-              {previewUrl ? (
-                <>
-                  <img
-                    src={previewUrl}
-                    alt={pet.name}
-                    className="absolute inset-0 pet-photo"
-                  />
-                  <button
-                    type="button"
-                    onClick={handleAdjustCrop}
-                    className="absolute top-2 right-2 w-7 h-7 flex items-center justify-center
-                               rounded-full bg-white/90 hover:bg-white text-gray-700 cursor-pointer
-                               transition-colors shadow-sm"
-                    aria-label="Adjust crop"
-                    title="Adjust crop"
-                  >
-                    <Crop size={14} />
-                  </button>
-                  <div
-                    className="absolute inset-x-0 bottom-0 bg-black/50 text-white text-xs
-                               font-medium text-center py-1.5"
-                  >
-                    Change photo
-                  </div>
-                </>
-              ) : (
-                <>
-                  <Camera size={20} />
-                  <span className="text-xs px-2 text-center">Upload photo</span>
-                </>
-              )}
-              <input
-                type="file"
-                accept={PHOTO_ACCEPT}
-                aria-label="Pet photo"
-                className="hidden"
-                onChange={handleFileSelected}
-              />
-            </label>
-          </div>
+        <div className="sm:col-span-2">
+          {error && <p role="alert" className="notice-error text-sm mb-3">{error}</p>}
 
-          {/* Right: details */}
-          <div className="space-y-3">
-            <div>
-              <label htmlFor="edit-pet-name" className="text-sm text-gray-600">Name</label>
-              <input
-                type="text"
-                id="edit-pet-name"
-                value={name}
-                maxLength={100}
-                onChange={(e) => setName(e.target.value)}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm mt-1
-                           focus:outline-none focus:ring-2 focus:ring-blue-700 focus:border-transparent
-                           transition-shadow"
-              />
-            </div>
-            <div>
-              <label htmlFor="edit-pet-breed" className="text-sm text-gray-600">Breed</label>
-              <input
-                type="text"
-                id="edit-pet-breed"
-                value={breed}
-                maxLength={100}
-                onChange={(e) => setBreed(e.target.value)}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm mt-1
-                           focus:outline-none focus:ring-2 focus:ring-blue-700 focus:border-transparent
-                           transition-shadow"
-              />
-            </div>
-            <div>
-              <label htmlFor="edit-pet-description" className="text-sm text-gray-600">Description</label>
-              <textarea
-                id="edit-pet-description"
-                value={description}
-                maxLength={255}
-                onChange={(e) => setDescription(e.target.value)}
-                rows={2}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm mt-1
-                           focus:outline-none focus:ring-2 focus:ring-blue-700 focus:border-transparent
-                           transition-shadow"
-              />
-            </div>
-            <div>
-              <label htmlFor="edit-pet-ifFoundInstructions" className="text-sm text-gray-600">If found instructions</label>
-              <textarea
-                id="edit-pet-ifFoundInstructions"
-                value={ifFoundInstructions}
-                maxLength={255}
-                onChange={(e) => setIfFoundInstructions(e.target.value)}
-                rows={2}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm mt-1
-                           focus:outline-none focus:ring-2 focus:ring-blue-700 focus:border-transparent
-                           transition-shadow"
-              />
-            </div>
-          </div>
-
-          <div className="sm:col-span-2">
-            {error && <p role="alert" className="text-sm text-red-700 mb-3">{error}</p>}
-
-            <button
-              type="submit"
-              disabled={saving}
-              className="w-full bg-blue-700 hover:bg-blue-800 text-white text-sm font-medium
-                         py-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed
-                         cursor-pointer transition-colors shadow-sm hover:shadow"
-            >
-              {saving ? "Saving..." : "Save changes"}
-            </button>
-          </div>
-        </form>
-      </div>
+          <button
+            type="submit"
+            disabled={saving}
+            className="button-primary w-full"
+          >
+            {saving ? "Saving..." : "Save changes"}
+          </button>
+        </div>
+      </form>
 
       {pendingPhoto && (
         <PhotoCropModal
           imageSrc={pendingPhoto.src}
-          fileName={pendingPhoto.name}
+          originalFile={pendingPhoto.file}
+          fileName={pendingPhoto.file?.name ?? image?.name}
           onCancel={handleCropCancel}
           onConfirm={handleCropConfirm}
         />

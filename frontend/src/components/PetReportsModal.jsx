@@ -33,7 +33,7 @@ export default function PetReportsModal({ pet, onClose }) {
 
   return (
     <Modal onClose={onClose} titleId="pet-reports-title" className="max-w-2xl">
-      <div className="sticky top-0 z-10 flex items-center justify-between gap-3 border-b border-gray-200 bg-white px-5 py-4">
+      <div className="dialog-header">
         <div className="min-w-0">
           <h2 id="pet-reports-title" className="text-lg font-semibold text-gray-900 break-words">
             Reports for {pet.name}
@@ -41,7 +41,7 @@ export default function PetReportsModal({ pet, onClose }) {
           <p className="text-xs text-gray-500 mt-1">Your pet's finder updates, newest first.</p>
         </div>
         <button type="button" onClick={onClose} aria-label="Close reports" autoFocus
-          className="shrink-0 rounded-lg p-2 text-gray-500 hover:bg-gray-100 cursor-pointer">
+          className="icon-button">
           <X size={20} />
         </button>
       </div>
@@ -52,12 +52,12 @@ export default function PetReportsModal({ pet, onClose }) {
             {loading ? "Loading reports..." : data ? `${data.totalElements} report${data.totalElements === 1 ? "" : "s"}` : "Reports unavailable"}
           </p>
           <button type="button" onClick={() => setRequest({ page: request.page })} disabled={loading}
-            className="inline-flex items-center gap-1.5 text-sm text-blue-700 rounded-lg px-2 py-1 hover:bg-blue-50 disabled:opacity-50 cursor-pointer">
+            className="button-quiet button-small">
             <RefreshCw size={14} /> Refresh
           </button>
         </div>
 
-        {error && <p role="alert" className="rounded-lg bg-red-50 p-3 text-sm text-red-700">{error} Use Refresh to try again.</p>}
+        {error && <p role="alert" className="notice-error text-sm">{error} Use Refresh to try again.</p>}
         {data?.totalElements === 0 && (
           <div className="rounded-xl border border-dashed border-gray-300 p-8 text-center">
             <p className="text-sm font-medium text-gray-700">No reports yet</p>
@@ -67,12 +67,12 @@ export default function PetReportsModal({ pet, onClose }) {
 
         <div className="space-y-4">
           {data?.content.map((report) => (
-            <article key={report.id} className="rounded-xl border border-gray-200 p-4">
+            <article key={report.id} className="report-card">
               <time dateTime={report.createdAt} className="text-xs text-gray-500">
                 {report.createdAt ? new Date(report.createdAt).toLocaleString() : "Time unavailable"}
               </time>
               <p className="mt-2 text-sm text-gray-800 whitespace-pre-wrap break-words">{report.message}</p>
-        {report.finderPhone && <p className="mt-3 text-sm"><span className="font-semibold">Finder contact: </span><a className="text-blue-700 underline" href={`tel:${report.finderPhone.replace(/[^+0-9]/g, "")}`}>{report.finderPhone}</a></p>}
+              {report.finderPhone && <p className="mt-3 text-sm"><span className="font-semibold">Finder contact: </span><a className="text-blue-700 underline" href={`tel:${report.finderPhone.replace(/[^+0-9]/g, "")}`}>{report.finderPhone}</a></p>}
               {report.photoUrl && (
                 <a href={report.photoUrl} target="_blank" rel="noopener noreferrer" className="block mt-3"
                   aria-label="Open finder photo in a new tab">
@@ -84,7 +84,7 @@ export default function PetReportsModal({ pet, onClose }) {
               {report.latitude != null && report.longitude != null && (
                 <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${report.latitude},${report.longitude}`)}`}
                   target="_blank" rel="noopener noreferrer"
-                  className="mt-3 inline-flex items-center gap-1.5 text-sm text-blue-700 hover:underline">
+                  className="button-secondary button-small mt-3">
                   <MapPin size={15} /> View shared location
                 </a>
               )}
@@ -98,12 +98,12 @@ export default function PetReportsModal({ pet, onClose }) {
             <div className="flex gap-2">
               <button type="button" disabled={data.page === 0}
                 onClick={() => setRequest({ page: data.page - 1 })}
-                className="inline-flex items-center gap-1 rounded-lg border border-gray-300 px-3 py-2 text-xs disabled:opacity-40 cursor-pointer">
+                className="button-secondary button-small">
                 <ChevronLeft size={14} /> Previous
               </button>
               <button type="button" disabled={data.last}
                 onClick={() => setRequest({ page: data.page + 1 })}
-                className="inline-flex items-center gap-1 rounded-lg border border-gray-300 px-3 py-2 text-xs disabled:opacity-40 cursor-pointer">
+                className="button-secondary button-small">
                 Next <ChevronRight size={14} />
               </button>
             </div>

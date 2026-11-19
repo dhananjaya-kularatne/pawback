@@ -1,4 +1,5 @@
 import Modal from "./Modal";
+import { useRef } from "react";
 import { AlertTriangle, X } from "lucide-react";
 
 // Small in-app confirmation modal , used instead of window.confirm so the
@@ -17,22 +18,18 @@ function ConfirmDialog({
   onConfirm,
   onCancel,
 }) {
-  const confirmClass =
-    tone === "danger"
-      ? "bg-red-600 hover:bg-red-700"
-      : "bg-blue-700 hover:bg-blue-800";
+  const cancelRef = useRef(null);
+  const confirmClass = tone === "danger" ? "button-danger" : "button-primary";
 
   return (
-    <Modal onClose={onCancel} busy={busy} titleId="confirm-title" className="max-w-md">
+    <Modal onClose={onCancel} busy={busy} titleId="confirm-title" initialFocus={cancelRef} className="max-w-md">
       <div
         className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 relative"
         onClick={(e) => e.stopPropagation()}
       >
         <button
           onClick={() => !busy && onCancel()}
-          className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full
-                     text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors cursor-pointer
-                     disabled:opacity-40 disabled:cursor-not-allowed"
+          className="icon-button absolute top-3 right-3 disabled:opacity-50"
           disabled={busy}
           aria-label="Close"
         >
@@ -53,21 +50,21 @@ function ConfirmDialog({
           </div>
         </div>
 
-        <div className="flex justify-end gap-2 mt-6">
+        <div className="flex flex-wrap justify-end gap-2 mt-6">
           <button
+            type="button"
+            ref={cancelRef}
             onClick={onCancel}
             disabled={busy}
-            className="text-sm font-medium px-4 py-2 rounded-lg border border-gray-200
-                       text-gray-700 bg-white hover:bg-gray-50 transition-colors cursor-pointer
-                       disabled:opacity-40 disabled:cursor-not-allowed"
+            className="button-secondary"
           >
             {cancelLabel}
           </button>
           <button
+            type="button"
             onClick={onConfirm}
             disabled={busy}
-            className={`text-sm font-medium px-4 py-2 rounded-lg text-white transition-colors cursor-pointer
-                        disabled:opacity-60 disabled:cursor-not-allowed ${confirmClass}`}
+            className={confirmClass}
           >
             {busy ? "Working..." : confirmLabel}
           </button>

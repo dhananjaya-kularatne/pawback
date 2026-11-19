@@ -53,14 +53,15 @@ export default function RegisterModal({ onClose, onSuccess, onSwitchToLogin }) {
       busy={loading}
       onClose={onClose}
       title="Create your account"
-      subtitle="Register your pet and start protecting them today."
+      subtitle="Set up your account to create pet profiles and manage QR tags."
       footer={
         <>
           Already registered?{" "}
           <button
             type="button"
             onClick={onSwitchToLogin}
-            className="text-blue-700 hover:text-blue-800 font-medium underline cursor-pointer"
+            disabled={loading}
+            className="inline-action"
           >
             Sign in
           </button>
@@ -68,15 +69,15 @@ export default function RegisterModal({ onClose, onSuccess, onSwitchToLogin }) {
       }
     >
       {error && (
-        <div className="mb-4 p-3 rounded-lg bg-red-100 text-red-700 text-sm font-medium border border-red-200">
+        <div className="notice-error text-sm mb-4" role="alert">
           {error}
         </div>
       )}
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Full Name */}
+        {/* Full name */}
         <div>
-          <label htmlFor="reg-name" className="block text-xs font-medium text-gray-700 mb-1">Full Name</label>
+          <label htmlFor="reg-name" className="block text-xs font-medium text-gray-700 mb-1">Full name</label>
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
               <User size={15} />
@@ -100,7 +101,7 @@ export default function RegisterModal({ onClose, onSuccess, onSwitchToLogin }) {
 
         {/* Email */}
         <div>
-          <label htmlFor="reg-email" className="block text-xs font-medium text-gray-700 mb-1">Email Address</label>
+          <label htmlFor="reg-email" className="block text-xs font-medium text-gray-700 mb-1">Email address</label>
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
               <Mail size={15} />
@@ -125,7 +126,7 @@ export default function RegisterModal({ onClose, onSuccess, onSwitchToLogin }) {
         {/* Phone */}
         <div>
           <label htmlFor="reg-phone" className="block text-xs font-medium text-gray-700 mb-1">
-            Phone <span className="text-gray-400 font-normal">(Optional)</span>
+            Phone number <span className="field-optional">Optional</span>
           </label>
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
@@ -137,7 +138,8 @@ export default function RegisterModal({ onClose, onSuccess, onSwitchToLogin }) {
               aria-invalid={!!fieldErrors.phone}
               aria-describedby="reg-phone-error"
               type="tel"
-              placeholder="+1 (555) 000-0000"
+              autoComplete="tel"
+              placeholder="+94 77 123 4567"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               className="w-full pl-9 pr-3 py-2 text-sm border border-gray-300 rounded-lg
@@ -201,25 +203,22 @@ export default function RegisterModal({ onClose, onSuccess, onSwitchToLogin }) {
         <button
           type="submit"
           disabled={loading}
-          className="w-full flex items-center justify-center gap-2 bg-blue-700 hover:bg-blue-800
-                     text-white text-sm font-semibold py-2.5 px-4 rounded-lg shadow-sm
-                     transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+          className="button-primary w-full"
         >
-          {loading ? "Creating account..." : (<>Create Account <ArrowRight size={15} /></>)}
+          {loading ? "Creating account..." : (<>Create account <ArrowRight size={15} /></>)}
         </button>
 
         <div className="relative flex items-center py-2">
           <div className="flex-grow border-t border-gray-200"></div>
-          <span className="flex-shrink-0 mx-4 text-xs text-gray-400 font-medium uppercase tracking-wider">Or</span>
+          <span className="flex-shrink-0 mx-4 text-xs text-gray-500 font-medium uppercase tracking-wider">Or</span>
           <div className="flex-grow border-t border-gray-200"></div>
         </div>
 
         <button
           type="button"
           onClick={() => window.location.href = GOOGLE_LOGIN_URL}
-          className="w-full flex items-center justify-center gap-2 bg-white hover:bg-gray-50
-                     text-gray-700 text-sm font-semibold py-2.5 px-4 rounded-lg shadow-sm
-                     border border-gray-200 transition-all cursor-pointer"
+          disabled={loading}
+          className="button-secondary w-full"
         >
           <svg className="w-5 h-5" viewBox="0 0 24 24">
             <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />

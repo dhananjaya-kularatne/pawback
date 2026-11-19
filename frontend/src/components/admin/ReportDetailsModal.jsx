@@ -4,7 +4,7 @@ import { MapPin, X } from "lucide-react";
 export default function ReportDetailsModal({ report, onClose }) {
   return (
     <Modal onClose={onClose} titleId="report-detail-title" className="max-w-2xl">
-      <div className="sticky top-0 z-10 flex items-start justify-between gap-3 border-b border-gray-200 bg-white px-5 py-4">
+      <div className="dialog-header">
         <div className="min-w-0">
           <h2 id="report-detail-title" className="text-lg font-semibold text-gray-900 break-words">
             Report for {report.petName || "pet"}
@@ -12,7 +12,7 @@ export default function ReportDetailsModal({ report, onClose }) {
           <p className="mt-1 text-xs text-gray-500">Pet ID {report.petId} · Report #{report.id}</p>
         </div>
         <button type="button" onClick={onClose} autoFocus aria-label="Close report details"
-          className="rounded-lg p-2 text-gray-500 hover:bg-gray-100 shrink-0 cursor-pointer">
+          className="icon-button">
           <X size={20} />
         </button>
       </div>
@@ -34,7 +34,7 @@ export default function ReportDetailsModal({ report, onClose }) {
         {report.latitude != null && report.longitude != null ? (
           <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${report.latitude},${report.longitude}`)}`}
             target="_blank" rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 text-sm text-blue-700 hover:underline">
+            className="button-secondary button-small">
             <MapPin size={15} /> View shared location
           </a>
         ) : <p className="text-xs text-gray-500">No location shared.</p>}

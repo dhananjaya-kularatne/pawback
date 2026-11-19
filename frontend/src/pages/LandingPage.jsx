@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useSession } from "../utils/useSession";
-import { PawPrint, QrCode, ArrowRight, ArrowUpRight, Camera, Heart, Check } from "lucide-react";
+import { QrCode, ArrowRight, Camera, Heart, Check } from "lucide-react";
 import { Link } from "react-router-dom";
 import scanImg from "../assets/scan-collar.webp";
 import heroImg from "../assets/collar-dog.webp";
@@ -23,7 +23,7 @@ function LandingPage() {
   const { token } = useSession();
   const isLoggedIn = Boolean(token);
 
-  const [registerOpen, setRegisterOpen] = useState(false);
+  const [registerOpen, setRegisterOpen] = useState(() => !isLoggedIn && Boolean(location.state?.openRegister));
   const [loginOpen, setLoginOpen] = useState(() => Boolean(location.state?.openLogin || location.state?.authError || location.state?.sessionExpired));
   const [forgotOpen, setForgotOpen] = useState(false);
 
@@ -58,29 +58,28 @@ function LandingPage() {
   }
 
   return <div className="landing-page">
-    <AppHeader showNavLinks={isLoggedIn}>{isLoggedIn ? <AccountMenu /> : <><button className="header-link" onClick={openLogin}>Sign in</button><button className="button-primary button-small" onClick={openRegister}>Get started <ArrowUpRight size={16} /></button></>}</AppHeader>
-    <main id="main-content">
+    <AppHeader>{isLoggedIn ? <AccountMenu /> : <><button className="header-link" onClick={openLogin}>Sign in</button><button className="button-primary button-small" onClick={openRegister}>Get started</button></>}</AppHeader>
+    <main id="main-content" tabIndex={-1}>
       <section className="hero-section">
         <div className="content-width hero-grid">
-          <div className="hero-copy"><span className="eyebrow"><PawPrint size={16} /> BIG LOVE. LITTLE TAG.</span>
-            <h1>More adventures.<br /><span>Always a way<br className="hidden lg:block" /> back home.</span></h1>
-            <p>A familiar face. A little blue collar. A QR tag that helps a kind stranger tell you where your best friend has been found.</p>
-            <div className="flex flex-wrap gap-3 mt-8"><button className="button-primary" onClick={isLoggedIn ? () => navigate("/dashboard") : openRegister}>{isLoggedIn ? "Meet your pets" : "Create your pet's profile"}<ArrowUpRight size={19} /></button><Link className="button-secondary" to="/help">See how it works</Link></div>
-            <div className="hero-note"><span className="mini-paw"><PawPrint size={20} /></span><span>One profile. One unique QR tag.<br /><strong>A little more peace of mind.</strong></span></div>
+          <div className="hero-copy">
+            <h1>Help them find <em>their way home.</em></h1>
+            <p>Attach a PawBack QR tag to your pet’s collar. If they get lost, anyone who finds them can scan the tag and tell you where they saw them.</p>
+            <div className="hero-actions"><button className="button-primary" onClick={isLoggedIn ? () => navigate("/dashboard") : openRegister}>{isLoggedIn ? "My pets" : "Create a pet profile"}<ArrowRight size={18} /></button><Link className="button-secondary" to="/help">How it works</Link></div>
           </div>
-          <div className="hero-visual"><img src={heroImg} alt="Golden retriever wearing a blue collar with a QR identification tag" fetchPriority="high" width="1536" height="1024" /></div>
+          <figure className="hero-visual"><img src={heroImg} alt="Golden retriever wearing a blue collar with a QR identification tag" fetchPriority="high" width="1536" height="1024" /><figcaption><QrCode size={19} /> PawBack collar tag</figcaption></figure>
         </div>
       </section>
       <div className="promise-strip"><div className="content-width"><span><Check size={17} /> No app needed to scan</span><span><Check size={17} /> A unique tag for every pet</span><span><Check size={17} /> Finder reports in your dashboard</span></div></div>
       <section className="content-width story-section">
-        <div className="story-image"><img src={scanImg} alt="A finder scanning a QR tag attached to a beagle's blue collar" loading="lazy" width="1536" height="1024" /><span className="image-caption">A small act of kindness can lead them home.</span></div>
-        <div className="story-copy"><span className="eyebrow">FOR PETS. FOR THEIR PEOPLE.</span><h2>Happy tails.<br />Reassured humans.</h2><p>They turn everyday walks into adventures. Give your curious companion a simple way to be recognised if they wander a little too far.</p><p>PawBack connects a collar tag to your pet's profile. When your pet is marked Lost, a finder can leave a message, photo or location for you to follow up.</p><Link className="text-link" to="/help">A closer look at PawBack <ArrowRight size={18} /></Link></div>
+        <div className="story-image"><img src={scanImg} alt="A finder scanning a QR tag attached to a beagle's blue collar" loading="lazy" width="1536" height="1024" /></div>
+        <div className="story-copy"><h2>What happens when someone scans the tag?</h2><p>They see your pet’s photo and the instructions you’ve left. If your pet is marked Lost, they can send you a report with a message, photo or location.</p><Link className="text-link" to="/help#found">See what a finder should do <ArrowRight size={18} /></Link></div>
       </section>
-      <section className="walkthrough-section"><div className="content-width"><div className="section-heading"><span className="eyebrow">A LITTLE PREPARATION GOES A LONG WAY</span><h2>Their way home starts with you.</h2><p>From a favourite photo to a tag on their collar. Here's how it comes together.</p></div>
-        <ol className="walkthrough-grid">{[{icon: Camera,title:"Make it theirs",text:"Add a photo, a name and helpful instructions to your pet's profile."},{icon: QrCode,title:"Tag along",text:"Download the unique QR image, print a clear tag and attach it securely to their collar."},{icon: Heart,title:"Stay connected",text:"Mark your pet Lost if they wander. Read finder reports and mark them Safe when they're home."}].map(({icon: Icon,title,text},i)=><li key={title}><span className="step-top"><span className="step-number">0{i+1}</span><Icon size={31} strokeWidth={1.5} /></span><h3>{title}</h3><p>{text}</p></li>)}</ol>
+      <section className="walkthrough-section"><div className="content-width"><div className="section-heading"><h2>Set up your pet’s tag</h2></div>
+        <ol className="walkthrough-grid">{[{icon: Camera,title:"Create a profile",text:"Add your pet’s name, a clear photo and instructions for anyone who finds them."},{icon: QrCode,title:"Print and attach the tag",text:"Download the QR code, print it on a durable tag and attach it to their collar."},{icon: Heart,title:"Know what to do if they go missing",text:"Mark your pet Lost to receive reports. Mark them Safe when they’re home."}].map(({icon: Icon,title,text})=><li key={title}><Icon className="feature-icon" size={26} strokeWidth={1.75} /><h3>{title}</h3><p>{text}</p></li>)}</ol>
         <div className="text-center mt-10"><Link to="/help" className="button-secondary">Your step-by-step guide <ArrowRight size={17} /></Link></div>
       </div></section>
-      <section className="content-width home-cta"><div><span className="eyebrow">FOR ALL THE WALKS STILL TO COME</span><h2>Give their next adventure<br />a way back to you.</h2></div><button className="button-primary" onClick={isLoggedIn ? () => navigate("/dashboard") : openRegister}>{isLoggedIn ? "Open my pets" : "Let's get your pet ready"}<ArrowUpRight size={19} /></button></section>
+      <section className="content-width home-cta"><h2>Get a tag ready before the next walk.</h2><button className="button-primary" onClick={isLoggedIn ? () => navigate("/dashboard") : openRegister}>{isLoggedIn ? "Open my pets" : "Create a pet profile"}<ArrowRight size={18} /></button></section>
     </main><Footer />
     {registerOpen && <RegisterModal onClose={() => setRegisterOpen(false)} onSuccess={handleAuthSuccess} onSwitchToLogin={openLogin} />}
     {loginOpen && <LoginModal initialError={location.state?.authError || (location.state?.sessionExpired ? "Your session has ended. Please sign in again." : "")} onClose={closeLogin} onSuccess={handleAuthSuccess} onSwitchToRegister={openRegister} onForgotPassword={openForgot} />}

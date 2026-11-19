@@ -17,7 +17,7 @@ const TITLES = {
 
 const SUBTITLES = {
   1: "Request a 6-digit code to confirm it's you.",
-  2: "If the account is eligible, check your inbox for its reset code.",
+  2: "Check your inbox and spam folder for the 6-digit code.",
   3: "Pick a strong password you haven't used before.",
   4: "",
 };
@@ -45,7 +45,7 @@ export default function ForgotPasswordModal({ onClose, onSwitchToLogin }) {
     setLoading(true);
     try {
       await forgotPassword(email);
-      setNotice(`If ${email} is registered, a 6-digit code is on its way.`);
+      setNotice(`If ${email.trim()} is linked to a PawBack password account, we’ll email a reset code to that address.`);
       setStep(2);
     } catch (err) {
       setFieldErrors(err.fieldErrors || {});
@@ -68,7 +68,7 @@ export default function ForgotPasswordModal({ onClose, onSwitchToLogin }) {
       setStep(3);
     } catch (err) {
       setFieldErrors(err.fieldErrors || {});
-      setError(err.message || "That code is invalid or has expired.");
+      setError(err.message || "This reset code is incorrect or has expired.");
     } finally {
       setLoading(false);
     }
@@ -99,10 +99,7 @@ export default function ForgotPasswordModal({ onClose, onSwitchToLogin }) {
     "w-full pl-9 pr-3 py-2 text-sm border border-gray-300 rounded-lg " +
     "focus:outline-none focus:ring-2 focus:ring-blue-700 transition-shadow text-gray-900";
 
-  const submitClass =
-    "w-full flex items-center justify-center gap-2 bg-blue-700 hover:bg-blue-800 " +
-    "text-white text-sm font-semibold py-2.5 px-4 rounded-lg shadow-sm " +
-    "transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed";
+  const submitClass = "button-primary w-full";
 
   return (
     <AuthModalShell
@@ -118,7 +115,8 @@ export default function ForgotPasswordModal({ onClose, onSwitchToLogin }) {
             <button
               type="button"
               onClick={() => onSwitchToLogin()}
-              className="text-blue-700 hover:text-blue-800 font-medium underline cursor-pointer"
+              disabled={loading}
+              className="inline-action"
             >
               Back to sign in
             </button>
@@ -127,12 +125,12 @@ export default function ForgotPasswordModal({ onClose, onSwitchToLogin }) {
       }
     >
       {error && (
-        <div className="mb-4 p-3 rounded-lg bg-red-100 text-red-700 text-sm font-medium border border-red-200">
+        <div className="notice-error text-sm mb-4" role="alert">
           {error}
         </div>
       )}
       {notice && !error && (
-        <div className="mb-4 p-3 rounded-lg bg-blue-50 text-blue-800 text-sm font-medium border border-blue-200">
+        <div role="status" className="mb-4 p-3 rounded-lg bg-blue-50 text-blue-800 text-sm border border-blue-200 wrap-anywhere">
           {notice}
         </div>
       )}
@@ -140,7 +138,7 @@ export default function ForgotPasswordModal({ onClose, onSwitchToLogin }) {
       {step === 1 && (
         <form onSubmit={handleEmail} className="space-y-4">
           <div>
-            <label htmlFor="fp-email" className="block text-xs font-medium text-gray-700 mb-1">Email Address</label>
+            <label htmlFor="fp-email" className="block text-xs font-medium text-gray-700 mb-1">Email address</label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
                 <Mail size={15} />
@@ -150,6 +148,7 @@ export default function ForgotPasswordModal({ onClose, onSwitchToLogin }) {
                 aria-invalid={!!fieldErrors.email}
                 aria-describedby="fp-email-error"
                 type="email"
+                autoComplete="email"
                 required
                 placeholder="jane@example.com"
                 value={email}
@@ -171,9 +170,10 @@ export default function ForgotPasswordModal({ onClose, onSwitchToLogin }) {
             <label htmlFor="fp-otp" className="block text-xs font-medium text-gray-700 mb-1">6-digit code</label>
             <input
               id="fp-otp"
-                aria-invalid={!!fieldErrors.otp}
-                aria-describedby="fp-otp-error"
+              aria-invalid={!!fieldErrors.otp}
+              aria-describedby={fieldErrors.otp ? "fp-otp-error" : undefined}
               type="text"
+              autoComplete="one-time-code"
               inputMode="numeric"
               maxLength={6}
               required
@@ -184,14 +184,16 @@ export default function ForgotPasswordModal({ onClose, onSwitchToLogin }) {
                          focus:outline-none focus:ring-2 focus:ring-blue-700 transition-shadow text-gray-900"
             />
 
-            <AuthFieldError id="fp-otp-error" message={fieldErrors.otp} />          </div>
+            <AuthFieldError id="fp-otp-error" message={fieldErrors.otp} />
+          </div>
           <button type="submit" disabled={loading} className={submitClass}>
             {loading ? "Verifying..." : (<>Verify code <ArrowRight size={15} /></>)}
           </button>
           <button
             type="button"
-            onClick={() => { reset(); setStep(1); }}
-            className="w-full text-center text-xs text-blue-700 hover:text-blue-800 hover:underline cursor-pointer"
+            onClick={() => { reset(); setOtp(""); setStep(1); }}
+            disabled={loading}
+            className="button-quiet button-small w-full"
           >
             Use a different email
           </button>
@@ -211,6 +213,7 @@ export default function ForgotPasswordModal({ onClose, onSwitchToLogin }) {
                 aria-invalid={!!fieldErrors.newPassword}
                 aria-describedby="fp-new-error fp-password-hint"
                 type="password"
+                autoComplete="new-password"
                 required
                 minLength={8}
                 placeholder="At least 8 characters"
@@ -231,6 +234,7 @@ export default function ForgotPasswordModal({ onClose, onSwitchToLogin }) {
               <input
                 id="fp-confirm"
                 type="password"
+                autoComplete="new-password"
                 required
                 placeholder="Re-enter your new password"
                 value={confirmPassword}
