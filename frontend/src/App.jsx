@@ -14,8 +14,12 @@ import InformationPage from "./pages/InformationPage";
 import PageStatus from "./components/PageStatus";
 
 function RouteScrollReset() {
-  const { pathname } = useLocation();
-  useEffect(() => { window.scrollTo(0, 0); }, [pathname]);
+  const { pathname, hash } = useLocation();
+  useEffect(() => {
+    const section = hash && document.getElementById(hash.slice(1));
+    if (section) section.scrollIntoView();
+    else window.scrollTo(0, 0);
+  }, [pathname, hash]);
   return null;
 }
 

@@ -1,12 +1,12 @@
-import { Link } from "react-router-dom";
+import { Link, NavLink } from "react-router-dom";
 import HeaderNavLinks from "./HeaderNavLinks";
 import BrandMark from "./BrandMark";
 export default function AppHeader({ showNavLinks = true, children }) {
   return <header className="site-header">
     <a href="#main-content" className="skip-link">Skip to content</a>
     <div className="site-header-inner">
-      <Link to="/" className="brand"><BrandMark /><span>PawBack<span className="brand-caption">A little tag. A way home.</span></span></Link>
-      {showNavLinks ? <HeaderNavLinks /> : <nav aria-label="Main"><Link to="/" className="header-link">Home</Link><Link to="/help" className="header-link">How it works</Link></nav>}
+      <Link to="/" className="brand"><BrandMark /><span>PawBack</span></Link>
+      {showNavLinks ? <HeaderNavLinks /> : <nav aria-label="Main"><NavLink to="/help" className="header-link">How it works</NavLink></nav>}
       <div className="header-actions">{children}</div>
     </div>
   </header>;
