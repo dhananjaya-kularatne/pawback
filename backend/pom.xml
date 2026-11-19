@@ -131,6 +131,25 @@
 		</dependency>
 	</dependencies>
 
+	<profiles>
+		<profile>
+			<id>azure</id>
+			<build>
+				<!-- Keep deployment classes separate from the IDE's target/classes. -->
+				<directory>${project.basedir}/target/azure</directory>
+				<resources>
+					<resource>
+						<directory>src/main/resources</directory>
+					</resource>
+					<resource>
+						<directory>../frontend/dist</directory>
+						<targetPath>static</targetPath>
+					</resource>
+				</resources>
+			</build>
+		</profile>
+	</profiles>
+
 	<build>
 		<plugins>
 			<plugin>
