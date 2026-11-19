@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { X } from "lucide-react";
+import { Check, Crosshair, X } from "lucide-react";
 import Modal from "./Modal";
 
 export default function LocationPickerModal({ location, onConfirm, onClose }) {
@@ -40,19 +40,21 @@ export default function LocationPickerModal({ location, onConfirm, onClose }) {
   }, [location]);
 
   return <Modal onClose={onClose} titleId="report-map-title" className="max-w-2xl">
-    <div className="p-5 sm:p-6 space-y-4">
+    <div className="map-dialog">
       <div className="flex items-center justify-between gap-3">
-        <h2 id="report-map-title" className="text-xl font-semibold">Choose report location</h2>
-        <button type="button" onClick={onClose} aria-label="Close location map" className="p-2 rounded-lg hover:bg-slate-100"><X size={22} /></button>
+        <h2 id="report-map-title">Report location</h2>
+        <button type="button" onClick={onClose} aria-label="Close location map" className="icon-button"><X size={22} /></button>
       </div>
-      <p id="report-map-help" className="text-sm text-slate-600">Click the place where you saw the pet, or drag the pin. You can also move the map with the arrow keys and select its centre.</p>
+      <p id="report-map-help" className="text-sm text-slate-600">Tap the map or drag the pin to where you saw the pet. You can also pan with the arrow keys and use the map centre.</p>
       <div ref={container} role="region" aria-label="Report location map" aria-describedby="report-map-help" className="report-location-map" />
       {tileError && <p role="alert" className="text-sm text-amber-800">Some map tiles could not load. Try reopening the map, or describe the place in your report.</p>}
-      <button type="button" className="text-sm text-blue-700 underline" onClick={() => selectRef.current?.(mapRef.current.getCenter())}>Select map centre</button>
-      <p role="status" className="text-sm text-slate-600">{selected ? `Selected point: ${selected.latitude.toFixed(6)}, ${selected.longitude.toFixed(6)}` : "Choose a point to add to your report."}</p>
-      <div className="flex flex-wrap justify-end gap-3">
-        <button type="button" onClick={onClose} className="px-4 py-3 border border-slate-300 rounded-lg">Cancel</button>
-        <button type="button" disabled={!selected} onClick={() => onConfirm(selected)} className="px-4 py-3 bg-blue-700 text-white rounded-lg disabled:opacity-50">Use selected location</button>
+      <div className="map-point-row">
+        <p role="status" className="text-sm text-slate-600">{selected ? `Selected point: ${selected.latitude.toFixed(6)}, ${selected.longitude.toFixed(6)}` : "Choose a point to add to your report."}</p>
+        <button type="button" className="button-quiet button-small" onClick={() => selectRef.current?.(mapRef.current.getCenter())}><Crosshair size={17} /> Use map centre</button>
+      </div>
+      <div className="map-actions">
+        <button type="button" onClick={onClose} className="button-secondary">Cancel</button>
+        <button type="button" disabled={!selected} onClick={() => onConfirm(selected)} className="button-primary"><Check size={18} /> Use selected location</button>
       </div>
     </div>
   </Modal>;
