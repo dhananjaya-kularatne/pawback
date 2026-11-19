@@ -1,79 +1,78 @@
 # PawBack
 
-Pet profiles, printable QR tags, finder reports, and an owner/admin dashboard.
+PawBack helps reunite lost pets with their owners. Owners can create a pet profile and attach a printable QR tag to their pet's collar. Anyone who finds the pet can scan the tag with a phone camera, view the pet's profile, and send the owner a sighting report.
 
-## Local setup
+[Open PawBack](https://pawback.duckdns.org/) · [Watch the video demo](https://youtu.be/M3tMdFTfyaw?si=5Zy40g-NT0lzLwZZ)
 
-Use Java 21, Node 22.17 or newer, npm, and MySQL 8.0 or newer. The Maven wrapper is included. Dependencies require internet access on the first install.
+## Screenshots
 
-The backend settings are in [application.properties](backend/src/main/resources/application.properties). Save the values under Windows User environment variables, then fully reopen your IDE/terminal. Run the normal Maven command below; no dotenv loader or custom launcher is needed. Required local values are `DB_PASSWORD`, `JWT_SECRET`, the three `CLOUDINARY_*` values, and `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`. Use a private database account; `DB_URL` and `DB_USERNAME` override the local defaults. Do not commit real secrets.
+| Home | My pets |
+| --- | --- |
+| [![PawBack homepage with a golden retriever wearing a QR collar tag](assets/home.jpg)](assets/home.jpg) | [![Owner dashboard showing two pet profiles and their Safe or Lost status](assets/my-pets.jpg)](assets/my-pets.jpg) |
+| **Finder view** | **Owner reports** |
+| [![Mobile pet profile and sighting report form](assets/finder-view.jpg)](assets/finder-view.jpg) | [![Owner dashboard showing a sighting report and its shared location link](assets/owner-reports.jpg)](assets/owner-reports.jpg) |
 
-Generate a random JWT secret rather than using a memorable password. For example, in PowerShell:
+Pet profiles and reports shown here use demo data. Select any screenshot to view it at full size.
+
+## Features
+
+- **Pet profiles and QR tags.** Add a photo, pet details, and instructions for finders. Download a QR tag for each pet.
+- **Safe and Lost status.** Update a pet's status from the owner dashboard. When a pet is marked Lost, finders can submit a report from the public QR profile without signing in.
+- **Sighting reports.** Finders can include a photo, map location, or callback number. Owners receive an email notification and can view report details in the dashboard.
+- **Account access and moderation.** Owners can sign in with a password or Google. Administrators can manage users and review finder reports.
+
+## Tech stack
+
+| Layer | Technology |
+| --- | --- |
+| Frontend | React, Vite, Tailwind CSS, Leaflet |
+| Backend | Java 21, Spring Boot, Spring Security, Spring Data JPA |
+| Database | MySQL |
+| Integrations | Google OAuth, Cloudinary for images, Brevo for email, ZXing for QR generation |
+
+## Run locally
+
+Install **Java 21**, **Node.js 22.17 or later** with npm, and **MySQL 8.0 or later**. The repository includes the Maven wrapper.
+
+Start MySQL and create an empty database named `pawback`. Hibernate initializes the application tables when the backend starts.
+
+Set the following environment variables before starting the backend. On Windows, save them as user environment variables and open a new terminal to load them. The backend reads them through [application.properties](backend/src/main/resources/application.properties).
+
+| Variables | Values |
+| --- | --- |
+| `DB_URL`, `DB_USERNAME`, `DB_PASSWORD` | Your MySQL JDBC URL, username, and password. The default URL points to `localhost:3306/pawback` and the default username is `root`. |
+| `JWT_SECRET` | A random signing secret. The command below generates one as Base64 text. |
+| `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET` | Your Cloudinary credentials. |
+| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | Credentials for a Google OAuth web application. |
+| `PAWBACK_BREVO_API_KEY`, `PAWBACK_BREVO_SENDER_EMAIL` | Brevo API key and verified sender address for password reset and report emails. |
+
+For Google sign-in, set `http://localhost:5173` as an authorized JavaScript origin and `http://localhost:8080/login/oauth2/code/google` as an authorized redirect URI.
+
+To generate a JWT secret in PowerShell and use it in the current terminal, run the following command. Store credentials privately.
 
 ```powershell
 $pawbackBytes = New-Object byte[] 64
-$pawbackRng = [Security.Cryptography.RandomNumberGenerator]::Create()
+$pawbackRng = [System.Security.Cryptography.RandomNumberGenerator]::Create()
 $pawbackRng.GetBytes($pawbackBytes)
-$env:JWT_SECRET = [Convert]::ToBase64String($pawbackBytes)
 $pawbackRng.Dispose()
+$env:JWT_SECRET = [Convert]::ToBase64String($pawbackBytes)
 ```
 
-In the backend terminal:
+Start the backend from the repository root.
 
 ```powershell
 cd backend
 .\mvnw.cmd spring-boot:run
 ```
 
-In a second terminal, copy `frontend/.env.example` to `frontend/.env.local` if different settings are needed, then:
+On macOS or Linux, use `sh ./mvnw spring-boot:run` from the `backend` directory.
 
-```powershell
+In a second terminal, start the frontend from the repository root.
+
+```sh
 cd frontend
 npm ci
 npm run dev
 ```
 
-Open `http://localhost:5173`. The API defaults to `http://localhost:8080/api`. `VITE_API_BASE_URL` is a **build-time** frontend setting; rebuild after changing it. The development and build commands use Vite's native config loader.
-
-## Database setup
-
-The project uses Hibernate schema updates through `spring.jpa.hibernate.ddl-auto=update` in `application.properties`. Start MySQL, set the database environment variables, and run the normal Maven command. Hibernate creates missing mapped tables/columns, including the report counters and mail queue. Existing account fields receive zero defaults where needed.
-
-Back up an existing database before running changed entity mappings. If startup reports a schema-update error, inspect that error rather than deleting the database. Database recovery guidance is in [OPERATIONS.md](docs/OPERATIONS.md).
-
-## Provider setup
-
-- Google: configure authorized JavaScript origin `http://localhost:5173` and redirect URI `http://localhost:8080/login/oauth2/code/google` for local development.
-- Cloudinary: supply the cloud name/API key/API secret. New uploads have tracked public IDs. Recovery jobs remove unused images and retry provider failures.
-- Email: set `PAWBACK_BREVO_API_KEY`, `PAWBACK_BREVO_SENDER_EMAIL`, and optionally `PAWBACK_BREVO_SENDER_NAME`. The sender must be verified with the provider. Without a key, encrypted email jobs remain pending until configured or expired; OTPs are never logged. Live delivery has not been verified.
-
-## Build and verify
-
-```powershell
-cd frontend
-npm run lint
-npm run build
-npm run preview
-```
-
-```powershell
-cd backend
-.\mvnw.cmd package '-Dmaven.test.skip=true'
-```
-
-Backend unit tests and CI are outside the agreed project scope. [The local verification checklist](docs/RELEASE.md) covers application checks.
-
-If the IDE rewrites `backend/target/classes` during a Maven build, stop its incremental builder or build in a separate checkout before verifying the artifact. Do not run a mixture of IDE-generated and Maven-generated classes.
-
-## Product behavior
-
-- Images: decoded JPEG/PNG only, at most 5 MiB, 4096 pixels per side, and 16 megapixels. Create/edit descriptions, instructions, and report messages support 255 characters; pet names/breeds support 100.
-- Finder location is optional and must contain both latitude and longitude. Reports are accepted only while the pet is Lost.
-- Report limits default to five submissions per client and twenty per pet per hour. Shared database counters work across app instances and expire automatically. Request keys prevent duplicate successful retries.
-- Removing a pet disables its public QR lookup and removes its reports. Cloud cleanup is asynchronous. The internal pet row remains soft-deleted; backups follow the operator's retention policy.
-- Owners can regenerate a QR image. If the public domain changes, old printed localhost/domain links cannot be repaired remotely: generate/download a new image and replace the physical tags.
-- Report history is available from each pet's **View reports** action. The unfinished notification bell has been removed.
-
-See [local database and recovery guidance](docs/OPERATIONS.md), [application checks](docs/RELEASE.md), and the public `/help` and `/privacy` pages. Deployment preparation is deferred.
-
-Authentication, reset limits, Google identity rules, and mail recovery are described in [authentication and email behavior](docs/AUTHENTICATION.md). Deployment remains deferred.
+Open [localhost:5173](http://localhost:5173/). The backend runs on port `8080` by default.
