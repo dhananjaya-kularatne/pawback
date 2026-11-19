@@ -7,6 +7,8 @@ import com.pawback.pawback.security.oauth2.HttpCookieOAuth2AuthorizationRequestR
 import com.pawback.pawback.security.oauth2.OAuth2LoginFailureHandler;
 import com.pawback.pawback.security.oauth2.OAuth2LoginSuccessHandler;
 import lombok.RequiredArgsConstructor;
+import jakarta.servlet.DispatcherType;
+import org.springframework.http.HttpMethod;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -33,7 +35,7 @@ public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final UserRepository userRepository;
-    
+
     // OAuth2 Dependencies
     private final CustomOAuth2UserService customOAuth2UserService;
     private final OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler;
@@ -76,6 +78,13 @@ public class SecurityConfig {
             .sessionManagement(session ->
                     session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
+                .dispatcherTypeMatchers(DispatcherType.FORWARD, DispatcherType.ERROR).permitAll()
+                // React pages contain no private data; the API still enforces authentication.
+                .requestMatchers(HttpMethod.GET,
+                        "/", "/index.html", "/favicon.svg", "/assets/**",
+                        "/help", "/privacy", "/dashboard", "/admin",
+                        "/admin/users", "/admin/reports", "/scan/{petUuid}"
+                ).permitAll()
                 .requestMatchers(
                         "/api/auth/register",
                         "/api/auth/login",
