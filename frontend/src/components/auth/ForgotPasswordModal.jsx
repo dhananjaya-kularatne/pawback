@@ -99,10 +99,7 @@ export default function ForgotPasswordModal({ onClose, onSwitchToLogin }) {
     "w-full pl-9 pr-3 py-2 text-sm border border-gray-300 rounded-lg " +
     "focus:outline-none focus:ring-2 focus:ring-blue-700 transition-shadow text-gray-900";
 
-  const submitClass =
-    "w-full flex items-center justify-center gap-2 bg-blue-700 hover:bg-blue-800 " +
-    "text-white text-sm font-semibold py-2.5 px-4 rounded-lg shadow-sm " +
-    "transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed";
+  const submitClass = "button-primary w-full";
 
   return (
     <AuthModalShell
@@ -118,7 +115,7 @@ export default function ForgotPasswordModal({ onClose, onSwitchToLogin }) {
             <button
               type="button"
               onClick={() => onSwitchToLogin()}
-              className="text-blue-700 hover:text-blue-800 font-medium underline cursor-pointer"
+              className="inline-action"
             >
               Back to sign in
             </button>
@@ -127,7 +124,7 @@ export default function ForgotPasswordModal({ onClose, onSwitchToLogin }) {
       }
     >
       {error && (
-        <div className="mb-4 p-3 rounded-lg bg-red-100 text-red-700 text-sm font-medium border border-red-200">
+        <div className="notice-error text-sm mb-4" role="alert">
           {error}
         </div>
       )}
@@ -140,7 +137,7 @@ export default function ForgotPasswordModal({ onClose, onSwitchToLogin }) {
       {step === 1 && (
         <form onSubmit={handleEmail} className="space-y-4">
           <div>
-            <label htmlFor="fp-email" className="block text-xs font-medium text-gray-700 mb-1">Email Address</label>
+            <label htmlFor="fp-email" className="block text-xs font-medium text-gray-700 mb-1">Email address</label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
                 <Mail size={15} />

@@ -66,8 +66,7 @@ function QrCodeModal({ pet, onClose, onRegenerate }) {
             disabled={downloading || regenerating}
             aria-label="Close QR code"
             autoFocus
-            className="text-gray-500 hover:text-gray-700 hover:bg-gray-100
-                       p-2 -mr-2 -mt-1 shrink-0 rounded-md cursor-pointer transition-colors"
+            className="icon-button disabled:opacity-50"
           >
             <X size={20} />
           </button>
@@ -88,22 +87,20 @@ function QrCodeModal({ pet, onClose, onRegenerate }) {
           Attach this to {pet.name}'s collar so finders can scan it.
         </p>
 
-        {error && <p role="alert" className="text-sm text-red-700 mb-3">{error}</p>}
+        {error && <p role="alert" className="notice-error text-sm mb-3">{error}</p>}
         <button
           type="button"
           onClick={handleDownload}
           disabled={downloading || regenerating || !pet.qrCodeUrl}
           aria-busy={downloading}
-          className="w-full flex items-center justify-center gap-2 bg-blue-700
-                     hover:bg-blue-800 text-white text-base font-medium py-3 px-4
-                     rounded-lg cursor-pointer transition-colors shadow-sm hover:shadow disabled:opacity-50 disabled:cursor-not-allowed"
+          className="button-primary w-full"
         >
           <Download size={18} />
           {downloading ? "Downloading..." : "Download QR code"}
         </button>
         {onRegenerate && <div className="mt-7 pt-5 border-t border-gray-200">
           <button type="button" onClick={regenerate} disabled={downloading || regenerating}
-          className="text-sm font-medium text-blue-700 hover:text-blue-800 hover:underline disabled:opacity-50 cursor-pointer">
+          className="button-secondary button-small">
           {regenerating ? "Generating..." : pet.qrCodeUrl ? "Regenerate QR image" : "Generate QR image"}
           </button>
           <p className="mt-2 text-sm text-gray-500">If an old tag no longer opens your pet's page, generate a new image, download it, and replace the printed tag.</p>

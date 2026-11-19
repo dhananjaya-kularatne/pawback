@@ -1,9 +1,10 @@
 import Modal from "./Modal";
 import { useObjectUrls } from "../utils/useObjectUrls";
 import { useState } from "react";
-import { X, Camera, Crop } from "lucide-react";
+import { X } from "lucide-react";
 import PhotoCropModal from "./PhotoCropModal";
-import { PHOTO_ACCEPT, validatePhoto } from "../utils/validatePhoto";
+import PetPhotoField from "./PetPhotoField";
+import { validatePhoto } from "../utils/validatePhoto";
 
 function EditPetModal({ pet, onClose, onSave }) {
   const { createObjectUrl, revokeObjectUrl } = useObjectUrls();
@@ -38,9 +39,7 @@ function EditPetModal({ pet, onClose, onSave }) {
     if (src) setPendingPhoto({ src, name: file.name });
   }
 
-  function handleAdjustCrop(e) {
-    e.preventDefault();
-    e.stopPropagation();
+  function handleAdjustCrop() {
     setPendingPhoto({ src: previewUrl, name: photoFileName });
   }
 
@@ -85,70 +84,24 @@ function EditPetModal({ pet, onClose, onSave }) {
 
   return (
     <Modal onClose={onClose} busy={saving || Boolean(pendingPhoto)} titleId="edit-pet-title" className="max-w-2xl">
-      <div className="bg-white rounded-xl p-6 w-full max-w-2xl shadow-lg">
+      <div className="p-5 sm:p-7">
         <div className="flex justify-between items-center mb-4">
           <h2 id="edit-pet-title" className="text-base font-medium text-gray-900">Edit pet</h2>
           <button
             onClick={onClose}
             disabled={saving}
             aria-label="Close pet form"
-            className="text-gray-500 hover:text-gray-700 hover:bg-gray-100
-                       p-1 rounded-md cursor-pointer transition-colors"
+            className="icon-button disabled:opacity-50"
           >
             <X size={18} />
           </button>
         </div>
 
         <form onSubmit={handleSubmit} className="grid grid-cols-1 sm:grid-cols-[200px_1fr] gap-5">
-          {/* Left: photo */}
-          <div>
-            <label className="text-sm text-gray-600">Photo</label>
-            <label
-              className="relative mt-1 flex flex-col items-center justify-center gap-1.5
-                         aspect-[4/5] w-full max-w-[200px] mx-auto sm:max-w-none rounded-lg border
-                         border-gray-300 border-dashed text-gray-500 cursor-pointer overflow-hidden
-                         hover:bg-gray-50 hover:border-gray-400 transition-colors"
-            >
-              {previewUrl ? (
-                <>
-                  <img
-                    src={previewUrl}
-                    alt={pet.name}
-                    className="absolute inset-0 pet-photo"
-                  />
-                  <button
-                    type="button"
-                    onClick={handleAdjustCrop}
-                    className="absolute top-2 right-2 w-7 h-7 flex items-center justify-center
-                               rounded-full bg-white/90 hover:bg-white text-gray-700 cursor-pointer
-                               transition-colors shadow-sm"
-                    aria-label="Adjust crop"
-                    title="Adjust crop"
-                  >
-                    <Crop size={14} />
-                  </button>
-                  <div
-                    className="absolute inset-x-0 bottom-0 bg-black/50 text-white text-xs
-                               font-medium text-center py-1.5"
-                  >
-                    Change photo
-                  </div>
-                </>
-              ) : (
-                <>
-                  <Camera size={20} />
-                  <span className="text-xs px-2 text-center">Upload photo</span>
-                </>
-              )}
-              <input
-                type="file"
-                accept={PHOTO_ACCEPT}
-                aria-label="Pet photo"
-                className="hidden"
-                onChange={handleFileSelected}
-              />
-            </label>
-          </div>
+          <PetPhotoField
+            previewUrl={previewUrl} alt={pet.name} disabled={saving || Boolean(pendingPhoto)}
+            onChange={handleFileSelected} onCrop={handleAdjustCrop}
+          />
 
           {/* Right: details */}
           <div className="space-y-3">
@@ -207,14 +160,12 @@ function EditPetModal({ pet, onClose, onSave }) {
           </div>
 
           <div className="sm:col-span-2">
-            {error && <p role="alert" className="text-sm text-red-700 mb-3">{error}</p>}
+            {error && <p role="alert" className="notice-error text-sm mb-3">{error}</p>}
 
             <button
               type="submit"
               disabled={saving}
-              className="w-full bg-blue-700 hover:bg-blue-800 text-white text-sm font-medium
-                         py-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed
-                         cursor-pointer transition-colors shadow-sm hover:shadow"
+              className="button-primary w-full"
             >
               {saving ? "Saving..." : "Save changes"}
             </button>

@@ -73,18 +73,14 @@ function PhotoCropModal({ imageSrc, fileName, onCancel, onConfirm }) {
           <button
             onClick={onCancel}
             disabled={saving}
-            className="text-sm font-medium px-4 py-2 rounded-lg border border-gray-200
-                       text-gray-700 bg-white hover:bg-gray-50 transition-colors cursor-pointer
-                       disabled:opacity-40 disabled:cursor-not-allowed"
+            className="button-secondary"
           >
             Cancel
           </button>
           <button
             onClick={handleConfirm}
             disabled={saving || !croppedAreaPixels}
-            className="text-sm font-medium px-4 py-2 rounded-lg bg-blue-700 hover:bg-blue-800
-                       text-white transition-colors cursor-pointer
-                       disabled:opacity-60 disabled:cursor-not-allowed"
+            className="button-primary"
           >
             {saving ? "Cropping..." : "Confirm"}
           </button>

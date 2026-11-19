@@ -45,7 +45,7 @@ export default function LoginModal({ onClose, onSuccess, onSwitchToRegister, onF
           <button
             type="button"
             onClick={onSwitchToRegister}
-            className="text-blue-700 hover:text-blue-800 font-medium underline cursor-pointer"
+            className="inline-action"
           >
             Register
           </button>
@@ -53,7 +53,7 @@ export default function LoginModal({ onClose, onSuccess, onSwitchToRegister, onF
       }
     >
       {error && (
-        <div className="mb-4 p-3 rounded-lg bg-red-100 text-red-700 text-sm font-medium border border-red-200">
+        <div className="notice-error text-sm mb-4" role="alert">
           {error}
         </div>
       )}
@@ -61,7 +61,7 @@ export default function LoginModal({ onClose, onSuccess, onSwitchToRegister, onF
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* Email */}
         <div>
-          <label htmlFor="login-email" className="block text-xs font-medium text-gray-700 mb-1">Email Address</label>
+          <label htmlFor="login-email" className="block text-xs font-medium text-gray-700 mb-1">Email address</label>
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
               <Mail size={15} />
@@ -86,7 +86,7 @@ export default function LoginModal({ onClose, onSuccess, onSwitchToRegister, onF
             <button
               type="button"
               onClick={onForgotPassword}
-              className="text-xs text-blue-700 hover:text-blue-800 font-medium hover:underline cursor-pointer"
+              className="inline-action text-xs"
             >
               Forgot password?
             </button>
@@ -111,9 +111,7 @@ export default function LoginModal({ onClose, onSuccess, onSwitchToRegister, onF
         <button
           type="submit"
           disabled={loading}
-          className="w-full flex items-center justify-center gap-2 bg-blue-700 hover:bg-blue-800
-                     text-white text-sm font-semibold py-2.5 px-4 rounded-lg shadow-sm
-                     transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+          className="button-primary w-full"
         >
           {loading ? "Signing in..." : (<>Sign in <ArrowRight size={15} /></>)}
         </button>
@@ -127,9 +125,7 @@ export default function LoginModal({ onClose, onSuccess, onSwitchToRegister, onF
         <button
           type="button"
           onClick={() => window.location.href = GOOGLE_LOGIN_URL}
-          className="w-full flex items-center justify-center gap-2 bg-white hover:bg-gray-50
-                     text-gray-700 text-sm font-semibold py-2.5 px-4 rounded-lg shadow-sm
-                     border border-gray-200 transition-all cursor-pointer"
+          className="button-secondary w-full"
         >
           <svg className="w-5 h-5" viewBox="0 0 24 24">
             <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
