@@ -4,8 +4,7 @@ import Cropper from "react-easy-crop";
 import { ZoomIn } from "lucide-react";
 import { getCroppedImageFile } from "../utils/cropImage";
 
-// Fixed 4:5 portrait frame, matching the dashboard card's image area so a
-// cropped photo never clips awkwardly against the name/breed/status overlay.
+// New crops are saved as 4:5 portraits. Photo previews preserve the saved framing.
 const CROP_ASPECT = 4 / 5;
 
 // Reusable crop step shown after a photo is selected on the Add pet form or
