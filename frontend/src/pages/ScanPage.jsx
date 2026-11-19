@@ -1,10 +1,11 @@
 import BrandMark from "../components/BrandMark";
-import { useEffect, useRef, useState } from "react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import { Heart, Camera, MapPin } from "lucide-react";
 import { getPetByUuid, submitReport } from "../api/scanApi";
 import { PHOTO_ACCEPT, validatePhoto } from "../utils/validatePhoto";
 import PageStatus from "../components/PageStatus";
+const LocationPickerModal = lazy(() => import("../components/LocationPickerModal"));
 
 // Public page a finder lands on after scanning a pet's QR code.
 // No login required. Branches on the pet's status: Safe shows a calm message, Lost shows the pet's details (conditional fields) plus a
@@ -22,6 +23,7 @@ function ScanPetPage({ petUuid }) {
   const [error, setError] = useState("");
 
   const [location, setLocation] = useState(null);
+  const [locationPickerOpen, setLocationPickerOpen] = useState(false);
   const [locating, setLocating] = useState(false);
   const [locationError, setLocationError] = useState("");
   const locationRequest = useRef(null);
@@ -69,6 +71,7 @@ function ScanPetPage({ petUuid }) {
           latitude: position.coords.latitude,
           longitude: position.coords.longitude,
           accuracy: position.coords.accuracy,
+          source: "device",
         });
       },
       (error) => {
@@ -90,6 +93,21 @@ function ScanPetPage({ petUuid }) {
     setLocating(false);
     setLocation(null);
     setLocationError("");
+  }
+
+  function openLocationPicker() {
+    locationRequest.current = null;
+    setLocating(false);
+    setLocationError("");
+    setLocationPickerOpen(true);
+  }
+
+  function confirmLocation(point) {
+    locationRequest.current = null;
+    setLocating(false);
+    setLocation({ latitude: point.latitude, longitude: point.longitude, source: "map" });
+    setLocationError("");
+    setLocationPickerOpen(false);
   }
 
   async function handleSubmitReport() {
@@ -253,16 +271,16 @@ function ScanPetPage({ petUuid }) {
                 </button>
                 <p id="finder-location-status" role="status" className={`text-xs ${locationError ? "text-red-700" : "text-gray-500"}`}>
                   {locationError || (location
-                    ? `Location added to this report.${Number.isFinite(location.accuracy) ? ` Estimated accuracy: within ${Math.ceil(location.accuracy)} metres.` : ""} This is your current location, not the pet's live location.`
+                    ? location.source === "map" ? "Your selected map point will be sent with this report." : `Location added to this report.${Number.isFinite(location.accuracy) ? ` Estimated accuracy: within ${Math.ceil(location.accuracy)} metres.` : ""} Open the location to check or correct the pin.`
                     : locating ? "Waiting for your device. Allow location access if your browser asks."
-                    : "Adds your current location when you send the report. If you saw the pet somewhere else, describe that place in your message.")}
+                    : "Share your location, then open it to check or correct the pin before sending.")}
                 </p>
                 {location && <div className="space-y-2">
-                  <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${location.latitude},${location.longitude}`)}`}
-                    target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-sm text-blue-700 underline">
-                    <MapPin size={14} /> Check location on map
-                  </a>
-                  {location.accuracy > 1000 && <p className="text-xs text-amber-800">Your device returned a broad area. Check the map before sending. If the pin is wrong, remove the location and describe the exact place in your message. A phone with location services enabled may give a more accurate result.</p>}
+                  <button type="button" onClick={openLocationPicker} disabled={submitting}
+                    className="inline-flex items-center gap-1 text-sm text-blue-700 underline disabled:opacity-50">
+                    <MapPin size={14} /> Open location
+                  </button>
+                  {location.accuracy > 1000 && <p className="text-xs text-amber-800">Your device returned a broad area. Open the location and correct the pin before sending.</p>}
                 </div>}
                 {(location || locating) && <button type="button" onClick={clearLocation} disabled={submitting}
                   className="text-xs text-blue-700 underline cursor-pointer disabled:opacity-50">
@@ -297,6 +315,7 @@ function ScanPetPage({ petUuid }) {
           </div>
         </div>
       </div>
+      {locationPickerOpen && <Suspense fallback={<p role="status">Opening location map...</p>}><LocationPickerModal location={location} onConfirm={confirmLocation} onClose={() => setLocationPickerOpen(false)} /></Suspense>}
     </div>
   );
 }
