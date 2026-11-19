@@ -8,9 +8,9 @@ PawBack helps reunite lost pets with their owners. Owners can create a pet profi
 
 | Home | My pets |
 | --- | --- |
-| [![PawBack homepage with a golden retriever wearing a QR collar tag](assets/readme/home.jpg)](assets/readme/home.jpg) | [![Owner dashboard showing two pet profiles and their Safe or Lost status](assets/readme/my-pets.jpg)](assets/readme/my-pets.jpg) |
+| [![PawBack homepage with a golden retriever wearing a QR collar tag](assets/home.jpg)](assets/home.jpg) | [![Owner dashboard showing two pet profiles and their Safe or Lost status](assets/my-pets.jpg)](assets/my-pets.jpg) |
 | **Finder view** | **Owner reports** |
-| [![Mobile pet profile and sighting report form](assets/readme/finder-view.jpg)](assets/readme/finder-view.jpg) | [![Owner dashboard showing a sighting report and its shared location link](assets/readme/owner-reports.jpg)](assets/readme/owner-reports.jpg) |
+| [![Mobile pet profile and sighting report form](assets/finder-view.jpg)](assets/finder-view.jpg) | [![Owner dashboard showing a sighting report and its shared location link](assets/owner-reports.jpg)](assets/owner-reports.jpg) |
 
 Pet profiles and reports shown here use demo data. Select any screenshot to view it at full size.
 
