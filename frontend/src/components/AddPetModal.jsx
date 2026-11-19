@@ -85,105 +85,104 @@ function AddPetModal({ onClose, onSave }) {
 
   return (
     <Modal onClose={onClose} busy={saving || Boolean(pendingPhoto)} titleId="add-pet-title" className="max-w-2xl">
-      <div className="p-5 sm:p-7">
-        <div className="flex justify-between items-center mb-4">
-          <h2 id="add-pet-title" className="text-base font-medium text-gray-900">Register a pet</h2>
-          <button
-            onClick={onClose}
-            disabled={saving}
-            aria-label="Close pet form"
-            className="icon-button disabled:opacity-50"
-          >
-            <X size={18} />
-          </button>
+      <div className="dialog-header">
+        <h2 id="add-pet-title" className="text-base font-medium text-gray-900">Register a pet</h2>
+        <button
+          onClick={onClose}
+          disabled={saving}
+          aria-label="Close pet form"
+          className="icon-button disabled:opacity-50"
+        >
+          <X size={18} />
+        </button>
+      </div>
+
+      <form onSubmit={handleSubmit} className="grid grid-cols-1 sm:grid-cols-[200px_1fr] gap-5 p-5 sm:p-7">
+        <PetPhotoField
+          previewUrl={previewUrl} alt="Selected pet" required disabled={saving || Boolean(pendingPhoto)}
+          onChange={handleFileSelected} onCrop={handleAdjustCrop}
+        />
+
+        {/* Right: details */}
+        <div className="space-y-3">
+          <div>
+            <label htmlFor="add-pet-name" className="text-sm text-gray-600">
+              Name <span className="text-red-700">*</span>
+            </label>
+            <input
+              type="text"
+              id="add-pet-name"
+              value={name}
+              required
+              maxLength={100}
+              onChange={(e) => setName(e.target.value)}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm mt-1
+                         focus:outline-none focus:ring-2 focus:ring-blue-700 transition-shadow"
+            />
+          </div>
+
+          <div>
+            <label htmlFor="add-pet-breed" className="text-sm text-gray-600">
+              Breed <span className="field-optional">Optional</span>
+            </label>
+            <input
+              type="text"
+              id="add-pet-breed"
+              value={breed}
+              maxLength={100}
+              onChange={(e) => setBreed(e.target.value)}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm mt-1
+                         focus:outline-none focus:ring-2 focus:ring-blue-700 transition-shadow"
+            />
+          </div>
+
+          <div>
+            <label htmlFor="add-pet-description" className="text-sm text-gray-600">
+              Description <span className="field-optional">Optional</span>
+            </label>
+            <textarea
+              id="add-pet-description"
+              value={description}
+              maxLength={255}
+              onChange={(e) => setDescription(e.target.value)}
+              rows={2}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm mt-1
+                         focus:outline-none focus:ring-2 focus:ring-blue-700 transition-shadow"
+            />
+          </div>
+
+          <div>
+            <label htmlFor="add-pet-ifFoundInstructions" className="text-sm text-gray-600">
+              If found instructions <span className="field-optional">Optional</span>
+            </label>
+            <textarea
+              id="add-pet-ifFoundInstructions"
+              value={ifFoundInstructions}
+              maxLength={255}
+              onChange={(e) => setIfFoundInstructions(e.target.value)}
+              rows={2}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm mt-1
+                         focus:outline-none focus:ring-2 focus:ring-blue-700 transition-shadow"
+            />
+          </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="grid grid-cols-1 sm:grid-cols-[200px_1fr] gap-5">
-          <PetPhotoField
-            previewUrl={previewUrl} alt="Selected pet" required disabled={saving || Boolean(pendingPhoto)}
-            onChange={handleFileSelected} onCrop={handleAdjustCrop}
-          />
+        <div className="sm:col-span-2">
+          {error && <p role="alert" className="notice-error text-sm mb-3">{error}</p>}
 
-          {/* Right: details */}
-          <div className="space-y-3">
-            <div>
-              <label htmlFor="add-pet-name" className="text-sm text-gray-600">
-                Name <span className="text-red-700">*</span>
-              </label>
-              <input
-                type="text"
-                id="add-pet-name"
-                value={name}
-                maxLength={100}
-                onChange={(e) => setName(e.target.value)}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm mt-1
-                           focus:outline-none focus:ring-2 focus:ring-blue-700 transition-shadow"
-              />
-            </div>
+          <button
+            type="submit"
+            disabled={saving}
+            className="button-primary w-full"
+          >
+            {saving ? "Registering..." : "Register pet"}
+          </button>
 
-            <div>
-              <label htmlFor="add-pet-breed" className="text-sm text-gray-600">
-                Breed <span className="text-gray-400">(optional)</span>
-              </label>
-              <input
-                type="text"
-                id="add-pet-breed"
-                value={breed}
-                maxLength={100}
-                onChange={(e) => setBreed(e.target.value)}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm mt-1
-                           focus:outline-none focus:ring-2 focus:ring-blue-700 transition-shadow"
-              />
-            </div>
-
-            <div>
-              <label htmlFor="add-pet-description" className="text-sm text-gray-600">
-                Description <span className="text-gray-400">(optional)</span>
-              </label>
-              <textarea
-                id="add-pet-description"
-                value={description}
-                maxLength={255}
-                onChange={(e) => setDescription(e.target.value)}
-                rows={2}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm mt-1
-                           focus:outline-none focus:ring-2 focus:ring-blue-700 transition-shadow"
-              />
-            </div>
-
-            <div>
-              <label htmlFor="add-pet-ifFoundInstructions" className="text-sm text-gray-600">
-                If found instructions <span className="text-gray-400">(optional)</span>
-              </label>
-              <textarea
-                id="add-pet-ifFoundInstructions"
-                value={ifFoundInstructions}
-                maxLength={255}
-                onChange={(e) => setIfFoundInstructions(e.target.value)}
-                rows={2}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm mt-1
-                           focus:outline-none focus:ring-2 focus:ring-blue-700 transition-shadow"
-              />
-            </div>
-          </div>
-
-          <div className="sm:col-span-2">
-            {error && <p role="alert" className="notice-error text-sm mb-3">{error}</p>}
-
-            <button
-              type="submit"
-              disabled={saving}
-              className="button-primary w-full"
-            >
-              {saving ? "Registering..." : "Register pet"}
-            </button>
-
-            <p className="text-xs text-gray-400 text-center mt-2">
-              By default this pet will be shown as Safe
-            </p>
-          </div>
-        </form>
-      </div>
+          <p className="field-help text-center">
+            New pet profiles are marked safe.
+          </p>
+        </div>
+      </form>
 
       {pendingPhoto && (
         <PhotoCropModal

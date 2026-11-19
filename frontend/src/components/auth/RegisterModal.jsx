@@ -60,6 +60,7 @@ export default function RegisterModal({ onClose, onSuccess, onSwitchToLogin }) {
           <button
             type="button"
             onClick={onSwitchToLogin}
+            disabled={loading}
             className="inline-action"
           >
             Sign in
@@ -208,13 +209,14 @@ export default function RegisterModal({ onClose, onSuccess, onSwitchToLogin }) {
 
         <div className="relative flex items-center py-2">
           <div className="flex-grow border-t border-gray-200"></div>
-          <span className="flex-shrink-0 mx-4 text-xs text-gray-400 font-medium uppercase tracking-wider">Or</span>
+          <span className="flex-shrink-0 mx-4 text-xs text-gray-500 font-medium uppercase tracking-wider">Or</span>
           <div className="flex-grow border-t border-gray-200"></div>
         </div>
 
         <button
           type="button"
           onClick={() => window.location.href = GOOGLE_LOGIN_URL}
+          disabled={loading}
           className="button-secondary w-full"
         >
           <svg className="w-5 h-5" viewBox="0 0 24 24">

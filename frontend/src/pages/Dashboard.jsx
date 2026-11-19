@@ -108,10 +108,10 @@ function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen flex flex-col bg-slate-50">
       <Navbar />
 
-      <main id="main-content" className="content-width dashboard-content">
+      <main id="main-content" tabIndex={-1} className="content-width dashboard-content">
         <div className="dashboard-welcome">
           <div>
             <h1>My pets</h1>

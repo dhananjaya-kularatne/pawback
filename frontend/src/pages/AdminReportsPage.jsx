@@ -120,7 +120,7 @@ function AdminReportsPage() {
     <AdminLayout title="Reports">
       <div className="mb-5">
         <p className="text-gray-600" role="status">
-          {loading ? "Loading reports..." : totalElements === 1 ? "1 finder report" : `${totalElements} finder reports`}
+          {loading ? "Loading reports..." : pageData ? `${totalElements} finder report${totalElements === 1 ? "" : "s"}` : "Reports unavailable"}
         </p>
       </div>
 
@@ -182,17 +182,17 @@ function AdminReportsPage() {
         )}
       </form>
 
-      {filterError && <p role="alert" className="text-sm text-red-700 mb-4">{filterError}</p>}
+      {filterError && <p role="alert" className="notice-error text-sm mb-4">{filterError}</p>}
       <p className="text-xs text-gray-500 mb-4">Date filters include whole days in UTC. Report times are displayed in your local time.</p>
 
       {error && (
-        <p className="text-sm text-red-700 mb-4 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
-          {error}{" "}
+        <div className="notice-error text-sm mb-4 flex flex-wrap items-center justify-between gap-2">
+          <p role="alert">{error}</p>
           <button type="button" onClick={refetch} disabled={loading}
-            className="inline-flex items-center gap-1 underline disabled:opacity-40 cursor-pointer">
-            <RefreshCw size={12} /> Retry
+            className="button-secondary button-small">
+            <RefreshCw size={16} /> Retry
           </button>
-        </p>
+        </div>
       )}
 
       <div className="surface overflow-hidden">
@@ -233,7 +233,7 @@ function AdminReportsPage() {
                       className="border-b border-gray-100 last:border-0 hover:bg-blue-50/40 transition-colors"
                     >
                       <td data-label="Pet" className="px-5 py-3">
-                        <div className="font-medium text-gray-900">{report.petName || "-"}</div>
+                        <div className="font-medium text-gray-900 wrap-anywhere">{report.petName || "-"}</div>
                         <div className="text-gray-500 text-xs">Pet ID {report.petId}</div>
                       </td>
                       <td data-label="Message" className="px-5 py-3 text-gray-700 max-w-xs truncate" title={report.message}>

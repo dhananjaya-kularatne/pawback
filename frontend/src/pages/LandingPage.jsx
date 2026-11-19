@@ -59,7 +59,7 @@ function LandingPage() {
 
   return <div className="landing-page">
     <AppHeader showNavLinks={isLoggedIn}>{isLoggedIn ? <AccountMenu /> : <><button className="header-link" onClick={openLogin}>Sign in</button><button className="button-primary button-small" onClick={openRegister}>Get started</button></>}</AppHeader>
-    <main id="main-content">
+    <main id="main-content" tabIndex={-1}>
       <section className="hero-section">
         <div className="content-width hero-grid">
           <div className="hero-copy">

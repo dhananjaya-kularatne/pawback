@@ -40,11 +40,11 @@ export default function LocationPickerModal({ location, onConfirm, onClose }) {
   }, [location]);
 
   return <Modal onClose={onClose} titleId="report-map-title" className="max-w-2xl">
+    <div className="dialog-header">
+      <h2 id="report-map-title">Report location</h2>
+      <button type="button" onClick={onClose} aria-label="Close location map" className="icon-button"><X size={20} /></button>
+    </div>
     <div className="map-dialog">
-      <div className="flex items-center justify-between gap-3">
-        <h2 id="report-map-title">Report location</h2>
-        <button type="button" onClick={onClose} aria-label="Close location map" className="icon-button"><X size={22} /></button>
-      </div>
       <p id="report-map-help" className="text-sm text-slate-600">Tap the map or drag the pin to where you saw the pet. You can also pan with the arrow keys and use the map centre.</p>
       <div ref={container} role="region" aria-label="Report location map" aria-describedby="report-map-help" className="report-location-map" />
       {tileError && <p role="alert" className="text-sm text-amber-800">Some map tiles could not load. Try reopening the map, or describe the place in your report.</p>}

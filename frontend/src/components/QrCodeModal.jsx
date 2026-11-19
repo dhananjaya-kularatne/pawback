@@ -55,23 +55,23 @@ function QrCodeModal({ pet, onClose, onRegenerate }) {
 
   return (
     <Modal onClose={onClose} busy={downloading || regenerating} titleId="pet-qr-title" className="max-w-lg">
-      <div className="p-6 sm:p-8">
-        <div className="flex justify-between items-start gap-4 mb-6">
-          <h2 id="pet-qr-title" className="text-xl font-semibold text-gray-900 break-words min-w-0">
-            {pet.name}'s QR code
-          </h2>
-          <button
-            type="button"
-            onClick={onClose}
-            disabled={downloading || regenerating}
-            aria-label="Close QR code"
-            autoFocus
-            className="icon-button disabled:opacity-50"
-          >
-            <X size={20} />
-          </button>
-        </div>
+      <div className="dialog-header">
+        <h2 id="pet-qr-title" className="text-xl font-semibold text-gray-900 break-words min-w-0">
+          {pet.name}'s QR code
+        </h2>
+        <button
+          type="button"
+          onClick={onClose}
+          disabled={downloading || regenerating}
+          aria-label="Close QR code"
+          autoFocus
+          className="icon-button disabled:opacity-50"
+        >
+          <X size={20} />
+        </button>
+      </div>
 
+      <div className="p-5 sm:p-7">
         <div className="border border-gray-200 rounded-lg p-5 sm:p-6 mb-5 bg-gray-50 flex justify-center">
           {pet.qrCodeUrl && !previewFailed ? <img
             src={pet.qrCodeUrl}

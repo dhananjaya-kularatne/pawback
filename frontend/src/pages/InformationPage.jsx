@@ -14,7 +14,7 @@ export default function InformationPage() {
   const privacy = pathname === "/privacy";
   return <div className="min-h-screen bg-slate-50">
     <AppHeader showNavLinks={Boolean(token)}>{token ? <AccountMenu /> : <Link to="/" state={{ openLogin: true }} className="button-primary button-small">Sign in</Link>}</AppHeader>
-    <main id="main-content" className={`content-width information-page ${privacy ? "privacy-page" : "guide-page"}`}>
+    <main id="main-content" tabIndex={-1} className={`content-width information-page ${privacy ? "privacy-page" : "guide-page"}`}>
       <h1 className="text-3xl font-bold text-gray-900">{privacy ? "Data and privacy" : "How PawBack works"}</h1>
       {privacy ? <>
         <section><h2 className="text-lg font-semibold">Pet profiles</h2><p>Anyone with a pet's QR link can see its name, photo, breed, description, instructions, and Safe/Lost status. Avoid including private addresses or other sensitive information in those fields.</p></section>

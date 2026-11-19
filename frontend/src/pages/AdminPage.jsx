@@ -81,7 +81,7 @@ function AdminPage() {
   return (
     <AdminLayout title="Platform overview">
       {error && (
-        <p className="text-sm text-red-700 mb-4 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+        <p role="alert" className="notice-error text-sm mb-4">
           {error}
         </p>
       )}
@@ -89,7 +89,7 @@ function AdminPage() {
       <p className="admin-intro">Live counts across users, pets, and reports.</p>
 
       {/* People */}
-      <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">
+      <p className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-3">
         People
       </p>
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
@@ -99,7 +99,7 @@ function AdminPage() {
       </div>
 
       {/* Pets & reports */}
-      <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">
+      <p className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-3">
         Pets &amp; reports
       </p>
       <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 mb-8">

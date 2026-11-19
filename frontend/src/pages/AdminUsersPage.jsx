@@ -94,9 +94,7 @@ function AdminUsersPage() {
       <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 mb-5">
         <div>
           <p className="text-gray-600" role="status">
-            {loading ? "Loading users..." : totalElements === 1
-              ? "1 registered account"
-              : `${totalElements} registered accounts`}
+            {loading ? "Loading users..." : pageData ? `${totalElements} registered account${totalElements === 1 ? "" : "s"}` : "Users unavailable"}
           </p>
         </div>
         <div className="relative w-full sm:w-72">
@@ -117,7 +115,7 @@ function AdminUsersPage() {
       </div>
 
       {error && (
-        <p className="text-sm text-red-700 mb-4 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+        <p role="alert" className="notice-error text-sm mb-4">
           {error}
         </p>
       )}
@@ -143,7 +141,7 @@ function AdminUsersPage() {
                 </tr>
               )}
 
-              {!loading && users.length === 0 && (
+              {!loading && !error && users.length === 0 && (
                 <tr>
                   <td colSpan={5} className="px-5 py-12 text-center text-sm text-gray-400">
                     {query ? "No users match your search." : "No users to show."}

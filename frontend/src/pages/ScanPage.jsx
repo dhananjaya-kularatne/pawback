@@ -166,12 +166,13 @@ function ScanPetPage({ petUuid }) {
   return (
     <div className="scan-page min-h-screen">
       <header className="finder-header">
+        <a href="#main-content" className="skip-link">Skip to content</a>
         <div className="content-width">
           <Link to="/" className="brand"><BrandMark /> PawBack</Link>
           <Link className="header-link" to="/help#found">Finder help <ChevronRight size={16} /></Link>
         </div>
       </header>
-      <main id="main-content" className={`content-width finder-layout ${isLost ? "finder-layout-lost" : ""}`}>
+      <main id="main-content" tabIndex={-1} className={`content-width finder-layout ${isLost ? "finder-layout-lost" : ""}`}>
         <article className="surface finder-profile">
           <div className="pet-profile-photo">
             <img src={pet.photoUrl} alt={pet.name} className="pet-photo" />
@@ -243,7 +244,7 @@ function ScanPetPage({ petUuid }) {
                     <div className="finder-attachment">
                       <label className="button-secondary finder-photo">
                         {photo ? <Check size={19} /> : <Camera size={19} />}
-                        <span>{photo ? "Photo added" : "Add a photo (optional)"}</span>
+                        <span>{photo ? "Change photo" : "Add a photo (optional)"}</span>
                         <input
                           type="file"
                           accept={PHOTO_ACCEPT}
@@ -258,7 +259,13 @@ function ScanPetPage({ petUuid }) {
                           }}
                         />
                       </label>
-                      {photo && <p className="field-help break-all" role="status">{photo.name}</p>}
+                      {photo && (
+                        <>
+                          <p className="field-help break-all" role="status">Photo added: {photo.name}</p>
+                          <button type="button" className="button-quiet button-small mt-1"
+                            disabled={submitting} onClick={() => setPhoto(null)}>Remove photo</button>
+                        </>
+                      )}
                     </div>
                     <div className="finder-attachment">
                       <button

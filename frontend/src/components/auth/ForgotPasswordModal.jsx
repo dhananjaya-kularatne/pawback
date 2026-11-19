@@ -115,6 +115,7 @@ export default function ForgotPasswordModal({ onClose, onSwitchToLogin }) {
             <button
               type="button"
               onClick={() => onSwitchToLogin()}
+              disabled={loading}
               className="inline-action"
             >
               Back to sign in

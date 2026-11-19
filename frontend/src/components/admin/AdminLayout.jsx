@@ -20,7 +20,7 @@ export default function AdminLayout({ title, children }) {
         </NavLink>)}
       </nav>
     </div>
-    <main id="main-content" className="content-width admin-content">
+    <main id="main-content" tabIndex={-1} className="content-width admin-content">
       <h1 className="page-title">{title}</h1>
       {children}
     </main>

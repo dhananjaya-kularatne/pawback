@@ -45,6 +45,7 @@ export default function LoginModal({ onClose, onSuccess, onSwitchToRegister, onF
           <button
             type="button"
             onClick={onSwitchToRegister}
+            disabled={loading}
             className="inline-action"
           >
             Register
@@ -69,6 +70,7 @@ export default function LoginModal({ onClose, onSuccess, onSwitchToRegister, onF
             <input
               id="login-email"
               type="email"
+              autoComplete="username"
               required
               placeholder="jane@example.com"
               value={email}
@@ -86,6 +88,7 @@ export default function LoginModal({ onClose, onSuccess, onSwitchToRegister, onF
             <button
               type="button"
               onClick={onForgotPassword}
+              disabled={loading}
               className="inline-action text-xs"
             >
               Forgot password?
@@ -98,6 +101,7 @@ export default function LoginModal({ onClose, onSuccess, onSwitchToRegister, onF
             <input
               id="login-password"
               type="password"
+              autoComplete="current-password"
               required
               placeholder="Enter your password"
               value={password}
@@ -118,13 +122,14 @@ export default function LoginModal({ onClose, onSuccess, onSwitchToRegister, onF
 
         <div className="relative flex items-center py-2">
           <div className="flex-grow border-t border-gray-200"></div>
-          <span className="flex-shrink-0 mx-4 text-xs text-gray-400 font-medium uppercase tracking-wider">Or</span>
+          <span className="flex-shrink-0 mx-4 text-xs text-gray-500 font-medium uppercase tracking-wider">Or</span>
           <div className="flex-grow border-t border-gray-200"></div>
         </div>
 
         <button
           type="button"
           onClick={() => window.location.href = GOOGLE_LOGIN_URL}
+          disabled={loading}
           className="button-secondary w-full"
         >
           <svg className="w-5 h-5" viewBox="0 0 24 24">
