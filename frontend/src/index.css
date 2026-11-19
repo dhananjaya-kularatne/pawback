@@ -147,8 +147,9 @@ label { font-weight: 500; }
 .pet-empty { display: grid; justify-items: center; gap: 8px; padding: clamp(24px,5vw,56px); text-align: center; }
 .pet-empty h2 { font-size: 23px; font-weight: 700; }
 .pet-empty p { color: var(--muted); }
-.pet-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(min(100%,300px),1fr)); gap: 20px; align-items: start; }
-.pet-card { container-type: inline-size; min-width: 0; overflow: hidden; }
+.pet-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(min(100%,290px),312px)); gap: 24px; align-items: start; }
+.pet-card { container-type: inline-size; min-width: 0; }
+.pet-card:has(.pet-actions-trigger[aria-expanded="true"]) { z-index: 1; }
 .pet-photo {
   display: block;
   width: auto;
@@ -158,33 +159,38 @@ label { font-weight: 500; }
   border-radius: 12px;
   object-fit: contain;
 }
-.pet-photo-frame {
-  display: grid;
-  place-items: center;
-  min-width: 0;
-  min-height: 145px;
+.pet-card-photo {
+  overflow: hidden;
+  border-radius: calc(var(--surface-radius) - 1px) calc(var(--surface-radius) - 1px) 0 0;
+  border-bottom: 1px solid var(--line);
+  background: #eaf0f8;
 }
-.pet-photo-frame > .pet-photo {
-  max-height: 340px;
-  border-radius: 10px;
+.pet-card-photo > img {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 115cqw;
+  object-fit: contain;
 }
-.pet-card-overview { background: #f4f6fc; padding: 12px; border-bottom: 1px solid var(--line); }
-.pet-card-portrait { display: grid; grid-template-columns: fit-content(68%) minmax(0,1fr); align-items: center; gap: 12px; }
+.pet-card-photo-empty { display: grid; place-content: center; justify-items: center; aspect-ratio: 1; gap: 10px; color: var(--muted); font-size: 14px; }
 .pet-photo-field-preview { margin-top: 6px; max-height: 220px; }
-.pet-card-body { padding: 14px; overflow-wrap: anywhere; }
-.pet-card-heading { min-width: 0; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px; margin-top: 12px; overflow-wrap: anywhere; }
-.pet-card-portrait .pet-card-heading { display: grid; justify-items: start; margin-top: 0; }
-.pet-card-breed { flex-basis: 100%; }
+.pet-card-body { padding: 16px; overflow-wrap: anywhere; }
+.pet-card-heading { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px; }
+.pet-card-breed { margin-top: 4px; color: var(--muted); font-size: 15px; }
 .pet-card-heading .pet-state { flex-shrink: 0; }
-.pet-card-heading h2 { font-family: var(--display-font); font-size: clamp(25px,3vw,34px); line-height: 1.1; }
-.pet-card-tools { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 6px; }
-.pet-card-tools .button-small { padding-inline: 4px; gap: 5px; font-size: 14px; white-space: nowrap; }
-.pet-card-status { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px; border-top: 1px solid var(--line); margin-top: 8px; padding-top: 3px; }
-.pet-card-status .button-quiet { padding-inline: 7px; }
-@container (max-width: 290px) {
-  .pet-card-tools .button-small { padding-inline: 2px; }
-  .pet-card-tools svg { display: none; }
-  .pet-card-status .button-small { padding-inline: 4px; gap: 5px; }
+.pet-card-heading h2 { min-width: 0; font-family: var(--display-font); font-size: clamp(28px,3vw,35px); line-height: 1.1; }
+.pet-card-heading + .text-sm, .pet-card-breed + .text-sm { margin-top: 10px; }
+.pet-card-tools { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line); }
+.pet-card-tools .button-small { padding-inline: 9px; gap: 5px; font-size: 14px; white-space: nowrap; }
+.pet-actions { position: relative; margin-inline-start: auto; }
+.pet-actions-trigger[aria-expanded="true"] { background: #eaf0ff; }
+.pet-actions-panel { position: absolute; z-index: 2; top: calc(100% + 4px); inset-inline-end: 0; min-width: 164px; padding: 5px; border-radius: 12px; }
+.pet-actions-panel button { width: 100%; justify-content: flex-start; }
+.pet-actions-panel .pet-remove { border-top: 1px solid var(--line); border-top-left-radius: 0; border-top-right-radius: 0; }
+.pet-status-progress { color: var(--muted); font-size: 14px; margin-top: 8px; }
+@container (max-width: 295px) {
+  .pet-card-body { padding-inline: 12px; }
+  .pet-card-tools .button-small { padding-inline: 6px; }
 }
 .pet-remove { color: #a51c32; }
 .pet-remove:hover:not(:disabled) { color: #a51c32; background: #ffedf0; }

@@ -40,7 +40,13 @@ export default function PhotoCropModal({ imageSrc, originalFile, fileName, onCan
         <p className="text-sm text-gray-600">Move the crop box to frame your pet. Drag its edges or corners to resize it.</p>
         <div className="crop-stage mt-4">
           <ReactCrop crop={crop} onChange={(_, percent) => setCrop(percent)} disabled={saving} keepSelection ruleOfThirds>
-            <img src={imageSrc} alt="Photo to crop" onLoad={() => setCrop(INITIAL_CROP)}
+            <img src={imageSrc} alt="Photo to crop" onLoad={({ currentTarget }) => {
+              const { naturalWidth, naturalHeight } = currentTarget;
+              const cardHeight = 115 * naturalWidth / naturalHeight;
+              setCrop(cardHeight < 100
+                ? { unit: "%", x: 0, y: 0, width: 100, height: cardHeight }
+                : INITIAL_CROP);
+            }}
               onError={() => setError("Could not open this photo. Choose a different image.")} />
           </ReactCrop>
         </div>

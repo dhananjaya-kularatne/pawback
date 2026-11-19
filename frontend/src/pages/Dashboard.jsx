@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import Footer from "../components/layout/Footer";
-import { useEffect, useRef, useState } from "react";
-import { ArrowRight, BookOpen, CheckCircle2, LoaderCircle, MapPin, PawPrint, Plus, Pencil, MessageSquare, Trash2, QrCode as QrCodeIcon } from "lucide-react";
+import { useEffect, useId, useRef, useState } from "react";
+import { ArrowRight, BookOpen, CheckCircle2, ChevronDown, LoaderCircle, MapPin, PawPrint, Plus, Pencil, MessageSquare, Trash2, QrCode as QrCodeIcon } from "lucide-react";
 import Navbar from "../components/Navbar";
 import { getMyPets, updatePet, createPet, updatePetStatus, deletePet, regeneratePetQr } from "../api/petApi";
 import ConfirmDialog from "../components/ConfirmDialog";
@@ -11,24 +11,63 @@ import AddPetModal from "../components/AddPetModal";
 import QrCodeModal from "../components/QrCodeModal";
 import PetReportsModal from "../components/PetReportsModal";
 
-function PetCardOverview({ pet }) {
-  const [portrait, setPortrait] = useState(false);
-  const lost = pet.status === "LOST";
+function PetCardPhoto({ pet }) {
+  const [failed, setFailed] = useState(false);
+  const hasPhoto = pet.photoUrl && !failed;
 
   return (
-    <div className={`pet-card-overview${portrait ? " pet-card-portrait" : ""}`}>
-      <div className="pet-photo-frame">
-        <img src={pet.photoUrl} alt={pet.name} className="pet-photo" onLoad={({ currentTarget }) => {
-          setPortrait(currentTarget.naturalHeight > currentTarget.naturalWidth);
-        }} />
+    hasPhoto ? (
+      <div className="pet-card-photo">
+        <img
+          src={pet.photoUrl} alt={pet.name} decoding="async" loading="lazy"
+          onError={() => setFailed(true)}
+        />
       </div>
-      <div className="pet-card-heading">
-        <h2>{pet.name}</h2>
-        <span role="status" className={`pet-state ${lost ? "pet-state-lost" : "pet-state-safe"}`}>
-          <span aria-hidden="true" /> {lost ? "Lost" : "Safe"}
-        </span>
-        {pet.breed && <p className="pet-card-breed text-sm text-gray-600">{pet.breed}</p>}
+    ) : (
+      <div className="pet-card-photo pet-card-photo-empty">
+        <PawPrint size={36} aria-hidden="true" />
+        <span>Photo unavailable</span>
       </div>
+    )
+  );
+}
+
+function PetActions({ name, children }) {
+  const [open, setOpen] = useState(false);
+  const panelId = useId();
+  const controlRef = useRef(null);
+  const triggerRef = useRef(null);
+
+  useEffect(() => {
+    if (!open) return;
+    function handleOutside(event) {
+      if (!controlRef.current?.contains(event.target)) setOpen(false);
+    }
+    document.addEventListener("pointerdown", handleOutside);
+    return () => document.removeEventListener("pointerdown", handleOutside);
+  }, [open]);
+
+  function close() {
+    setOpen(false);
+    triggerRef.current?.focus();
+  }
+
+  return (
+    <div className="pet-actions" ref={controlRef}
+      onBlur={(event) => {
+        if (event.relatedTarget && !event.currentTarget.contains(event.relatedTarget)) setOpen(false);
+      }}
+      onKeyDown={(event) => {
+        if (open && event.key === "Escape") close();
+      }}>
+      <button type="button" className="button-quiet button-small pet-actions-trigger" ref={triggerRef}
+        aria-label={`Actions for ${name}`} aria-expanded={open} aria-controls={open ? panelId : undefined}
+        onClick={() => setOpen(!open)}>
+        Actions <ChevronDown size={15} aria-hidden="true" />
+      </button>
+      {open && <div id={panelId} className="surface pet-actions-panel" onClick={(event) => {
+        if (event.target.closest("button")) close();
+      }}>{children}</div>}
     </div>
   );
 }
@@ -164,44 +203,40 @@ function Dashboard() {
               const updating = pendingStatusIds.has(pet.id);
               return (
                 <article key={pet.id} className="surface pet-card">
-                  <PetCardOverview key={pet.photoUrl} pet={pet} />
+                  <PetCardPhoto key={pet.photoUrl} pet={pet} />
                   <div className="pet-card-body">
+                    <div className="pet-card-heading">
+                      <h2>{pet.name}</h2>
+                      <span role="status" className={`pet-state ${isLost ? "pet-state-lost" : "pet-state-safe"}`}>
+                        <span aria-hidden="true" /> {isLost ? "Lost" : "Safe"}
+                      </span>
+                    </div>
+                    {pet.breed && <p className="pet-card-breed">{pet.breed}</p>}
                     {pet.description && <p className="text-sm text-gray-600 mb-3 line-clamp-2">{pet.description}</p>}
                     {pet.ifFoundInstructions && <p className="text-sm text-gray-600 mb-3"><strong>If found</strong> {pet.ifFoundInstructions}</p>}
                     {statusErrors[pet.id] && <p role="alert" className="notice-error text-sm mt-3">{statusErrors[pet.id]}</p>}
                     <div className="pet-card-tools">
                       <button type="button" className="button-secondary button-small" onClick={() => setViewingQrPet(pet)} aria-label="View QR code">
-                        <QrCodeIcon size={16} /> QR
+                        <QrCodeIcon size={16} /> QR tag
                       </button>
-                      <button type="button" className="button-secondary button-small" onClick={() => setEditingPet(pet)} aria-label="Edit pet">
-                        <Pencil size={16} /> Edit
-                      </button>
-                      <button type="button" className="button-secondary button-small" onClick={() => setViewingReportsPet(pet)} aria-label={`View reports for ${pet.name}`}>
+                      <button type="button" className={`button-small ${isLost ? "button-primary" : "button-quiet"}`} onClick={() => setViewingReportsPet(pet)} aria-label={`View reports for ${pet.name}`}>
                         <MessageSquare size={16} /> Reports
                       </button>
+                      <PetActions name={pet.name}>
+                        <button type="button" className="button-quiet button-small" onClick={() => setEditingPet(pet)}>
+                          <Pencil size={16} /> Edit pet
+                        </button>
+                        <button type="button" className="button-quiet button-small" disabled={updating || deletingId === pet.id}
+                          onClick={() => handleToggleStatus(pet)}>
+                          <MapPin size={16} /> {isLost ? "Mark safe" : "Mark lost"}
+                        </button>
+                        <button type="button" className="button-quiet button-small pet-remove" disabled={updating || deletingId != null}
+                          onClick={() => setRemovingPet(pet)}>
+                          <Trash2 size={16} /> Remove pet
+                        </button>
+                      </PetActions>
                     </div>
-                    <div className="pet-card-status">
-                      <button
-                        type="button"
-                        className="button-quiet button-small"
-                        onClick={() => handleToggleStatus(pet)}
-                        disabled={updating || deletingId === pet.id}
-                        aria-busy={updating}
-                        aria-label={`Mark ${pet.name} as ${isLost ? "safe" : "lost"}`}
-                      >
-                        {updating ? <LoaderCircle size={16} className="motion-safe:animate-spin" /> : <MapPin size={16} />}
-                        {updating ? "Updating..." : isLost ? "Mark safe" : "Mark lost"}
-                      </button>
-                      <button
-                        type="button"
-                        className="button-quiet button-small pet-remove"
-                        onClick={() => setRemovingPet(pet)}
-                        disabled={updating || deletingId != null}
-                        aria-label={`Remove ${pet.name}`}
-                      >
-                        <Trash2 size={16} /> Remove
-                      </button>
-                    </div>
+                    {updating && <p role="status" className="pet-status-progress">Updating status...</p>}
                   </div>
                 </article>
               );
