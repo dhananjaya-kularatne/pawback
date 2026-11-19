@@ -18,8 +18,8 @@ public class EmailService {
     @Transactional(propagation=Propagation.MANDATORY)
     public void sendPasswordResetOtp(String recipient,String otp){
         cancelPasswordReset(recipient);
-        enqueue("otp:"+UUID.randomUUID(),recipient,"Your PawBack Password Reset Code",
-                "<html><body><h2>Password reset</h2><p>Your verification code is <strong>"+org.springframework.web.util.HtmlUtils.htmlEscape(otp)+"</strong>.</p><p>It expires in ten minutes. Ignore this email if you did not request it.</p></body></html>","OTP",null,600);
+        enqueue("otp:"+UUID.randomUUID(),recipient,"Your PawBack password reset code",
+                formatting.buildPasswordResetHtml(otp),"OTP",null,600);
     }
     @Transactional(propagation=Propagation.MANDATORY)
     public void cancelPasswordReset(String recipient){
@@ -54,6 +54,7 @@ public class EmailService {
         var row=jdbc.queryForMap("SELECT * FROM mail_outbox WHERE id=? AND lock_token=?",id,lease);
         int attempts=((Number)row.get("attempts")).intValue();
         try{
+            String subject = (String) row.get("subject");
             String html;
             if("REPORT".equals(row.get("kind"))){
                 var names=jdbc.queryForList("SELECT p.name FROM scan_reports r JOIN pets p ON p.id=r.pet_id JOIN users u ON u.id=p.owner_id WHERE r.id=? AND p.deleted_at IS NULL AND u.enabled=1",String.class,row.get("report_id"));
@@ -61,11 +62,13 @@ public class EmailService {
                     jdbc.update("UPDATE mail_outbox SET status='DEAD',payload=NULL,last_error='Report unavailable' WHERE id=? AND lock_token=?",id,lease);return;
                 }
                 // Rebuild queued report notices so older payloads cannot send finder details.
-                html=formatting.buildReportNotificationHtml(names.getFirst());
+                String petName = names.getFirst();
+                subject = formatting.buildReportNotificationSubject(petName);
+                html=formatting.buildReportNotificationHtml(petName);
             }else{
                 html=cipher.decrypt((String)row.get("payload"));
             }
-            transport.send((String)row.get("recipient"),(String)row.get("subject"),html,"pawback-"+id);
+            transport.send((String)row.get("recipient"),subject,html,"pawback-"+id);
             jdbc.update("UPDATE mail_outbox SET status='DELIVERED',payload=NULL,locked_until=NULL,lock_token=NULL,last_error=NULL WHERE id=? AND lock_token=?",id,lease);
         }catch(Exception exception){
             int delay=Math.min(21600,30*(1<<Math.min(attempts,10)));

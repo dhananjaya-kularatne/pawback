@@ -58,20 +58,20 @@ public class AuthController {
     public ResponseEntity<ApiResponse<Void>> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request, jakarta.servlet.http.HttpServletRequest httpRequest) {
         authService.forgotPassword(request, addresses.resolve(httpRequest));
         // We always return the same success message to prevent email enumeration
-        return ResponseEntity.ok(ApiResponse.success("If this account is eligible, a password reset code will be sent.", null));
+        return ResponseEntity.ok(ApiResponse.success("If this address is linked to a PawBack password account, we’ll email a reset code to that address.", null));
     }
 
     // Verifies the 6-digit OTP sent to the user's email
     @PostMapping("/verify-otp")
     public ResponseEntity<ApiResponse<Void>> verifyOtp(@Valid @RequestBody VerifyOtpRequest request, jakarta.servlet.http.HttpServletRequest httpRequest) {
         authService.verifyOtp(request, addresses.resolve(httpRequest));
-        return ResponseEntity.ok(ApiResponse.success("OTP verified successfully. You may now reset your password.", null));
+        return ResponseEntity.ok(ApiResponse.success("Code verified. Choose a new password.", null));
     }
 
     // Sets a new password using the verified OTP
     @PostMapping("/reset-password")
     public ResponseEntity<ApiResponse<Void>> resetPassword(@Valid @RequestBody ResetPasswordRequest request, jakarta.servlet.http.HttpServletRequest httpRequest) {
         authService.resetPassword(request, addresses.resolve(httpRequest));
-        return ResponseEntity.ok(ApiResponse.success("Password has been reset successfully.", null));
+        return ResponseEntity.ok(ApiResponse.success("Your password has been updated. You can sign in with it now.", null));
     }
 }
